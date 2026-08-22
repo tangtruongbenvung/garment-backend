@@ -6,37 +6,58 @@
     <title>Hệ Thống Quản Lý May Mặc ERP Cloud</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Thêm thư viện đọc Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="bg-light">
 
-    <!-- Thanh Điều Hướng Menu Phân Hệ -->
+    <!-- Thanh Điều Hướng -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-navbar-brand fw-bold text-white fs-4 ms-2" href="#"><i class="fa-solid fa-shirt me-2"></i>GARMENT ERP CLOUD</a>
+            <a class="navbar-brand fw-bold text-white fs-4 ms-2" href="#"><i class="fa-solid fa-shirt me-2"></i>GARMENT ERP CLOUD</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto nav-pills fs-6">
-                    <li class="nav-item"><a class="nav-link text-white active me-1" data-bs-toggle="pill" href="#tab-orders"><i class="fa-solid fa-file-contract me-1"></i>Đơn Hàng (PO)</a></li>
-                    <li class="nav-item"><a class="nav-link text-white me-1" data-bs-toggle="pill" href="#tab-bom"><i class="fa-solid fa-boxes-packing me-1"></i>Định Mức BOM / Kho NPL</a></li>
-                    <li class="nav-item"><a class="nav-link text-white me-1" data-bs-toggle="pill" href="#tab-lines"><i class="fa-solid fa-industry me-1"></i>Tiến Độ Chuyền May</a></li>
-                    <li class="nav-item"><a class="nav-link text-white me-1" data-bs-toggle="pill" href="#tab-qc"><i class="fa-solid fa-clipboard-check me-1"></i>Kiểm Soát Chất Lượng (QC)</a></li>
-                    <li class="nav-item"><a class="nav-link text-white me-1" data-bs-toggle="pill" href="#tab-reports"><i class="fa-solid fa-chart-line me-1"></i>Báo Cáo Tổng Quan</a></li>
+                <ul class="navbar-nav ms-auto nav-pills" id="erpTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-white active" data-bs-toggle="pill" data-bs-target="#tab-orders" type="button" role="tab"><i class="fa-solid fa-file-contract me-1"></i>Đơn Hàng (PO)</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-white" data-bs-toggle="pill" data-bs-target="#tab-bom" type="button" role="tab"><i class="fa-solid fa-boxes-packing me-1"></i>Định Mức BOM / Kho NPL</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-white" data-bs-toggle="pill" data-bs-target="#tab-lines" type="button" role="tab"><i class="fa-solid fa-industry me-1"></i>Tiến Độ Chuyền May</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-white" data-bs-toggle="pill" data-bs-target="#tab-qc" type="button" role="tab"><i class="fa-solid fa-clipboard-check me-1"></i>Kiểm Soát Chất Lượng (QC)</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-white" data-bs-toggle="pill" data-bs-target="#tab-reports" type="button" role="tab"><i class="fa-solid fa-chart-line me-1"></i>Báo Cáo Tổng Quan</button>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Nội Dung Các Phân Hệ -->
+    <!-- Nội Dung -->
     <div class="container-fluid py-4 px-4">
-        <div class="tab-content">
+        <div class="tab-content" id="erpTabsContent">
             
             <!-- PHÂN HỆ 1: ĐƠN HÀNG PO -->
-            <div class="tab-pane fade show active" id="tab-orders">
+            <div class="tab-pane fade show active" id="tab-orders" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="fw-bold text-secondary"><i class="fa-solid fa-list-check me-2"></i>Quản Lý Đơn Hàng PO & Kế Hoạch</h4>
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrderModal"><i class="fa-solid fa-plus me-1"></i>Tạo Đơn Hàng Mới</button>
+                    <div>
+                        <!-- Nút Import Excel -->
+                        <input type="file" id="excelFile" accept=".xlsx, .xls" style="display: none;" onchange="importExcel(event)">
+                        <button class="btn btn-warning text-dark fw-bold me-2" onclick="document.getElementById('excelFile').click()">
+                            <i class="fa-solid fa-file-excel me-1"></i>Import từ Excel
+                        </button>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrderModal">
+                            <i class="fa-solid fa-plus me-1"></i>Tạo Đơn Hàng Mới
+                        </button>
+                    </div>
                 </div>
                 <div class="card shadow-sm border-0">
                     <div class="card-body">
@@ -60,28 +81,25 @@
                 </div>
             </div>
 
-            <!-- PHÂN HỆ 2: ĐỊNH MỨC & KHO nguyên phụ liệu -->
-            <div class="tab-pane fade" id="tab-bom">
+            <!-- CÁC PHÂN HỆ KHÁC (Đã sửa lỗi chuyển Tab) -->
+            <div class="tab-pane fade" id="tab-bom" role="tabpanel">
                 <h4 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-warehouse me-2"></i>Quản Lý Định Mức BOM & Nguyên Phụ Liệu</h4>
-                <div class="alert alert-info">Đang kết nối dữ liệu tồn kho Vải, Chỉ, Nhãn mác và Cúc/Kéo kho...</div>
+                <div class="alert alert-info shadow-sm">Giao diện kết nối kho Vải, Chỉ, Nhãn mác... sẽ hiển thị tại đây.</div>
             </div>
 
-            <!-- PHÂN HỆ 3: TIẾN ĐỘ CHUYỀN MAY -->
-            <div class="tab-pane fade" id="tab-lines">
+            <div class="tab-pane fade" id="tab-lines" role="tabpanel">
                 <h4 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-diagram-project me-2"></i>Theo Dõi Tiến Độ Sản Xuất Theo Chuyền</h4>
-                <div class="alert alert-warning">Bảng theo dõi sản lượng giờ/ngày từng chuyền may đang được đồng bộ...</div>
+                <div class="alert alert-warning shadow-sm">Bảng theo dõi sản lượng giờ/ngày từng chuyền may...</div>
             </div>
 
-            <!-- PHÂN HỆ 4: KCS / QC -->
-            <div class="tab-pane fade" id="tab-qc">
+            <div class="tab-pane fade" id="tab-qc" role="tabpanel">
                 <h4 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-microscope me-2"></i>Báo Cáo Tỷ Lệ Lỗi KCS / QC</h4>
-                <div class="alert alert-danger">Nhập dữ liệu lỗi may, bẩn vải, may lệch cỡ để tính tỷ lệ lỗi AQL...</div>
+                <div class="alert alert-danger shadow-sm">Nhập dữ liệu lỗi may, bẩn vải, may lệch cỡ để tính tỷ lệ lỗi AQL...</div>
             </div>
 
-            <!-- PHÂN HỆ 5: BÁO CÁO -->
-            <div class="tab-pane fade" id="tab-reports">
-                <h4 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-chart-pie me-2"></i>Báo Cáo Doanh Thu & Hiệu Suất Xưởng</h4>
-                <div class="alert alert-success">Tổng hợp doanh thu, tiến độ giao hàng cho Ban Giám Đốc.</div>
+            <div class="tab-pane fade" id="tab-reports" role="tabpanel">
+                <h4 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-chart-pie me-2"></i>Báo Cáo Tổng Quan</h4>
+                <div class="alert alert-success shadow-sm">Biểu đồ tổng hợp doanh thu, tiến độ giao hàng cho Ban Giám Đốc.</div>
             </div>
 
         </div>
@@ -113,11 +131,14 @@
         </div>
     </div>
 
+    <!-- Script xử lý Logic & Excel -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // QUAN TRỌNG: Đảm bảo URL này là của Render API của bạn
         const API_URL = 'https://garment-api-xr2e.onrender.com/api/orders';
 
+        // 1. Tải dữ liệu từ API
         function loadOrders() {
             fetch(API_URL)
                 .then(res => res.json())
@@ -137,36 +158,101 @@
                         </tr>`;
                     });
                     $('#orders-list').html(rows);
+                })
+                .catch(err => {
+                    console.error("Lỗi khi tải dữ liệu:", err);
+                    $('#orders-list').html('<tr><td colspan="7" class="text-center text-danger">Không thể kết nối đến máy chủ. Đang chờ hệ thống khởi động...</td></tr>');
                 });
         }
 
+        // 2. Thêm đơn hàng thủ công
+        $('#orderForm').submit(function(e) {
+            e.preventDefault();
+            const payload = {
+                po_code: $('#po_code').val(),
+                customer: $('#customer').val(),
+                style_code: $('#style_code').val(),
+                qty_s: parseInt($('#qty_s').val()) || 0,
+                qty_m: parseInt($('#qty_m').val()) || 0,
+                qty_l: parseInt($('#qty_l').val()) || 0,
+                qty_xl: parseInt($('#qty_xl').val()) || 0,
+                qty_xxl: parseInt($('#qty_xxl').val()) || 0,
+                price_cm: parseFloat($('#price_cm').val()) || 0
+            };
+
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                bootstrap.Modal.getInstance(document.getElementById('addOrderModal')).hide();
+                $('#orderForm')[0].reset();
+                loadOrders();
+            });
+        });
+
+        // 3. Import Excel
+        function importExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // Chuyển Excel sang JSON. Giả định dòng 1 là Header.
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                
+                if(jsonData.length === 0) {
+                    alert("File Excel trống hoặc không đúng định dạng!");
+                    return;
+                }
+
+                alert(`Tìm thấy ${jsonData.length} dòng. Hệ thống bắt đầu đẩy lên Cloud, vui lòng chờ...`);
+                
+                // Lặp qua từng dòng và gửi API
+                let successCount = 0;
+                let promises = jsonData.map(row => {
+                    // Ánh xạ cột Excel vào payload API (Cần khớp tên cột trong Excel)
+                    const payload = {
+                        po_code: String(row['Mã PO'] || row['PO'] || `PO-${Date.now()}`),
+                        customer: String(row['Khách Hàng'] || 'Chưa rõ'),
+                        style_code: String(row['Mã Style'] || 'Chưa rõ'),
+                        qty_s: parseInt(row['Size S']) || 0,
+                        qty_m: parseInt(row['Size M']) || 0,
+                        qty_l: parseInt(row['Size L']) || 0,
+                        qty_xl: parseInt(row['Size XL']) || 0,
+                        qty_xxl: parseInt(row['Size XXL']) || 0,
+                        price_cm: parseFloat(row['Đơn Giá'] || row['Giá CM']) || 0
+                    };
+                    
+                    return fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }).then(res => {
+                        if(res.ok) successCount++;
+                    });
+                });
+
+                Promise.all(promises).then(() => {
+                    alert(`Đã Import thành công ${successCount}/${jsonData.length} đơn hàng!`);
+                    loadOrders(); // Tải lại bảng
+                    document.getElementById('excelFile').value = ""; // Reset input
+                }).catch(err => {
+                    alert("Có lỗi xảy ra trong quá trình Import.");
+                    console.error(err);
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Khởi động
         $(document).ready(function() {
             loadOrders();
-
-            $('#orderForm').submit(function(e) {
-                e.preventDefault();
-                const payload = {
-                    po_code: $('#po_code').val(),
-                    customer: $('#customer').val(),
-                    style_code: $('#style_code').val(),
-                    qty_s: parseInt($('#qty_s').val()) || 0,
-                    qty_m: parseInt($('#qty_m').val()) || 0,
-                    qty_l: parseInt($('#qty_l').val()) || 0,
-                    qty_xl: parseInt($('#qty_xl').val()) || 0,
-                    qty_xxl: parseInt($('#qty_xxl').val()) || 0,
-                    price_cm: parseFloat($('#price_cm').val()) || 0
-                };
-
-                fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                }).then(() => {
-                    bootstrap.Modal.getInstance(document.getElementById('addOrderModal')).hide();
-                    $('#orderForm')[0].reset();
-                    loadOrders();
-                });
-            });
         });
     </script>
 </body>
