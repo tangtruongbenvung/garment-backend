@@ -112,6 +112,17 @@
 
         .table td { padding: 6px 10px; vertical-align: middle; font-size: 11px; }
         .badge { padding: 3px 6px; font-weight: 600; font-size: 10px; border-radius: 3px; }
+
+        .nav-tabs .nav-link {
+            font-weight: 600;
+            color: #64748b;
+            font-size: 11px;
+            padding: 6px 12px;
+        }
+        .nav-tabs .nav-link.active {
+            color: #2563eb;
+            border-bottom: 2px solid #2563eb;
+        }
     </style>
 </head>
 <body>
@@ -137,7 +148,7 @@
             </a>
 
             <!-- 2. Quản lý hợp đồng và phụ lục -->
-            <a class="nav-link active" onclick="switchMainTab('contract-section', 'Quản Lý Hợp Đồng & Phụ Lục Hợp Đồng', this)">
+            <a class="nav-link active" onclick="switchMainTab('contract-section', 'Quản Lý Hợp Đồng & Đối Tác', this)">
                 <div><i class="fa-solid fa-file-contract menu-icon text-warning"></i><span>Quản Lý Hợp Đồng & Phụ Lục</span></div>
             </a>
 
@@ -168,7 +179,7 @@
         <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
             <div>
                 <h6 class="fw-bold text-dark mb-0" id="page-heading">QUẢN LÝ HỢP ĐỒNG & PHỤ LỤC HỢP ĐỒNG</h6>
-                <small class="text-muted" style="font-size: 10px;">💡 Double-click tiêu đề cột bất kỳ để tùy chỉnh tên trực tiếp</small>
+                <small class="text-muted" style="font-size: 10px;">💡 Click đúp tiêu đề cột bất kỳ để tùy chỉnh tên trực tiếp</small>
             </div>
             <span class="badge bg-success"><i class="fa-solid fa-circle me-1"></i>Hệ thống Online</span>
         </div>
@@ -182,98 +193,171 @@
                         <h4 class="fw-bold mb-0 text-primary mt-1">24 Đơn</h4>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card-custom border-start border-success border-4 py-2">
-                        <small class="text-muted fw-bold">SẢN LƯỢNG MAY TRONG THÁNG</small>
-                        <h4 class="fw-bold mb-0 text-success mt-1">128,500 Pcs</h4>
+            </div>
+        </div>
+
+        <!-- 2. PHÂN HỆ: QUẢN LÝ HỢP ĐỒNG & ĐỐI TÁC -->
+        <div id="contract-section" class="tab-content-panel">
+            
+            <!-- SUB-NAV TABS -->
+            <ul class="nav nav-tabs mb-3" id="contractSubTabs">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-outbound"><i class="fa-solid fa-arrow-up-right-from-square me-1 text-primary"></i>Hợp Đồng Đầu Ra (Bán hàng/Gia công)</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-inbound"><i class="fa-solid fa-arrow-down-left-and-up-right-to-center me-1 text-danger"></i>Hợp Đồng Đầu Vào (Mua VL/Thuê ngoài)</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-partners"><i class="fa-solid fa-handshake me-1 text-success"></i>Danh Sách Đối Tác (Khách hàng & NCC)</button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                
+                <!-- TAB 1: HỢP ĐỒNG ĐẦU RA -->
+                <div class="tab-pane fade show active" id="tab-outbound">
+                    <div class="card-custom">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-file-export me-1 text-primary"></i>HỢP ĐỒNG BÁN HÀNG & GIA CÔNG XUẤT KHẨU</h6>
+                            <button class="btn btn-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addContractModal" onclick="setContractCategory('OUTBOUND')"><i class="fa-solid fa-plus me-1"></i>Tạo HĐ Đầu Ra</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="editable-th" data-key="th_out_code"><span class="th-text">SỐ HỢP ĐỒNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="editable-th" data-key="th_out_cust"><span class="th-text">KHÁCH HÀNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="editable-th" data-key="th_out_type"><span class="th-text">LOẠI HÌNH</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="editable-th" data-key="th_out_qty"><span class="th-text">SỐ LƯỢNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="editable-th" data-key="th_out_val"><span class="th-text">GIÁ TRỊ HĐ</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="editable-th" data-key="th_out_date"><span class="th-text">HẠN GIAO</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="text-center">PHỤ LỤC & THAO TÁC</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="outbound-hd-list">
+                                    <tr>
+                                        <td class="fw-bold text-primary">HĐ-OUT-2026/GARCO</td>
+                                        <td class="fw-medium">Tổng Công Ty May 10</td>
+                                        <td><span class="badge bg-info text-dark">FOB</span></td>
+                                        <td class="fw-bold">50,000 Pcs</td>
+                                        <td class="fw-bold text-success">$ 175,000 USD</td>
+                                        <td>30/10/2026</td>
+                                        <td class="text-center">
+                                            <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="showAppendix('HĐ-OUT-2026/GARCO')"><i class="fa-solid fa-paperclip me-1"></i>Phụ Lục (1)</button>
+                                            <button class="btn btn-outline-warning btn-sm py-0 px-2 ms-1" onclick="openAddAppendix('HĐ-OUT-2026/GARCO')">+ Phụ Lục</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- 2. PHÂN HỆ: QUẢN LÝ HỢP ĐỒNG VÀ PHỤ LỤC -->
-        <div id="contract-section" class="tab-content-panel card-custom">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="d-flex align-items-center gap-2">
-                    <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-file-signature me-1 text-warning"></i>DANH SÁCH HỢP ĐỒNG SẢN XUẤT MAY</h6>
-                    <span class="badge bg-primary rounded-pill" id="total-contract-count">2 Hợp đồng</span>
+                <!-- TAB 2: HỢP ĐỒNG ĐẦU VÀO -->
+                <div class="tab-pane fade" id="tab-inbound">
+                    <div class="card-custom">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-file-import me-1 text-danger"></i>HỢP ĐỒNG MUA VẬT TƯ & THUÊ GIA CÔNG NGOÀI</h6>
+                            <button class="btn btn-danger btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addContractModal" onclick="setContractCategory('INBOUND')"><i class="fa-solid fa-plus me-1"></i>Tạo HĐ Đầu Vào</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="editable-th" data-key="th_in_code"><span class="th-text">SỐ HỢP ĐỒNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="editable-th" data-key="th_in_supp"><span class="th-text">NHÀ CUNG CẤP / XƯỞNG GC</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="editable-th" data-key="th_in_type"><span class="th-text">MỤC ĐÍCH</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="editable-th" data-key="th_in_qty"><span class="th-text">KHỐI LƯỢNG/SL</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="editable-th" data-key="th_in_val"><span class="th-text">TỔNG CHI PHÍ</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="editable-th" data-key="th_in_date"><span class="th-text">HẠN HOÀN THÀNH</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="text-center">PHỤ LỤC & THAO TÁC</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inbound-hd-list">
+                                    <tr>
+                                        <td class="fw-bold text-danger">HĐ-IN-2026/TEX-01</td>
+                                        <td class="fw-medium">Cty Vải Dệt Nam Định</td>
+                                        <td><span class="badge bg-secondary">Mua Vải Cotton</span></td>
+                                        <td class="fw-bold">12,000 Mét</td>
+                                        <td class="fw-bold text-danger">480,000,000 VNĐ</td>
+                                        <td>15/09/2026</td>
+                                        <td class="text-center">
+                                            <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="showAppendix('HĐ-IN-2026/TEX-01')"><i class="fa-solid fa-paperclip me-1"></i>Phụ Lục (0)</button>
+                                            <button class="btn btn-outline-warning btn-sm py-0 px-2 ms-1" onclick="openAddAppendix('HĐ-IN-2026/TEX-01')">+ Phụ Lục</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div class="d-flex gap-2">
-                    <input type="text" class="form-control" id="searchContract" placeholder="Tìm số HĐ, Khách hàng..." style="width: 200px;">
-                    <button class="btn btn-warning btn-sm text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#addContractModal"><i class="fa-solid fa-plus me-1"></i>Tạo Hợp Đồng Mới</button>
+
+                <!-- TAB 3: DANH SÁCH ĐỐI TÁC -->
+                <div class="tab-pane fade" id="tab-partners">
+                    <div class="card-custom">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-address-book me-1 text-success"></i>DANH SÁCH ĐỐI TÁC (KHÁCH HÀNG & NHÀ CUNG CẤP)</h6>
+                            <button class="btn btn-success btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addPartnerModal"><i class="fa-solid fa-user-plus me-1"></i>Thêm Đối Tác Mới</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>MÃ ĐỐI TÁC</th>
+                                        <th>TÊN CÔNG TY / ĐƠN VỊ</th>
+                                        <th>PHÂN LOẠI</th>
+                                        <th>SỐ ĐIỆN THOẠI</th>
+                                        <th>EMAIL / ĐỊA CHỈ</th>
+                                        <th>MÃ SỐ THUẾ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="partner-list-body">
+                                    <tr>
+                                        <td class="fw-bold text-dark">DT-MAY10</td>
+                                        <td class="fw-bold text-primary">Tổng Công Ty May 10</td>
+                                        <td><span class="badge bg-primary">Khách Hàng (Đầu Ra)</span></td>
+                                        <td>024.3827.1010</td>
+                                        <td>Sài Đồng, Long Biên, Hà Nội</td>
+                                        <td>0100100123</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-dark">DT-NDTEXTILE</td>
+                                        <td class="fw-bold text-danger">Cty Vải Dệt Nam Định</td>
+                                        <td><span class="badge bg-danger">Nhà Cung Cấp (Đầu Vào)</span></td>
+                                        <td>0228.3849.555</td>
+                                        <td>TP. Nam Định</td>
+                                        <td>0600123456</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- AREA HIỂN THỊ PHỤ LỤC -->
+            <div id="appendix-detail-card" class="card-custom border-warning border-2 mt-3" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-layer-group me-1 text-warning"></i>DANH SÁCH PHỤ LỤC CHO: <span id="current-selected-hd" class="text-primary fw-bold"></span></h6>
+                    <button class="btn-close" onclick="$('#appendix-detail-card').slideUp(150)"></button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>MÃ PHỤ LỤC</th>
+                                <th>NGÀY KÝ</th>
+                                <th>NỘI DUNG ĐIỀU CHỈNH</th>
+                                <th>KHỐI LƯỢNG ĐIỀU CHỈNH</th>
+                                <th>GIÁ TRỊ THAY ĐỔI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appendix-list-body"></tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- BẢNG HỢP ĐỒNG CHÍNH -->
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th class="editable-th" data-key="th_hd_code"><span class="th-text">SỐ HỢP ĐỒNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_hd_cust"><span class="th-text">KHÁCH HÀNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_hd_type"><span class="th-text">LOẠI HÌNH</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_hd_qty"><span class="th-text">TỔNG SL (PCS)</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_hd_val"><span class="th-text">TỔNG GIÁ TRỊ</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_hd_date"><span class="th-text">HẠN GIAO HÀNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_hd_status"><span class="th-text">TRẠNG THÁI</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="text-center">PHỤ LỤC & THAO TÁC</th>
-                        </tr>
-                    </thead>
-                    <tbody id="contract-list">
-                        <tr>
-                            <td class="fw-bold text-primary">HĐ-2026/GARCO-01</td>
-                            <td class="fw-medium">Tổng Công Ty May 10</td>
-                            <td><span class="badge bg-info text-dark">FOB</span></td>
-                            <td class="fw-bold">50,000 Pcs</td>
-                            <td class="fw-bold text-success">$ 175,000 USD</td>
-                            <td>30/10/2026</td>
-                            <td><span class="badge bg-success">Đang Sản Xuất</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="showAppendix('HĐ-2026/GARCO-01')"><i class="fa-solid fa-paperclip me-1"></i>Xem Phụ Lục (1)</button>
-                                <button class="btn btn-outline-warning btn-sm py-0 px-2 ms-1" onclick="openAddAppendix('HĐ-2026/GARCO-01')">+ Phụ Lục</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold text-primary">HĐ-2026/NIKE-08</td>
-                            <td class="fw-medium">Tập Đoàn Nike VN</td>
-                            <td><span class="badge bg-secondary">CM</span></td>
-                            <td class="fw-bold">20,000 Pcs</td>
-                            <td class="fw-bold text-success">$ 30,000 USD</td>
-                            <td>15/11/2026</td>
-                            <td><span class="badge bg-warning text-dark">Chờ Đặt Cọc</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="showAppendix('HĐ-2026/NIKE-08')"><i class="fa-solid fa-paperclip me-1"></i>Xem Phụ Lục (0)</button>
-                                <button class="btn btn-outline-warning btn-sm py-0 px-2 ms-1" onclick="openAddAppendix('HĐ-2026/NIKE-08')">+ Phụ Lục</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- AREA HIỂN THỊ PHỤ LỤC HỢP ĐỒNG CHI TIẾT -->
-        <div id="appendix-detail-card" class="card-custom border-warning border-2" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-layer-group me-1 text-warning"></i>DANH SÁCH PHỤ LỤC CHO: <span id="current-selected-hd" class="text-primary fw-bold"></span></h6>
-                <button class="btn-close" onclick="$('#appendix-detail-card').slideUp(150)"></button>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-bordered align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>MÃ PHỤ LỤC</th>
-                            <th>NGÀY KÝ</th>
-                            <th>NỘI DUNG ĐIỀU CHỈNH</th>
-                            <th>SL TĂNG/GIẢM</th>
-                            <th>GIÁ TRỊ THAY ĐỔI</th>
-                            <th>GIAO HÀNG MỚI</th>
-                        </tr>
-                    </thead>
-                    <tbody id="appendix-list-body">
-                        <!-- Render động qua JS -->
-                    </tbody>
-                </table>
-            </div>
         </div>
 
         <!-- 3. CÁC PHÂN HỆ KHÁC -->
@@ -283,37 +367,65 @@
         <div id="access-section" class="tab-content-panel card-custom" style="display: none;"><h6 class="fw-bold mb-0 text-dark">QUẢN LÝ QUYỀN TRUY CẬP</h6></div>
     </div>
 
-    <!-- MODAL 1: TẠO HỢP ĐỒNG MỚI -->
+    <!-- MODAL 1: TẠO HỢP ĐỒNG (ĐẦU RA / ĐẦU VÀO) -->
     <div class="modal fade" id="addContractModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-warning text-dark py-2">
-                    <h6 class="modal-title fw-bold"><i class="fa-solid fa-file-signature me-1"></i>Tạo Hợp Đồng May Mới</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header py-2 text-white" id="modalContractHeader">
+                    <h6 class="modal-title fw-bold" id="modalContractTitle"><i class="fa-solid fa-file-signature me-1"></i>Tạo Hợp Đồng</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formAddContract" class="row g-2">
-                        <div class="col-md-6"><label class="form-label mb-1">Số Hợp Đồng</label><input type="text" id="hd_code" class="form-control" placeholder="VD: HĐ-2026/GARCO-02" required></div>
-                        <div class="col-md-6"><label class="form-label mb-1">Khách Hàng</label><input type="text" id="hd_cust" class="form-control" placeholder="VD: May 10 / Nike..." required></div>
-                        <div class="col-md-4"><label class="form-label mb-1">Loại Hình Hợp Đồng</label>
-                            <select id="hd_type" class="form-select">
-                                <option value="FOB">FOB (Bao nguyên liệu)</option>
-                                <option value="CM">CM (Gia công May)</option>
-                                <option value="CMPT">CMPT (Cắt, May, Trim, Giao)</option>
+                        <input type="hidden" id="hd_category_type" value="OUTBOUND">
+                        
+                        <div class="col-md-6"><label class="form-label mb-1">Số Hợp Đồng</label><input type="text" id="hd_code" class="form-control" placeholder="VD: HĐ-2026/MAY-01" required></div>
+                        <div class="col-md-6">
+                            <label class="form-label mb-1">Chọn Đối Tác</label>
+                            <select id="hd_partner" class="form-select" required>
+                                <!-- Render từ danh sách đối tác -->
                             </select>
                         </div>
-                        <div class="col-md-4"><label class="form-label mb-1">Tổng Số Lượng (Pcs)</label><input type="number" id="hd_qty" class="form-control" placeholder="10000" oninput="calcHdTotal()" required></div>
-                        <div class="col-md-4"><label class="form-label mb-1">Đơn Giá Trung Bình (USD/Pcs)</label><input type="number" step="0.01" id="hd_price" class="form-control" placeholder="3.5" oninput="calcHdTotal()" required></div>
-                        <div class="col-md-6"><label class="form-label mb-1">Tổng Giá Trị HĐ (Tự tính)</label><input type="text" id="hd_val" class="form-control bg-light fw-bold text-success" readonly placeholder="$ 0 USD"></div>
-                        <div class="col-md-6"><label class="form-label mb-1">Hạn Giao Hàng</label><input type="date" id="hd_date" class="form-control" required></div>
-                        <div class="col-12 mt-3"><button type="submit" class="btn btn-warning text-dark fw-bold w-100">Lưu Hợp Đồng Vào Hệ Thống</button></div>
+                        <div class="col-md-4"><label class="form-label mb-1">Loại Hình / Mục Đích</label><input type="text" id="hd_type" class="form-control" placeholder="FOB / CM / Mua vải..." required></div>
+                        <div class="col-md-4"><label class="form-label mb-1">Số Lượng / Khối Lượng</label><input type="text" id="hd_qty" class="form-control" placeholder="VD: 50,000 Pcs / 10,000m" required></div>
+                        <div class="col-md-4"><label class="form-label mb-1">Tổng Giá Trị Hợp Đồng</label><input type="text" id="hd_val" class="form-control fw-bold text-success" placeholder="VD: $150,000 USD hoặc 300,000,000 VNĐ" required></div>
+                        <div class="col-md-6"><label class="form-label mb-1">Hạn Hoàn Thành / Giao Hàng</label><input type="date" id="hd_date" class="form-control" required></div>
+                        <div class="col-12 mt-3"><button type="submit" class="btn fw-bold w-100 text-white" id="btnSubmitContract">Lưu Hợp Đồng</button></div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 2: TẠO PHỤ LỤC HỢP ĐỒNG -->
+    <!-- MODAL 2: THÊM ĐỐI TÁC MỚI -->
+    <div class="modal fade" id="addPartnerModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success text-white py-2">
+                    <h6 class="modal-title fw-bold"><i class="fa-solid fa-user-plus me-1"></i>Thêm Đối Tác Mới</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAddPartner" class="row g-2">
+                        <div class="col-6"><label class="form-label mb-1">Mã Đối Tác</label><input type="text" id="part_code" class="form-control" placeholder="DT-MAY10" required></div>
+                        <div class="col-6"><label class="form-label mb-1">Phân Loại</label>
+                            <select id="part_type" class="form-select">
+                                <option value="Khách Hàng (Đầu Ra)">Khách Hàng (Đầu Ra)</option>
+                                <option value="Nhà Cung Cấp (Đầu Vào)">Nhà Cung Cấp (Đầu Vào)</option>
+                            </select>
+                        </div>
+                        <div class="col-12"><label class="form-label mb-1">Tên Công Ty / Đơn Vị</label><input type="text" id="part_name" class="form-control" required></div>
+                        <div class="col-6"><label class="form-label mb-1">Số Điện Thoại</label><input type="text" id="part_phone" class="form-control"></div>
+                        <div class="col-6"><label class="form-label mb-1">Mã Số Thuế</label><input type="text" id="part_tax" class="form-control"></div>
+                        <div class="col-12"><label class="form-label mb-1">Địa Chỉ</label><input type="text" id="part_address" class="form-control"></div>
+                        <div class="col-12 mt-3"><button type="submit" class="btn btn-success fw-bold w-100">Lưu Đối Tác</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: THÊM PHỤ LỤC HỢP ĐỒNG -->
     <div class="modal fade" id="addAppendixModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
@@ -323,12 +435,12 @@
                 </div>
                 <div class="modal-body">
                     <form id="formAddAppendix" class="row g-2">
-                        <div class="col-12"><label class="form-label mb-1">Thuộc Hợp Đồng</label><input type="text" id="app_hd_code" class="form-control bg-light fw-bold text-primary" readonly></div>
-                        <div class="col-6"><label class="form-label mb-1">Số Phụ Lục</label><input type="text" id="app_code" class="form-control" placeholder="VD: PL-01" required></div>
-                        <div class="col-6"><label class="form-label mb-1">Ngày Ký Phụ Lục</label><input type="date" id="app_date" class="form-control" required></div>
-                        <div class="col-12"><label class="form-label mb-1">Nội Dung Điều Chỉnh</label><input type="text" id="app_desc" class="form-control" placeholder="VD: Tăng số lượng áo Polo màu Xanh..." required></div>
-                        <div class="col-6"><label class="form-label mb-1">Số Lượng Điều Chỉnh (Pcs)</label><input type="number" id="app_qty" class="form-control" placeholder="+2,000 hoặc -1,000"></div>
-                        <div class="col-6"><label class="form-label mb-1">Giá Trị Điều Chỉnh ($ USD)</label><input type="number" id="app_val" class="form-control" placeholder="+7,000"></div>
+                        <div class="col-12"><label class="form-label mb-1">Hợp Đồng</label><input type="text" id="app_hd_code" class="form-control bg-light fw-bold text-primary" readonly></div>
+                        <div class="col-6"><label class="form-label mb-1">Số Phụ Lục</label><input type="text" id="app_code" class="form-control" placeholder="PL-01" required></div>
+                        <div class="col-6"><label class="form-label mb-1">Ngày Ký</label><input type="date" id="app_date" class="form-control" required></div>
+                        <div class="col-12"><label class="form-label mb-1">Nội Dung Điều Chỉnh</label><input type="text" id="app_desc" class="form-control" required></div>
+                        <div class="col-6"><label class="form-label mb-1">Khối Lượng ĐC</label><input type="text" id="app_qty" class="form-control" placeholder="+2,000 Pcs"></div>
+                        <div class="col-6"><label class="form-label mb-1">Giá Trị Điều Chỉnh</label><input type="text" id="app_val" class="form-control" placeholder="+$7,000 USD"></div>
                         <div class="col-12 mt-3"><button type="submit" class="btn btn-primary fw-bold w-100">Cập Nhật Phụ Lục</button></div>
                     </form>
                 </div>
@@ -340,17 +452,21 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Mẫu dữ liệu Phụ lục
         const sampleAppendixData = {
-            'HĐ-2026/GARCO-01': [
-                { code: 'PL-01/GARCO', date: '15/08/2026', desc: 'Bổ sung 5,000 áo Polo màu Trắng', qty: '+5,000 Pcs', val: '+$ 17,500 USD', new_date: '30/10/2026' }
+            'HĐ-OUT-2026/GARCO': [
+                { code: 'PL-01/GARCO', date: '15/08/2026', desc: 'Bổ sung 5,000 áo Polo màu Trắng', qty: '+5,000 Pcs', val: '+$ 17,500 USD' }
             ]
         };
 
+        const partnersList = [
+            { code: 'DT-MAY10', name: 'Tổng Công Ty May 10', type: 'Khách Hàng (Đầu Ra)' },
+            { code: 'DT-NDTEXTILE', name: 'Cty Vải Dệt Nam Định', type: 'Nhà Cung Cấp (Đầu Vào)' }
+        ];
+
         $(document).ready(function() {
             loadCustomHeaderTitles();
+            syncPartnerDropdown();
 
-            // Chỉnh sửa tiêu đề bảng trực tiếp
             $('.editable-th').on('dblclick click', function() {
                 let thElem = $(this);
                 let currentText = thElem.find('.th-text').text().trim();
@@ -363,14 +479,6 @@
                         localStorage.setItem('ERP_HEADER_' + storageKey, newTitle.trim().toUpperCase());
                     }
                 }
-            });
-
-            // Tìm kiếm nhanh Hợp đồng
-            $('#searchContract').on('keyup', function() {
-                let value = $(this).val().toLowerCase();
-                $('#contract-list tr').filter(function() {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-                });
             });
         });
 
@@ -394,15 +502,31 @@
             if(titleText) $('#page-heading').text(titleText.toUpperCase());
         }
 
-        // Tự động tính giá trị Hợp đồng khi nhập SL và Giá
-        function calcHdTotal() {
-            let qty = parseFloat($('#hd_qty').val()) || 0;
-            let price = parseFloat($('#hd_price').val()) || 0;
-            let total = qty * price;
-            $('#hd_val').val('$ ' + total.toLocaleString('en-US') + ' USD');
+        function setContractCategory(catType) {
+            $('#hd_category_type').val(catType);
+            syncPartnerDropdown(catType);
+
+            if(catType === 'OUTBOUND') {
+                $('#modalContractHeader').removeClass('bg-danger').addClass('bg-primary');
+                $('#modalContractTitle').html('<i class="fa-solid fa-file-export me-1"></i>Tạo Hợp Đồng Đầu Ra (Bán Hàng)');
+                $('#btnSubmitContract').removeClass('btn-danger').addClass('btn-primary').text('Lưu HĐ Đầu Ra');
+            } else {
+                $('#modalContractHeader').removeClass('bg-primary').addClass('bg-danger');
+                $('#modalContractTitle').html('<i class="fa-solid fa-file-import me-1"></i>Tạo Hợp Đồng Đầu Vào (Mua VT / Gia công)');
+                $('#btnSubmitContract').removeClass('btn-primary').addClass('btn-danger').text('Lưu HĐ Đầu Vào');
+            }
         }
 
-        // Xem phụ lục của Hợp đồng
+        function syncPartnerDropdown(catType) {
+            let select = $('#hd_partner');
+            select.empty();
+            partnersList.forEach(p => {
+                if(!catType || (catType === 'OUTBOUND' && p.type.includes('Khách Hàng')) || (catType === 'INBOUND' && p.type.includes('Nhà Cung Cấp'))) {
+                    select.append(`<option value="${p.name}">${p.name} (${p.code})</option>`);
+                }
+            });
+        }
+
         function showAppendix(hdCode) {
             $('#current-selected-hd').text(hdCode);
             let body = $('#appendix-list-body');
@@ -410,7 +534,7 @@
 
             let items = sampleAppendixData[hdCode] || [];
             if(items.length === 0) {
-                body.append(`<tr><td colspan="6" class="text-center text-muted py-3">Chưa có phụ lục điều chỉnh nào cho hợp đồng này</td></tr>`);
+                body.append(`<tr><td colspan="5" class="text-center text-muted py-3">Chưa có phụ lục điều chỉnh nào cho hợp đồng này</td></tr>`);
             } else {
                 items.forEach(item => {
                     body.append(`
@@ -420,7 +544,6 @@
                             <td>${item.desc}</td>
                             <td class="fw-bold text-success">${item.qty}</td>
                             <td class="fw-bold text-success">${item.val}</td>
-                            <td>${item.new_date}</td>
                         </tr>
                     `);
                 });
@@ -428,34 +551,37 @@
             $('#appendix-detail-card').slideDown(200);
         }
 
-        // Mở Modal thêm Phụ lục
         function openAddAppendix(hdCode) {
             $('#app_hd_code').val(hdCode);
             let modal = new bootstrap.Modal(document.getElementById('addAppendixModal'));
             modal.show();
         }
 
-        // Form Submit Hợp đồng mới
+        // Submit Hợp Đồng
         $('#formAddContract').submit(function(e) {
             e.preventDefault();
+            let catType = $('#hd_category_type').val();
             let code = $('#hd_code').val();
-            let cust = $('#hd_cust').val();
+            let partner = $('#hd_partner').val();
             let type = $('#hd_type').val();
-            let qty = parseFloat($('#hd_qty').val()||0).toLocaleString('en-US');
+            let qty = $('#hd_qty').val();
             let val = $('#hd_val').val();
             let date = $('#hd_date').val();
 
-            $('#contract-list').append(`
+            let targetList = (catType === 'OUTBOUND') ? '#outbound-hd-list' : '#inbound-hd-list';
+            let badgeColor = (catType === 'OUTBOUND') ? 'bg-info text-dark' : 'bg-secondary';
+            let codeColor = (catType === 'OUTBOUND') ? 'text-primary' : 'text-danger';
+
+            $(targetList).append(`
                 <tr>
-                    <td class="fw-bold text-primary">${code}</td>
-                    <td class="fw-medium">${cust}</td>
-                    <td><span class="badge bg-info text-dark">${type}</span></td>
-                    <td class="fw-bold">${qty} Pcs</td>
-                    <td class="fw-bold text-success">${val}</td>
+                    <td class="fw-bold ${codeColor}">${code}</td>
+                    <td class="fw-medium">${partner}</td>
+                    <td><span class="badge ${badgeColor}">${type}</span></td>
+                    <td class="fw-bold">${qty}</td>
+                    <td class="fw-bold ${codeColor}">${val}</td>
                     <td>${date}</td>
-                    <td><span class="badge bg-warning text-dark">Mới Tạo</span></td>
                     <td class="text-center">
-                        <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="showAppendix('${code}')"><i class="fa-solid fa-paperclip me-1"></i>Xem Phụ Lục (0)</button>
+                        <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="showAppendix('${code}')"><i class="fa-solid fa-paperclip me-1"></i>Phụ Lục (0)</button>
                         <button class="btn btn-outline-warning btn-sm py-0 px-2 ms-1" onclick="openAddAppendix('${code}')">+ Phụ Lục</button>
                     </td>
                 </tr>
@@ -465,7 +591,36 @@
             this.reset();
         });
 
-        // Form Submit Phụ lục
+        // Submit Đối Tác
+        $('#formAddPartner').submit(function(e) {
+            e.preventDefault();
+            let code = $('#part_code').val();
+            let name = $('#part_name').val();
+            let type = $('#part_type').val();
+            let phone = $('#part_phone').val();
+            let tax = $('#part_tax').val();
+            let address = $('#part_address').val();
+
+            partnersList.push({ code: code, name: name, type: type });
+
+            let badgeClass = type.includes('Khách Hàng') ? 'bg-primary' : 'bg-danger';
+
+            $('#partner-list-body').append(`
+                <tr>
+                    <td class="fw-bold text-dark">${code}</td>
+                    <td class="fw-bold text-primary">${name}</td>
+                    <td><span class="badge ${badgeClass}">${type}</span></td>
+                    <td>${phone}</td>
+                    <td>${address}</td>
+                    <td>${tax}</td>
+                </tr>
+            `);
+
+            bootstrap.Modal.getInstance(document.getElementById('addPartnerModal')).hide();
+            this.reset();
+        });
+
+        // Submit Phụ Lục
         $('#formAddAppendix').submit(function(e) {
             e.preventDefault();
             let hdCode = $('#app_hd_code').val();
@@ -479,15 +634,7 @@
                 sampleAppendixData[hdCode] = [];
             }
 
-            sampleAppendixData[hdCode].push({
-                code: appCode,
-                date: appDate,
-                desc: desc,
-                qty: (qty >= 0 ? '+' : '') + parseFloat(qty||0).toLocaleString('en-US') + ' Pcs',
-                val: (val >= 0 ? '+$ ' : '-$ ') + Math.abs(val||0).toLocaleString('en-US') + ' USD',
-                new_date: 'Theo HĐ'
-            });
-
+            sampleAppendixData[hdCode].push({ code: appCode, date: appDate, desc: desc, qty: qty, val: val });
             bootstrap.Modal.getInstance(document.getElementById('addAppendixModal')).hide();
             showAppendix(hdCode);
             this.reset();
