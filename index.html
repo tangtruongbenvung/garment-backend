@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garment ERP Cloud - Master Data Module</title>
+    <title>Garment ERP Cloud System</title>
     <!-- Bootstrap 5 & FontAwesome -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,7 +11,7 @@
     
     <style>
         :root {
-            --sidebar-w: 230px;
+            --sidebar-w: 250px;
             --sidebar-bg: #0f172a;
             --sidebar-active: #2563eb;
             --sidebar-hover: #1e293b;
@@ -47,7 +47,7 @@
         }
 
         #sidebar .brand {
-            padding: 10px 12px;
+            padding: 12px 14px;
             border-bottom: 1px solid #1e293b;
             background: #090d16;
             position: sticky; top: 0; z-index: 10;
@@ -64,7 +64,7 @@
 
         #sidebar .nav-link {
             color: var(--sidebar-text);
-            padding: 5px 10px;
+            padding: 6px 10px;
             font-weight: 500;
             border-radius: 4px;
             margin: 1px 6px;
@@ -76,17 +76,7 @@
 
         #sidebar .nav-link:hover { color: #f8fafc; background-color: var(--sidebar-hover); }
         #sidebar .nav-link.active { color: var(--sidebar-text-active); background-color: var(--sidebar-active); }
-        #sidebar .nav-link .menu-icon { width: 18px; font-size: 12px; text-align: center; margin-right: 6px; }
-
-        #sidebar .submenu {
-            display: none;
-            background: #1e293b;
-            border-radius: 4px;
-            margin: 2px 6px;
-            padding: 2px 0;
-        }
-
-        #sidebar .submenu .nav-link { margin: 1px 4px; padding: 4px 8px; font-size: 10.5px; color: #cbd5e1; }
+        #sidebar .nav-link .menu-icon { width: 18px; font-size: 12px; text-align: center; margin-right: 8px; }
 
         #main-content {
             margin-left: var(--sidebar-w);
@@ -129,34 +119,46 @@
     <!-- SIDEBAR NAVIGATION -->
     <div id="sidebar">
         <div class="brand d-flex align-items-center">
-            <div class="bg-primary text-white rounded me-2 d-flex align-items-center justify-content-center" style="width: 26px; height: 26px;">
-                <i class="fa-solid fa-shirt fs-7"></i>
+            <div class="bg-primary text-white rounded me-2 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                <i class="fa-solid fa-shirt fs-6"></i>
             </div>
             <div>
                 <h6 class="fw-bold text-white mb-0" style="font-size: 12px;">GARMENT ERP</h6>
-                <small class="text-muted" style="font-size: 9px;">Quản Lý May Mặc Cloud</small>
+                <small class="text-muted" style="font-size: 9px;">Hệ Thống Quản Lý May Mặc</small>
             </div>
         </div>
 
-        <div class="py-1">
-            <div class="menu-category">DỮ LIỆU NGUỒN (MASTER DATA)</div>
-            
-            <a class="nav-link active" onclick="switchMainTab('master-congdoan-section', this)">
-                <div><i class="fa-solid fa-list-check menu-icon text-warning"></i><span>Thư Viện Công Đoạn</span></div>
-            </a>
-            <a class="nav-link" onclick="switchMainTab('master-kh-section', this)">
-                <div><i class="fa-solid fa-handshake menu-icon text-info"></i><span>Đối Tác & Xưởng GC</span></div>
-            </a>
-            <a class="nav-link" onclick="switchMainTab('master-nhansu-section', this)">
-                <div><i class="fa-solid fa-users-gear menu-icon text-danger"></i><span>Chuyền May & Nhân Sự</span></div>
+        <div class="py-2">
+            <div class="menu-category">HỆ THỐNG QUẢN LÝ</div>
+
+            <!-- 1. Trang tổng quan -->
+            <a class="nav-link active" onclick="switchMainTab('dashboard-section', 'Trang Tổng Quan System', this)">
+                <div><i class="fa-solid fa-chart-line menu-icon text-info"></i><span>Trang Tổng Quan</span></div>
             </a>
 
-            <div class="menu-category">QUẢN LÝ VẬN HÀNH</div>
-            <a class="nav-link" onclick="switchMainTab('contract-section', this)">
-                <div><i class="fa-solid fa-file-contract menu-icon text-primary"></i><span>Hợp Đồng & Phụ Lục</span></div>
+            <!-- 2. Quản lý hợp đồng và phụ lục -->
+            <a class="nav-link" onclick="switchMainTab('contract-section', 'Quản Lý Hợp Đồng & Phụ Lục Hợp Đồng', this)">
+                <div><i class="fa-solid fa-file-contract menu-icon text-warning"></i><span>Quản Lý Hợp Đồng & Phụ Lục</span></div>
             </a>
-            <a class="nav-link" onclick="switchMainTab('po-section', this)">
-                <div><i class="fa-solid fa-boxes-stacked menu-icon text-success"></i><span>Đơn Hàng PO</span></div>
+
+            <!-- 3. Quản lý Nhân sự & Master Data -->
+            <a class="nav-link" onclick="switchMainTab('hr-section', 'Quản Lý Nhân Sự & Dữ Liệu Nguồn', this)">
+                <div><i class="fa-solid fa-users-gear menu-icon text-danger"></i><span>Quản Lý Nhân Sự & Data</span></div>
+            </a>
+
+            <!-- 4. Quản lý sản xuất -->
+            <a class="nav-link" onclick="switchMainTab('production-section', 'Quản Lý Sản Xuất & Tiến Độ Chuyền', this)">
+                <div><i class="fa-solid fa-industry menu-icon text-success"></i><span>Quản Lý Sản Xuất</span></div>
+            </a>
+
+            <!-- 5. Quản lý tài chính -->
+            <a class="nav-link" onclick="switchMainTab('finance-section', 'Quản Lý Tài Chính & Chi Phí CM/FOB', this)">
+                <div><i class="fa-solid fa-sack-dollar menu-icon text-primary"></i><span>Quản Lý Tài Chính</span></div>
+            </a>
+
+            <!-- 6. Quản lý quyền truy cập -->
+            <a class="nav-link" onclick="switchMainTab('access-section', 'Quản Lý Quyền Truy Cập & Phân Quyền', this)">
+                <div><i class="fa-solid fa-shield-halved menu-icon text-secondary"></i><span>Quản Lý Quyền Truy Cập</span></div>
             </a>
         </div>
     </div>
@@ -165,16 +167,56 @@
     <div id="main-content">
         <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
             <div>
-                <h6 class="fw-bold text-dark mb-0" id="page-heading">PHÂN HỆ 1: QUẢN LÝ DỮ LIỆU NGUỒN (MASTER DATA)</h6>
-                <small class="text-muted" style="font-size: 10px;">💡 Double-click tiêu đề cột bất kỳ để tùy chỉnh tên trực tiếp</small>
+                <h6 class="fw-bold text-dark mb-0" id="page-heading">TRANG TỔNG QUAN SYSTEM</h6>
+                <small class="text-muted" style="font-size: 10px;">💡 Click đúp tiêu đề cột bất kỳ ở các bảng để tùy chỉnh tên trực tiếp</small>
+            </div>
+            <span class="badge bg-success"><i class="fa-solid fa-circle me-1"></i>Hệ thống Online</span>
+        </div>
+
+        <!-- 1. PHÂN HỆ: TRANG TỔNG QUAN -->
+        <div id="dashboard-section" class="tab-content-panel">
+            <div class="row g-2 mb-3">
+                <div class="col-md-3">
+                    <div class="card-custom border-start border-primary border-4 py-2">
+                        <small class="text-muted fw-bold">TỔNG ĐƠN HÀNG (PO)</small>
+                        <h4 class="fw-bold mb-0 text-primary mt-1">24 Đơn</h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card-custom border-start border-success border-4 py-2">
+                        <small class="text-muted fw-bold">SẢN LƯỢNG MAY TRONG THÁNG</small>
+                        <h4 class="fw-bold mb-0 text-success mt-1">128,500 Pcs</h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card-custom border-start border-warning border-4 py-2">
+                        <small class="text-muted fw-bold">HIỆU SUẤT CHUYỀN MAY (SAH)</small>
+                        <h4 class="fw-bold mb-0 text-warning mt-1">87.5 %</h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card-custom border-start border-danger border-4 py-2">
+                        <small class="text-muted fw-bold">TỔNG LƯƠNG SẢN PHẨM</small>
+                        <h4 class="fw-bold mb-0 text-danger mt-1">850M VNĐ</h4>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- TAB 1: THƯ VIỆN CÔNG ĐOẠN MAY -->
-        <div id="master-congdoan-section" class="tab-content-panel card-custom">
+        <!-- 2. PHÂN HỆ: QUẢN LÝ HỢP ĐỒNG VÀ PHỤ LỤC -->
+        <div id="contract-section" class="tab-content-panel card-custom" style="display: none;">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-scissors me-1 text-warning"></i>THƯ VIỆN CÔNG ĐOẠN & ĐƠN GIÁ CÔNG</h6>
-                <button class="btn btn-warning btn-sm text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#addOpModal">+ Thêm Công Đoạn</button>
+                <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-file-contract me-1 text-warning"></i>DANH SÁCH HỢP ĐỒNG & PHỤ LỤC</h6>
+                <button class="btn btn-warning btn-sm text-dark fw-bold">+ Tạo Hợp Đồng Mới</button>
+            </div>
+            <p class="text-muted">Đang kết nối dữ liệu Hợp đồng & Phụ lục...</p>
+        </div>
+
+        <!-- 3. PHÂN HỆ: QUẢN LÝ NHÂN SỰ & MASTER DATA -->
+        <div id="hr-section" class="tab-content-panel card-custom" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-users me-1 text-danger"></i>THƯ VIỆN CÔNG ĐOẠN & DỮ LIỆU NHÂN SỰ</h6>
+                <button class="btn btn-danger btn-sm text-white fw-bold" data-bs-toggle="modal" data-bs-target="#addOpModal">+ Thêm Công Đoạn</button>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -183,10 +225,8 @@
                             <th class="editable-th" data-key="th_op_code"><span class="th-text">MÃ CÔNG ĐOẠN</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                             <th class="editable-th" data-key="th_op_name"><span class="th-text">TÊN CÔNG ĐOẠN MAY</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                             <th class="editable-th" data-key="th_op_cat"><span class="th-text">CHỦNG LOẠI SP</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_op_mach"><span class="th-text">LOẠI MÁY ĐANH</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_op_sam"><span class="th-text">THỜI GIAN SAM (GIÂY)</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_op_sam"><span class="th-text">THỜI GIAN SAM (S)</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                             <th class="editable-th" data-key="th_op_price"><span class="th-text">ĐƠN GIÁ CÔNG (VNĐ)</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_op_level"><span class="th-text">BẬC THỢ</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                         </tr>
                     </thead>
                     <tbody id="op-list">
@@ -194,151 +234,49 @@
                             <td class="fw-bold text-primary">CD-POLO-01</td>
                             <td class="fw-medium">Mổ nẹp áo Polo</td>
                             <td><span class="badge bg-light text-dark border">Áo Polo</span></td>
-                            <td>Máy 1 kim tra nẹp</td>
                             <td class="fw-bold">45s</td>
                             <td class="fw-bold text-success">1,125 VNĐ</td>
-                            <td><span class="badge bg-danger">Bậc 4 (Giỏi)</span></td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold text-primary">CD-POLO-02</td>
-                            <td class="fw-medium">Tra cổ vào thân</td>
-                            <td><span class="badge bg-light text-dark border">Áo Polo</span></td>
-                            <td>Máy vắt sổ 4 chỉ</td>
-                            <td class="fw-bold">30s</td>
-                            <td class="fw-bold text-success">750 VNĐ</td>
-                            <td><span class="badge bg-warning text-dark">Bậc 3</span></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- TAB 2: QUẢN LÝ KHÁCH HÀNG & XƯỞNG GIA CÔNG -->
-        <div id="master-kh-section" class="tab-content-panel card-custom" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-building me-1 text-info"></i>DANH SÁCH KHÁCH HÀNG & XƯỞNG GIA CÔNG (XGC)</h6>
-                <button class="btn btn-info btn-sm text-white fw-bold" data-bs-toggle="modal" data-bs-target="#addPartnerModal">+ Thêm Đối Tác</button>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th class="editable-th" data-key="th_p_code"><span class="th-text">MÃ ĐỐI TÁC</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_p_name"><span class="th-text">TÊN CÔNG TY / XƯỞNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_p_role"><span class="th-text">VAI TRÒ</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_p_cap"><span class="th-text">NĂNG LỰC (PCS/THÁNG)</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_p_contact"><span class="th-text">NGƯỜI LIÊN HỆ</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_p_status"><span class="th-text">TRẠNG THÁI</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                        </tr>
-                    </thead>
-                    <tbody id="partner-list">
-                        <tr>
-                            <td class="fw-bold text-dark">KH-GARCO10</td>
-                            <td class="fw-medium">Tổng Công Ty May 10</td>
-                            <td><span class="badge bg-primary">Khách Hàng FOB</span></td>
-                            <td class="fw-bold">100,000 Pcs</td>
-                            <td>Mr. Nam (0988.xxx.xxx)</td>
-                            <td><span class="badge bg-success bg-opacity-10 text-success">Đang Hợp Tác</span></td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold text-dark">XGC-HAIDUONG</td>
-                            <td class="fw-medium">Xưởng Gia Công May Hải Dương</td>
-                            <td><span class="badge bg-secondary">Xưởng GC Ngoại</span></td>
-                            <td class="fw-bold">30,000 Pcs</td>
-                            <td>Chị Hoa (0912.xxx.xxx)</td>
-                            <td><span class="badge bg-warning bg-opacity-10 text-dark">Tiềm Năng</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <!-- 4. PHÂN HỆ: QUẢN LÝ SẢN XUẤT -->
+        <div id="production-section" class="tab-content-panel card-custom" style="display: none;">
+            <h6 class="fw-bold mb-2 text-dark fs-7"><i class="fa-solid fa-industry me-1 text-success"></i>TIẾN ĐỘ SẢN XUẤT CHUYỀN MAY</h6>
+            <p class="text-muted">Đang kết nối dữ liệu Kế hoạch sản xuất & Tiến độ chuyền...</p>
         </div>
 
-        <!-- TAB 3: CHUYỀN MAY & NHÂN SỰ -->
-        <div id="master-nhansu-section" class="tab-content-panel card-custom" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-users me-1 text-danger"></i>DANH SÁCH CÔNG NHÂN & CHUYỀN MAY</h6>
-                <button class="btn btn-danger btn-sm text-white fw-bold" data-bs-toggle="modal" data-bs-target="#addWorkerModal">+ Thêm Công Nhân</button>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th class="editable-th" data-key="th_w_id"><span class="th-text">MÃ NV</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_w_name"><span class="th-text">HỌ VÀ TÊN</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_w_line"><span class="th-text">CHUYỀN SẢN XUẤT</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_w_skill"><span class="th-text">TAY NGHỀ CHÍNH</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_w_level"><span class="th-text">BẬC THỢ</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                            <th class="editable-th" data-key="th_w_status"><span class="th-text">TRẠNG THÁI</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                        </tr>
-                    </thead>
-                    <tbody id="worker-list">
-                        <tr>
-                            <td class="fw-bold text-dark">NV-0102</td>
-                            <td class="fw-medium">Nguyễn Thị Lan</td>
-                            <td><span class="badge bg-info text-dark">Chuyền May 01</span></td>
-                            <td>Tra cổ & Tra tra tay</td>
-                            <td><span class="badge bg-danger">Bậc 4</span></td>
-                            <td><span class="badge bg-success bg-opacity-10 text-success">Đang Làm Việc</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <!-- 5. PHÂN HỆ: QUẢN LÝ TÀI CHÍNH -->
+        <div id="finance-section" class="tab-content-panel card-custom" style="display: none;">
+            <h6 class="fw-bold mb-2 text-dark fs-7"><i class="fa-solid fa-sack-dollar me-1 text-primary"></i>QUẢN LÝ TÀI CHÍNH & TÍNH GIÁ THÀNH</h6>
+            <p class="text-muted">Đang kết nối dữ liệu Tài chính & Giá thành CM/FOB...</p>
+        </div>
+
+        <!-- 6. PHÂN HỆ: QUẢN LÝ QUYỀN TRUY CẬP -->
+        <div id="access-section" class="tab-content-panel card-custom" style="display: none;">
+            <h6 class="fw-bold mb-2 text-dark fs-7"><i class="fa-solid fa-shield-halved me-1 text-secondary"></i>PHÂN QUYỀN NGUYÊN TẮC VÀ TÀI KHOẢN</h6>
+            <p class="text-muted">Đang kết nối dữ liệu Phân quyền người dùng...</p>
         </div>
     </div>
 
-    <!-- MODAL 1: THÊM CÔNG ĐOẠN MAY -->
+    <!-- MODAL THÊM CÔNG ĐOẠN (Ví dụ) -->
     <div class="modal fade" id="addOpModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-warning text-dark py-2">
-                    <h6 class="modal-title fw-bold">Khai Báo Công Đoạn May Mới</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formAddOp" class="row g-2">
-                        <div class="col-6"><label class="form-label mb-1">Mã Công Đoạn</label><input type="text" id="op_code" class="form-control" placeholder="VD: CD-01" required></div>
-                        <div class="col-6"><label class="form-label mb-1">Chủng Loại SP</label><input type="text" id="op_cat" class="form-control" placeholder="Polo, Jacket..." required></div>
-                        <div class="col-12"><label class="form-label mb-1">Tên Công Đoạn May</label><input type="text" id="op_name" class="form-control" placeholder="VD: Tra dây kéo khóa" required></div>
-                        <div class="col-6"><label class="form-label mb-1">Loại Máy Sử Dụng</label><input type="text" id="op_mach" class="form-control" placeholder="Máy 1 kim / 2 kim..." required></div>
-                        <div class="col-6"><label class="form-label mb-1">Bậc Thợ Yêu Cầu</label>
-                            <select id="op_level" class="form-select">
-                                <option value="Bậc 1">Bậc 1 (Mới học)</option>
-                                <option value="Bậc 2">Bậc 2 (Trung bình)</option>
-                                <option value="Bậc 3" selected>Bậc 3 (Khá)</option>
-                                <option value="Bậc 4">Bậc 4 (Giỏi)</option>
-                            </select>
-                        </div>
-                        <div class="col-6"><label class="form-label mb-1">Thời gian SAM (Giây)</label><input type="number" id="op_sam" class="form-control" placeholder="VD: 30" oninput="calcOpPrice()" required></div>
-                        <div class="col-6"><label class="form-label mb-1">Đơn Giá Công (Tự tính)</label><input type="text" id="op_price" class="form-control bg-light fw-bold text-success" readonly placeholder="0 VNĐ"></div>
-                        <div class="col-12 mt-3"><button type="submit" class="btn btn-warning text-dark fw-bold w-100">Lưu Vào Thư Viện Công Đoạn</button></div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL 2: THÊM ĐỐI TÁC / XƯỞNG GC -->
-    <div class="modal fade" id="addPartnerModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-info text-white py-2">
-                    <h6 class="modal-title fw-bold">Thêm Khách Hàng / Xưởng Gia Công</h6>
+                <div class="modal-header bg-danger text-white py-2">
+                    <h6 class="modal-title fw-bold">Thêm Công Đoạn Mới</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formAddPartner" class="row g-2">
-                        <div class="col-6"><label class="form-label mb-1">Mã Đối Tác</label><input type="text" id="p_code" class="form-control" placeholder="VD: KH-NIKE" required></div>
-                        <div class="col-6"><label class="form-label mb-1">Vai Trò</label>
-                            <select id="p_role" class="form-select">
-                                <option value="Khách Hàng FOB">Khách Hàng FOB</option>
-                                <option value="Khách Hàng CM">Khách Hàng CM</option>
-                                <option value="Xưởng GC Ngoại">Xưởng Gia Công Ngoại</option>
-                            </select>
-                        </div>
-                        <div class="col-12"><label class="form-label mb-1">Tên Tên Công Ty / Xưởng</label><input type="text" id="p_name" class="form-control" required></div>
-                        <div class="col-6"><label class="form-label mb-1">Năng Lực (Pcs/Tháng)</label><input type="number" id="p_cap" class="form-control" placeholder="50000"></div>
-                        <div class="col-6"><label class="form-label mb-1">Người Liên Hệ / SĐT</label><input type="text" id="p_contact" class="form-control" placeholder="Tên - SĐT"></div>
-                        <div class="col-12 mt-3"><button type="submit" class="btn btn-info text-white fw-bold w-100">Lưu Đối Tác Mới</button></div>
+                    <form id="formAddOp" class="row g-2">
+                        <div class="col-6"><label class="form-label mb-1">Mã Công Đoạn</label><input type="text" id="op_code" class="form-control" required></div>
+                        <div class="col-6"><label class="form-label mb-1">Chủng Loại SP</label><input type="text" id="op_cat" class="form-control" required></div>
+                        <div class="col-12"><label class="form-label mb-1">Tên Công Đoạn May</label><input type="text" id="op_name" class="form-control" required></div>
+                        <div class="col-6"><label class="form-label mb-1">Thời gian SAM (Giây)</label><input type="number" id="op_sam" class="form-control" oninput="calcOpPrice()" required></div>
+                        <div class="col-6"><label class="form-label mb-1">Đơn Giá Công</label><input type="text" id="op_price" class="form-control bg-light fw-bold text-success" readonly placeholder="0 VNĐ"></div>
+                        <div class="col-12 mt-3"><button type="submit" class="btn btn-danger w-100 fw-bold">Lưu Công Đoạn</button></div>
                     </form>
                 </div>
             </div>
@@ -349,12 +287,11 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const SEC_PRICE = 25; // Quy đổi mặc định 1 giây SAM = 25 VNĐ
+        const SEC_PRICE = 25;
 
         $(document).ready(function() {
             loadCustomHeaderTitles();
 
-            // Chỉnh sửa tiêu đề trực tiếp
             $('.editable-th').on('dblclick click', function() {
                 let thElem = $(this);
                 let currentText = thElem.find('.th-text').text().trim();
@@ -382,28 +319,25 @@
             });
         }
 
-        function switchMainTab(sectionId, element) {
+        function switchMainTab(sectionId, titleText, element) {
             $('.tab-content-panel').hide();
             $('#sidebar .nav-link').removeClass('active');
             if(element) $(element).addClass('active');
             if($('#' + sectionId).length > 0) $('#' + sectionId).fadeIn(150);
+            if(titleText) $('#page-heading').text(titleText.toUpperCase());
         }
 
-        // Tự động tính đơn giá công đoạn khi gõ số giây SAM
         function calcOpPrice() {
             let sam = parseFloat($('#op_sam').val()) || 0;
             let price = sam * SEC_PRICE;
             $('#op_price').val(price.toLocaleString('vi-VN') + ' VNĐ');
         }
 
-        // Submit form Công đoạn
         $('#formAddOp').submit(function(e) {
             e.preventDefault();
             let code = $('#op_code').val();
             let name = $('#op_name').val();
             let cat = $('#op_cat').val();
-            let mach = $('#op_mach').val();
-            let level = $('#op_level').val();
             let sam = $('#op_sam').val();
             let price = (parseFloat(sam) * SEC_PRICE).toLocaleString('vi-VN');
 
@@ -412,38 +346,12 @@
                     <td class="fw-bold text-primary">${code}</td>
                     <td class="fw-medium">${name}</td>
                     <td><span class="badge bg-light text-dark border">${cat}</span></td>
-                    <td>${mach}</td>
                     <td class="fw-bold">${sam}s</td>
                     <td class="fw-bold text-success">${price} VNĐ</td>
-                    <td><span class="badge bg-secondary">${level}</span></td>
                 </tr>
             `);
 
             bootstrap.Modal.getInstance(document.getElementById('addOpModal')).hide();
-            this.reset();
-        });
-
-        // Submit form Đối tác
-        $('#formAddPartner').submit(function(e) {
-            e.preventDefault();
-            let code = $('#p_code').val();
-            let name = $('#p_name').val();
-            let role = $('#p_role').val();
-            let cap = parseFloat($('#p_cap').val()||0).toLocaleString('en-US');
-            let contact = $('#p_contact').val();
-
-            $('#partner-list').append(`
-                <tr>
-                    <td class="fw-bold text-dark">${code}</td>
-                    <td class="fw-medium">${name}</td>
-                    <td><span class="badge bg-primary">${role}</span></td>
-                    <td class="fw-bold">${cap} Pcs</td>
-                    <td>${contact}</td>
-                    <td><span class="badge bg-success bg-opacity-10 text-success">Đang Hoạt Động</span></td>
-                </tr>
-            `);
-
-            bootstrap.Modal.getInstance(document.getElementById('addPartnerModal')).hide();
             this.reset();
         });
     </script>
