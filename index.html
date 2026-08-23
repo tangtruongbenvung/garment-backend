@@ -12,7 +12,7 @@
     
     <style>
         :root {
-            --sidebar-w: 280px;
+            --sidebar-w: 250px;
             --sidebar-bg: #0f172a;
             --sidebar-active: #2563eb;
             --sidebar-hover: #1e293b;
@@ -21,12 +21,18 @@
             --bg-main: #f8fafc;
         }
 
+        /* Thu nhỏ font tổng thể hệ thống */
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background-color: var(--bg-main);
-            font-size: 13.5px;
+            font-size: 12px; /* Giảm cỡ chữ xuống 12px */
             color: #334155;
             overflow-x: hidden;
+        }
+
+        .form-control, .form-select, .btn {
+            font-size: 12px; /* Đồng bộ font cho Input & Button */
+            padding: 0.35rem 0.65rem;
         }
 
         /* --- SIDEBAR STYLING --- */
@@ -40,17 +46,16 @@
             color: var(--sidebar-text);
             overflow-y: auto;
             z-index: 1000;
-            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05);
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
             display: flex;
             flex-direction: column;
         }
 
-        /* Custom Scrollbar cho Sidebar */
-        #sidebar::-webkit-scrollbar { width: 5px; }
+        #sidebar::-webkit-scrollbar { width: 4px; }
         #sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
         #sidebar .brand {
-            padding: 20px 22px;
+            padding: 14px 16px;
             border-bottom: 1px solid #1e293b;
             background: #090d16;
             position: sticky;
@@ -59,25 +64,25 @@
         }
 
         #sidebar .menu-category {
-            font-size: 10.5px;
+            font-size: 9.5px;
             text-transform: uppercase;
             letter-spacing: 0.8px;
             color: #64748b;
             font-weight: 700;
-            padding: 16px 20px 6px 20px;
+            padding: 12px 16px 4px 16px;
         }
 
         #sidebar .nav-link {
             color: var(--sidebar-text);
-            padding: 10px 16px;
+            padding: 7px 12px;
             font-weight: 500;
-            border-radius: 8px;
-            margin: 2px 12px;
+            border-radius: 6px;
+            margin: 1px 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
         }
 
         #sidebar .nav-link:hover {
@@ -88,29 +93,29 @@
         #sidebar .nav-link.active {
             color: var(--sidebar-text-active);
             background-color: var(--sidebar-active);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
         }
 
         #sidebar .nav-link .menu-icon {
-            width: 24px;
-            font-size: 15px;
+            width: 20px;
+            font-size: 13px;
             text-align: center;
-            margin-right: 10px;
+            margin-right: 8px;
         }
 
         #sidebar .submenu {
             padding-left: 0;
             display: none;
             background: #1e293b;
-            border-radius: 8px;
-            margin: 4px 12px 8px 12px;
-            padding: 6px 0;
+            border-radius: 6px;
+            margin: 2px 8px 6px 8px;
+            padding: 4px 0;
         }
 
         #sidebar .submenu .nav-link {
-            margin: 2px 8px;
-            padding: 8px 12px;
-            font-size: 13px;
+            margin: 1px 6px;
+            padding: 6px 10px;
+            font-size: 11.5px;
             color: #cbd5e1;
         }
 
@@ -122,72 +127,69 @@
         /* --- MAIN CONTENT LAYOUT --- */
         #main-content {
             margin-left: var(--sidebar-w);
-            padding: 24px 32px;
+            padding: 16px 24px;
             min-height: 100vh;
         }
 
         .card-custom {
             background: #fff;
-            border-radius: 12px;
+            border-radius: 8px;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            padding: 24px;
-            margin-bottom: 24px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            padding: 16px;
+            margin-bottom: 16px;
         }
 
         .table th {
             background-color: #f8fafc;
             text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 0.6px;
+            font-size: 10.5px;
+            letter-spacing: 0.5px;
             color: #64748b;
             font-weight: 700;
-            padding: 12px 16px;
+            padding: 8px 12px;
             border-bottom: 1px solid #e2e8f0;
         }
 
         .table td {
-            padding: 14px 16px;
+            padding: 10px 12px;
             vertical-align: middle;
+            font-size: 12px;
         }
 
         .kpi-card {
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 8px;
+            padding: 14px;
             background: #fff;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
         }
 
         .badge {
-            padding: 6px 10px;
+            padding: 4px 8px;
             font-weight: 600;
-            border-radius: 6px;
+            font-size: 11px;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
 
-    <!-- SIDEBAR NAVIGATION (CỘT TRÁI) -->
+    <!-- SIDEBAR NAVIGATION (CỘT TRÁI - GỌN GÀNG) -->
     <div id="sidebar">
         <!-- Logo Brand -->
         <div class="brand d-flex align-items-center">
-            <div class="bg-primary text-white p-2 rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
-                <i class="fa-solid fa-shirt fs-5"></i>
+            <div class="bg-primary text-white p-1 rounded-2 me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                <i class="fa-solid fa-shirt fs-6"></i>
             </div>
             <div>
-                <h6 class="fw-bold text-white mb-0" style="letter-spacing: 0.5px;">GARMENT ERP</h6>
-                <small class="text-muted" style="font-size: 11px;">Quản Lý May Mặc Cloud</small>
+                <h6 class="fw-bold text-white mb-0" style="letter-spacing: 0.5px; font-size: 13px;">GARMENT ERP</h6>
+                <small class="text-muted" style="font-size: 10px;">Quản Lý May Mặc Cloud</small>
             </div>
         </div>
 
         <!-- Menu items -->
-        <div class="py-2">
+        <div class="py-1">
             <div class="menu-category">Tổng Quan & Nguồn</div>
             
             <a class="nav-link active" onclick="switchMainTab('dashboard-section', this)">
@@ -202,15 +204,15 @@
                     <i class="fa-solid fa-database menu-icon text-warning"></i>
                     <span>Dữ Liệu Nguồn</span>
                 </div>
-                <i class="fa-solid fa-chevron-down fs-7 opacity-50"></i>
+                <i class="fa-solid fa-chevron-down opacity-50" style="font-size: 9px;"></i>
             </a>
             <div class="submenu" id="sub-masterdata">
-                <a class="nav-link" onclick="switchMainTab('master-kh-section', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Khách hàng Đã/Đang làm</a>
-                <a class="nav-link" onclick="switchMainTab('master-congdoan-section', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Danh sách Công đoạn</a>
-                <a class="nav-link" onclick="switchMainTab('master-nhansu-section', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Danh sách Nhân sự</a>
-                <a class="nav-link" onclick="switchMainTab('master-xgc-section', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Xưởng Gia Công</a>
-                <a class="nav-link" onclick="switchMainTab('master-xgc-tiemnang-section', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>XGC Tiềm Năng</a>
-                <a class="nav-link" onclick="switchMainTab('master-kh-tiemnang-section', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>KH Tiềm năng</a>
+                <a class="nav-link" onclick="switchMainTab('master-kh-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Khách hàng Đã/Đang làm</a>
+                <a class="nav-link" onclick="switchMainTab('master-congdoan-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Danh sách Công đoạn</a>
+                <a class="nav-link" onclick="switchMainTab('master-nhansu-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Danh sách Nhân sự</a>
+                <a class="nav-link" onclick="switchMainTab('master-xgc-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Xưởng Gia Công</a>
+                <a class="nav-link" onclick="switchMainTab('master-xgc-tiemnang-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>XGC Tiềm Năng</a>
+                <a class="nav-link" onclick="switchMainTab('master-kh-tiemnang-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>KH Tiềm năng</a>
             </div>
 
             <div class="menu-category">Quản Lý Vận Hành</div>
@@ -220,12 +222,12 @@
                     <i class="fa-solid fa-file-contract menu-icon text-primary"></i>
                     <span>Quản Lý Đơn Hàng</span>
                 </div>
-                <i class="fa-solid fa-chevron-down fs-7 opacity-50"></i>
+                <i class="fa-solid fa-chevron-down opacity-50" style="font-size: 9px;"></i>
             </a>
             <div class="submenu" id="sub-orders">
-                <a class="nav-link" onclick="switchMainTab('contract-section', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Hợp đồng Sản xuất</a>
-                <a class="nav-link" onclick="switchMainTab('appendix-section', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Phụ lục Hợp đồng</a>
-                <a class="nav-link" onclick="switchMainTab('po-section', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Đơn hàng PO Tổng thể</a>
+                <a class="nav-link" onclick="switchMainTab('contract-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Hợp đồng Sản xuất</a>
+                <a class="nav-link" onclick="switchMainTab('appendix-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Phụ lục Hợp đồng</a>
+                <a class="nav-link" onclick="switchMainTab('po-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Đơn hàng PO Tổng thể</a>
             </div>
 
             <a class="nav-link" onclick="toggleSubmenu('sub-mfg')">
@@ -233,14 +235,14 @@
                     <i class="fa-solid fa-industry menu-icon text-success"></i>
                     <span>Quản Lý Sản Xuất</span>
                 </div>
-                <i class="fa-solid fa-chevron-down fs-7 opacity-50"></i>
+                <i class="fa-solid fa-chevron-down opacity-50" style="font-size: 9px;"></i>
             </a>
             <div class="submenu" id="sub-mfg">
-                <a class="nav-link" onclick="switchMainTab('mfg-truoccat', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Trước cắt (NPL & Định mức)</a>
-                <a class="nav-link" onclick="switchMainTab('mfg-maymau', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>May mẫu & Giác sơ đồ</a>
-                <a class="nav-link" onclick="switchMainTab('mfg-maydaitra', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>May đại trà & BTP</a>
-                <a class="nav-link" onclick="switchMainTab('mfg-hoanthien', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Hoàn thiện & Đóng gói</a>
-                <a class="nav-link" onclick="switchMainTab('mfg-xuathang', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Xuất hàng & Quyết toán</a>
+                <a class="nav-link" onclick="switchMainTab('mfg-truoccat', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Trước cắt (NPL & Định mức)</a>
+                <a class="nav-link" onclick="switchMainTab('mfg-maymau', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>May mẫu & Giác sơ đồ</a>
+                <a class="nav-link" onclick="switchMainTab('mfg-maydaitra', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>May đại trà & BTP</a>
+                <a class="nav-link" onclick="switchMainTab('mfg-hoanthien', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Hoàn thiện & Đóng gói</a>
+                <a class="nav-link" onclick="switchMainTab('mfg-xuathang', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Xuất hàng & Quyết toán</a>
             </div>
 
             <div class="menu-category">Nguồn Lực & Tài Chính</div>
@@ -250,13 +252,13 @@
                     <i class="fa-solid fa-users menu-icon text-danger"></i>
                     <span>Quản Lý Nhân Sự</span>
                 </div>
-                <i class="fa-solid fa-chevron-down fs-7 opacity-50"></i>
+                <i class="fa-solid fa-chevron-down opacity-50" style="font-size: 9px;"></i>
             </a>
             <div class="submenu" id="sub-hr">
-                <a class="nav-link" onclick="switchMainTab('hr-list', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Thông tin Chi tiết Nhân sự</a>
-                <a class="nav-link" onclick="switchMainTab('hr-chamcong', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Bảng Chấm Công</a>
-                <a class="nav-link" onclick="switchMainTab('hr-thongke', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Thống kê Công đoạn SP</a>
-                <a class="nav-link" onclick="switchMainTab('hr-luong', this)"><i class="fa-regular fa-circle me-2 fs-7"></i>Lương Sản Phẩm & Phụ Cấp</a>
+                <a class="nav-link" onclick="switchMainTab('hr-list', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Thông tin Chi tiết Nhân sự</a>
+                <a class="nav-link" onclick="switchMainTab('hr-chamcong', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Bảng Chấm Công</a>
+                <a class="nav-link" onclick="switchMainTab('hr-thongke', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Thống kê Công đoạn SP</a>
+                <a class="nav-link" onclick="switchMainTab('hr-luong', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Lương Sản Phẩm & Phụ Cấp</a>
             </div>
 
             <a class="nav-link" onclick="switchMainTab('finance-section', this)">
@@ -272,16 +274,16 @@
     <div id="main-content">
         
         <!-- HEADER TOOLBAR -->
-        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
             <div>
-                <h4 class="fw-bold text-dark mb-1" id="page-heading">Trang Chủ Báo Cáo</h4>
-                <p class="text-muted small mb-0">Đồng bộ dữ liệu quản lý may mặc theo thời gian thực</p>
+                <h5 class="fw-bold text-dark mb-0" id="page-heading">Trang Chủ Báo Cáo</h5>
+                <small class="text-muted">Đồng bộ dữ liệu quản lý may mặc theo thời gian thực</small>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm fw-medium shadow-sm" onclick="openCustomFieldModal()">
+                <button class="btn btn-outline-secondary btn-sm shadow-sm" onclick="openCustomFieldModal()">
                     <i class="fa-solid fa-sliders me-1"></i>⚙️ Tùy biến Cột dữ liệu
                 </button>
-                <button class="btn btn-primary btn-sm fw-medium shadow-sm" data-bs-toggle="modal" data-bs-target="#addContractModal">
+                <button class="btn btn-primary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#addContractModal">
                     <i class="fa-solid fa-plus me-1"></i>+ Tạo Hợp Đồng Mới
                 </button>
             </div>
@@ -289,45 +291,45 @@
 
         <!-- 1. DASHBOARD OVERVIEW -->
         <div id="dashboard-section" class="tab-content-panel">
-            <div class="row g-3 mb-4">
+            <div class="row g-2 mb-3">
                 <div class="col-md-3">
                     <div class="kpi-card">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small font-weight-medium">Hợp Đồng Đang Chạy</span>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted small">Hợp Đồng Đang Chạy</span>
                             <span class="badge bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-file-contract"></i></span>
                         </div>
-                        <div class="fs-4 fw-bold text-dark" id="kpi-contracts">1 HĐ</div>
-                        <span class="text-success small"><i class="fa-solid fa-arrow-up me-1"></i>Đang hoạt động</span>
+                        <div class="fs-5 fw-bold text-dark" id="kpi-contracts">2 HĐ</div>
+                        <span class="text-success small" style="font-size: 11px;"><i class="fa-solid fa-arrow-up me-1"></i>Đang hoạt động</span>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="kpi-card">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small font-weight-medium">Tổng Sản Lượng PO</span>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted small">Tổng Sản Lượng PO</span>
                             <span class="badge bg-info bg-opacity-10 text-info"><i class="fa-solid fa-boxes-stacked"></i></span>
                         </div>
-                        <div class="fs-4 fw-bold text-dark" id="kpi-pcs">25,000 Pcs</div>
-                        <span class="text-muted small">Toàn bộ chuyền</span>
+                        <div class="fs-5 fw-bold text-dark" id="kpi-pcs">25,000 Pcs</div>
+                        <span class="text-muted small" style="font-size: 11px;">Toàn bộ chuyền</span>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="kpi-card">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small font-weight-medium">Doanh Thu CM Dự Kiến</span>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted small">Doanh Thu CM Dự Kiến</span>
                             <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-dollar-sign"></i></span>
                         </div>
-                        <div class="fs-4 fw-bold text-success" id="kpi-revenue">$62,500.00</div>
-                        <span class="text-success small">Tỷ lệ quy đổi chuẩn</span>
+                        <div class="fs-5 fw-bold text-success" id="kpi-revenue">$62,500.00</div>
+                        <span class="text-success small" style="font-size: 11px;">Tỷ lệ quy đổi chuẩn</span>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="kpi-card">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small font-weight-medium">Chuyền Sản Xuất</span>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted small">Chuyền Sản Xuất</span>
                             <span class="badge bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-industry"></i></span>
                         </div>
-                        <div class="fs-4 fw-bold text-dark">8 Chuyền Active</div>
-                        <span class="text-muted small">Hiệu suất 92%</span>
+                        <div class="fs-5 fw-bold text-dark">8 Chuyền Active</div>
+                        <span class="text-muted small" style="font-size: 11px;">Hiệu suất 92%</span>
                     </div>
                 </div>
             </div>
@@ -336,11 +338,11 @@
         <!-- 2. HỢP ĐỒNG SẢN XUẤT -->
         <div id="contract-section" class="tab-content-panel card-custom" style="display: none;">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-file-signature me-2 text-primary"></i>Danh Sách Hợp Đồng Sản Xuất (HĐ Nguyên Tắc & 1 Lần)</h6>
+                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-file-signature me-2 text-primary"></i>Danh Sách Hợp Đồng Sản Xuất</h6>
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addContractModal">+ Thêm Hợp Đồng</button>
             </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
                             <th>Mã Hợp Đồng</th>
@@ -359,10 +361,23 @@
                             <td><span class="badge bg-info text-dark">HĐ Nguyên Tắc</span></td>
                             <td>01/01/2026</td>
                             <td><span class="badge bg-success bg-opacity-10 text-success">Đang Hiệu Lực</span></td>
-                            <td class="text-muted small">--</td>
+                            <td class="text-muted">--</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary fw-medium" onclick="createAppendixFromContract('HD-2026/GARCO10', 'Tổng Công Ty May 10')">
-                                    + Tạo Phụ Lục (Kế thừa)
+                                <button class="btn btn-sm btn-outline-primary" onclick="openAddAppendixModal('HD-2026/GARCO10')">
+                                    + Tạo Phụ Lục
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-primary">HD-2026/VTG</td>
+                            <td class="fw-medium">Tập đoàn Dệt May Việt Tiến</td>
+                            <td><span class="badge bg-info text-dark">HĐ Nguyên Tắc</span></td>
+                            <td>15/01/2026</td>
+                            <td><span class="badge bg-success bg-opacity-10 text-success">Đang Hiệu Lực</span></td>
+                            <td class="text-muted">--</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="openAddAppendixModal('HD-2026/VTG')">
+                                    + Tạo Phụ Lục
                                 </button>
                             </td>
                         </tr>
@@ -375,19 +390,19 @@
         <div id="appendix-section" class="tab-content-panel card-custom" style="display: none;">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-paperclip me-2 text-warning"></i>Danh Sách Phụ Lục Hợp Đồng</h6>
-                <button class="btn btn-warning text-dark btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addAppendixModal">+ Tạo Phụ Lục Mới</button>
+                <button class="btn btn-warning text-dark btn-sm fw-bold" onclick="openAddAppendixModal()">+ Tạo Phụ Lục Mới</button>
             </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
                             <th>Mã Phụ Lục</th>
                             <th>Hợp Đồng Cha</th>
-                            <th>Khách Hàng (Kế Thừa)</th>
+                            <th>Khách Hàng (Tự Kế Thừa)</th>
                             <th>Mã Style / Chủng Loại</th>
                             <th>Đơn Giá CM ($)</th>
                             <th class="custom-col-target">Trường Tùy Biến</th>
-                            <th>Thao Tác Kế Thừa</th>
+                            <th>Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody id="appendix-list">
@@ -397,9 +412,9 @@
                             <td class="fw-medium">Tổng Công Ty May 10</td>
                             <td><span class="badge bg-secondary">POLO-SHIRT-01</span></td>
                             <td class="fw-bold text-success">$2.50</td>
-                            <td class="text-muted small">--</td>
+                            <td class="text-muted">--</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-success fw-medium" onclick="createPOFromAppendix('PL-01/GARCO10', 'Tổng Công Ty May 10', 'POLO-SHIRT-01', 2.50)">
+                                <button class="btn btn-sm btn-outline-success">
                                     + Sinh Đơn PO
                                 </button>
                             </td>
@@ -413,10 +428,10 @@
         <div id="po-section" class="tab-content-panel card-custom" style="display: none;">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-boxes-stacked me-2 text-success"></i>Danh Sách Đơn Hàng PO Chi Tiết</h6>
-                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addPOModal">+ Tạo PO Chi Tiết</button>
+                <button class="btn btn-success btn-sm">+ Tạo PO Chi Tiết</button>
             </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
                             <th>Mã PO</th>
@@ -426,7 +441,7 @@
                             <th>Dải Size (S/M/L/XL/XXL)</th>
                             <th>Tổng SL</th>
                             <th>Doanh Thu CM</th>
-                            <th>Tiến Độ Sản Xuất</th>
+                            <th>Tiến Độ</th>
                         </tr>
                     </thead>
                     <tbody id="po-list">
@@ -435,23 +450,23 @@
                             <td><span class="badge bg-light text-dark border">PL-01/GARCO10</span></td>
                             <td>Tổng Công Ty May 10</td>
                             <td>POLO-SHIRT-01</td>
-                            <td class="small text-muted">S:1,000 | M:3,000 | L:4,000 | XL:2,000 | XXL:0</td>
+                            <td class="small text-muted">S:1k | M:3k | L:4k | XL:2k</td>
                             <td class="fw-bold">10,000 Pcs</td>
                             <td class="fw-bold text-success">$25,000.00</td>
-                            <td><span class="badge bg-primary">Chuyển sang Trước Cắt</span></td>
+                            <td><span class="badge bg-primary">Trước Cắt</span></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- GENERIC DYNAMIC SECTION FOR OTHER MODULES -->
+        <!-- GENERIC PANEL -->
         <div id="generic-section" class="tab-content-panel card-custom" style="display: none;">
-            <div class="alert alert-info border-0 shadow-sm d-flex align-items-center">
-                <i class="fa-solid fa-circle-info fs-3 me-3 text-info"></i>
+            <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-0">
+                <i class="fa-solid fa-circle-info fs-4 me-3 text-info"></i>
                 <div>
-                    <strong class="d-block mb-1">Phân hệ đang được kết nối dữ liệu tự động:</strong> 
-                    Mọi thao tác nhập liệu ở Hợp đồng và Phụ lục sẽ tự động đồng bộ sang bảng này. Bạn có thể nhấn <strong>"⚙️ Tùy biến Cột dữ liệu"</strong> ở góc trên để bổ sung thêm trường thông tin cho bảng hiện tại.
+                    <strong class="d-block mb-1">Phân hệ đang kết nối dữ liệu tự động:</strong> 
+                    Nội dung quản lý chi tiết đang được đồng bộ theo thời gian thực từ quy trình Hợp Đồng & Phụ Lục.
                 </div>
             </div>
         </div>
@@ -460,75 +475,75 @@
 
     <!-- MODAL 1: TẠO HỢP ĐỒNG -->
     <div class="modal fade" id="addContractModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
+                <div class="modal-header bg-primary text-white py-2">
                     <h6 class="modal-title fw-bold">Thêm Hợp Đồng Sản Xuất Mới</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formContract" class="row g-3">
-                        <div class="col-12"><label class="form-label fw-medium">Mã Hợp Đồng</label><input type="text" id="c_code" class="form-control" required placeholder="HD-2026/..."></div>
-                        <div class="col-12"><label class="form-label fw-medium">Khách Hàng / Đối Tác</label><input type="text" id="c_customer" class="form-control" required placeholder="Tên công ty / thương hiệu"></div>
+                    <form id="formContract" class="row g-2">
+                        <div class="col-12"><label class="form-label fw-medium mb-1">Mã Hợp Đồng</label><input type="text" id="c_code" class="form-control" required placeholder="VD: HD-2026/MAY3"></div>
+                        <div class="col-12"><label class="form-label fw-medium mb-1">Khách Hàng / Đối Tác</label><input type="text" id="c_customer" class="form-control" required placeholder="VD: Công ty May Đức Giang"></div>
                         <div class="col-6">
-                            <label class="form-label fw-medium">Loại Hợp Đồng</label>
+                            <label class="form-label fw-medium mb-1">Loại Hợp Đồng</label>
                             <select id="c_type" class="form-select">
                                 <option value="Nguyên Tắc">HĐ Nguyên Tắc</option>
                                 <option value="Một Lần">HĐ Một Lần</option>
                             </select>
                         </div>
-                        <div class="col-6"><label class="form-label fw-medium">Ngày Ký</label><input type="date" id="c_date" class="form-control"></div>
-                        <div class="col-12 mt-3"><button type="submit" class="btn btn-primary w-100 fw-bold">Lưu Hợp Đồng</button></div>
+                        <div class="col-6"><label class="form-label fw-medium mb-1">Ngày Ký</label><input type="date" id="c_date" class="form-control"></div>
+                        <div class="col-12 mt-3"><button type="submit" class="btn btn-primary w-100 fw-bold">Lưu Hợp Đồng Mới</button></div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 2: TẠO PHỤ LỤC (KẾ THỪA TỰ ĐỘNG) -->
+    <!-- MODAL 2: TẠO PHỤ LỤC HỢP ĐỒNG (THẢ XUỐNG CHỌN HỢP ĐỒNG) -->
     <div class="modal fade" id="addAppendixModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-warning text-dark">
-                    <h6 class="modal-title fw-bold">Tạo Phụ Lục Hợp Đồng (Kế Thừa)</h6>
+                <div class="modal-header bg-warning text-dark py-2">
+                    <h6 class="modal-title fw-bold"><i class="fa-solid fa-paperclip me-1"></i>Tạo Phụ Lục Hợp Đồng</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formAppendix" class="row g-3">
+                    <form id="formAppendix" class="row g-2">
+                        <!-- MENU THẢ XUỐNG CHỌN HỢP ĐỒNG CHA -->
                         <div class="col-12">
-                            <label class="form-label fw-bold">Chọn Hợp Đồng Nguồn (Kế thừa)</label>
-                            <select id="app_parent_contract" class="form-select" onchange="autoFillContractData()">
-                                <option value="">-- Chọn Hợp Đồng --</option>
-                                <option value="HD-2026/GARCO10" data-customer="Tổng Công Ty May 10">HD-2026/GARCO10 - May 10</option>
+                            <label class="form-label fw-bold text-dark mb-1">Chọn Hợp Đồng Nguồn (Menu thả xuống)</label>
+                            <select id="app_parent_select" class="form-select border-warning fw-medium" onchange="onContractSelectChange()" required>
+                                <option value="">-- Click để chọn Hợp Đồng --</option>
+                                <!-- Render danh sách Hợp Đồng qua JavaScript -->
                             </select>
                         </div>
-                        <div class="col-6"><label class="form-label fw-medium">Mã Phụ Lục</label><input type="text" id="app_code" class="form-control" required placeholder="PL-01/..."></div>
-                        <div class="col-6"><label class="form-label fw-medium">Khách Hàng (Tự Kế Thừa)</label><input type="text" id="app_customer" class="form-control bg-light" readonly></div>
-                        <div class="col-6"><label class="form-label fw-medium">Mã Style Sản Phẩm</label><input type="text" id="app_style" class="form-control" required></div>
-                        <div class="col-6"><label class="form-label fw-medium">Đơn Giá CM ($)</label><input type="number" step="0.01" id="app_price" class="form-control" value="0.00"></div>
-                        <div class="col-12 mt-3"><button type="submit" class="btn btn-warning w-100 fw-bold text-dark">Lưu Phụ Lục</button></div>
+                        <div class="col-6"><label class="form-label fw-medium mb-1">Mã Phụ Lục Mới</label><input type="text" id="app_code" class="form-control" required placeholder="VD: PL-02/..."></div>
+                        <div class="col-6"><label class="form-label fw-medium mb-1">Khách Hàng (Tự điền)</label><input type="text" id="app_customer" class="form-control bg-light" readonly placeholder="Tự động theo HĐ"></div>
+                        <div class="col-6"><label class="form-label fw-medium mb-1">Mã Style Sản Phẩm</label><input type="text" id="app_style" class="form-control" placeholder="VD: JACKET-2026" required></div>
+                        <div class="col-6"><label class="form-label fw-medium mb-1">Đơn Giá CM ($)</label><input type="number" step="0.01" id="app_price" class="form-control" value="2.50"></div>
+                        <div class="col-12 mt-3"><button type="submit" class="btn btn-warning w-100 fw-bold text-dark">Lưu Phụ Lục Hợp Đồng</button></div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 3: TÙY BIẾN CỘT DỮ LIỆU (CUSTOM FIELDS) -->
+    <!-- MODAL 3: TÙY BIẾN CỘT DỮ LIỆU -->
     <div class="modal fade" id="customFieldModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-dark text-white">
+                <div class="modal-header bg-dark text-white py-2">
                     <h6 class="modal-title"><i class="fa-solid fa-gear me-2"></i>Tùy Biến Bảng & Trường Thông Tin</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted small">Thêm các trường thông tin đặc thù theo yêu cầu xưởng của bạn mà không ảnh hưởng tới hệ thống gốc.</p>
-                    <div class="mb-3">
-                        <label class="form-label font-weight-bold">Tên Cột Thông Tin Mới</label>
+                    <div class="mb-2">
+                        <label class="form-label fw-medium mb-1">Tên Cột Thông Tin Mới</label>
                         <input type="text" id="newColumnName" class="form-control" placeholder="Ví dụ: Mã số Thuế, Zalo, Điều khoản LC...">
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Kiểu Dữ Liệu</label>
+                    <div class="mb-2">
+                        <label class="form-label fw-medium mb-1">Kiểu Dữ Liệu</label>
                         <select id="newColumnType" class="form-select">
                             <option value="text">Văn bản (Text)</option>
                             <option value="number">Số (Number)</option>
@@ -536,7 +551,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer py-2">
                     <button type="button" class="btn btn-primary w-100 fw-bold" onclick="addNewCustomColumn()">Lưu Cột Mới Vào Bảng</button>
                 </div>
             </div>
@@ -547,41 +562,62 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Dữ liệu bộ nhớ tạm danh sách Hợp đồng để đồng bộ Dropdown
+        let contractsData = [
+            { code: 'HD-2026/GARCO10', customer: 'Tổng Công Ty May 10' },
+            { code: 'HD-2026/VTG', customer: 'Tập đoàn Dệt May Việt Tiến' }
+        ];
+
         function toggleSubmenu(id) {
-            $(`#${id}`).slideToggle(200);
+            $(`#${id}`).slideToggle(180);
         }
 
         function switchMainTab(sectionId, element) {
             $('.tab-content-panel').hide();
-            
-            // Xóa active khỏi tất cả nav-link
             $('#sidebar .nav-link').removeClass('active');
             
-            // Thêm active vào phần tử được click
             if(element) {
                 $(element).addClass('active');
             }
 
             if($('#' + sectionId).length > 0) {
-                $('#' + sectionId).fadeIn(200);
+                $('#' + sectionId).fadeIn(150);
             } else {
-                $('#generic-section').fadeIn(200);
+                $('#generic-section').fadeIn(150);
             }
             
             let titleText = sectionId.replace('-', ' ').replace('section', '').toUpperCase();
             $('#page-heading').text(titleText);
         }
 
-        function createAppendixFromContract(contractCode, customerName) {
+        // Mở Modal Phụ Lục & Đồng bộ Menu thả xuống chọn Hợp đồng
+        function openAddAppendixModal(targetContractCode = null) {
+            let selectElem = $('#app_parent_select');
+            selectElem.empty();
+            selectElem.append('<option value="">-- Click để chọn Hợp Đồng --</option>');
+
+            // Render các Option Hợp đồng từ Dữ liệu
+            contractsData.forEach(item => {
+                selectElem.append(`<option value="${item.code}" data-customer="${item.customer}">${item.code} - (${item.customer})</option>`);
+            });
+
+            // Nếu gọi từ nút bấm ở dòng Hợp đồng cụ thể
+            if(targetContractCode) {
+                selectElem.val(targetContractCode);
+                onContractSelectChange();
+            } else {
+                $('#app_customer').val('');
+            }
+
             switchMainTab('appendix-section');
-            $('#addAppendixModal').modal('show');
-            $('#app_parent_contract').val(contractCode);
-            $('#app_customer').val(customerName);
+            new bootstrap.Modal(document.getElementById('addAppendixModal')).show();
         }
 
-        function autoFillContractData() {
-            let selectedCustomer = $('#app_parent_contract option:selected').data('customer');
-            $('#app_customer').val(selectedCustomer || '');
+        // Sự kiện khi người dùng Chọn 1 Hợp đồng trong Thẻ Thả Xuống (Dropdown)
+        function onContractSelectChange() {
+            let selectedOption = $('#app_parent_select option:selected');
+            let customerName = selectedOption.data('customer');
+            $('#app_customer').val(customerName || '');
         }
 
         function openCustomFieldModal() {
@@ -592,16 +628,17 @@
             let colName = $('#newColumnName').val();
             if(!colName) return alert("Vui lòng nhập tên cột!");
             
-            $('.custom-col-target').before(`<th class="bg-warning bg-opacity-10 text-dark">${colName} (Tùy biến)</th>`);
+            $('.custom-col-target').before(`<th class="bg-warning bg-opacity-10 text-dark">${colName}</th>`);
             $('.table tbody tr').each(function() {
-                $(this).find('td:last-child').before(`<td><input type="text" class="form-control form-control-sm" placeholder="Nhập ${colName}"></td>`);
+                $(this).find('td:last-child').before(`<td><input type="text" class="form-control form-control-sm" placeholder="${colName}..."></td>`);
             });
 
             bootstrap.Modal.getInstance(document.getElementById('customFieldModal')).hide();
             $('#newColumnName').val('');
-            alert(`Đã thêm thành công trường thông tin tùy biến: "${colName}"`);
+            alert(`Đã thêm cột tùy biến: "${colName}"`);
         }
 
+        // Form Tạo Hợp Đồng Mới
         $('#formContract').submit(function(e){
             e.preventDefault();
             let code = $('#c_code').val();
@@ -609,6 +646,10 @@
             let type = $('#c_type').val();
             let date = $('#c_date').val() || 'Vừa ký';
 
+            // Thêm vào bộ nhớ dữ liệu Hợp đồng
+            contractsData.push({ code: code, customer: cust });
+
+            // Render vào Bảng Hợp Đồng
             $('#contract-list').append(`
                 <tr>
                     <td class="fw-bold text-primary">${code}</td>
@@ -616,23 +657,27 @@
                     <td><span class="badge bg-info text-dark">HĐ ${type}</span></td>
                     <td>${date}</td>
                     <td><span class="badge bg-success bg-opacity-10 text-success">Đang Hiệu Lực</span></td>
-                    <td class="text-muted small">--</td>
+                    <td class="text-muted">--</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary fw-medium" onclick="createAppendixFromContract('${code}', '${cust}')">
-                            + Tạo Phụ Lục (Kế thừa)
+                        <button class="btn btn-sm btn-outline-primary" onclick="openAddAppendixModal('${code}')">
+                            + Tạo Phụ Lục
                         </button>
                     </td>
                 </tr>
             `);
-            $('#app_parent_contract').append(`<option value="${code}" data-customer="${cust}">${code} - ${cust}</option>`);
+
+            // Cập nhật lại đếm số lượng HĐ trên KPI
+            $('#kpi-contracts').text(`${contractsData.length} HĐ`);
+
             bootstrap.Modal.getInstance(document.getElementById('addContractModal')).hide();
             this.reset();
         });
 
+        // Form Tạo Phụ Lục
         $('#formAppendix').submit(function(e){
             e.preventDefault();
             let code = $('#app_code').val();
-            let parent = $('#app_parent_contract').val();
+            let parent = $('#app_parent_select').val();
             let cust = $('#app_customer').val();
             let style = $('#app_style').val();
             let price = $('#app_price').val();
@@ -644,14 +689,15 @@
                     <td class="fw-medium">${cust}</td>
                     <td><span class="badge bg-secondary">${style}</span></td>
                     <td class="fw-bold text-success">$${parseFloat(price).toFixed(2)}</td>
-                    <td class="text-muted small">--</td>
+                    <td class="text-muted">--</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-success fw-medium">
+                        <button class="btn btn-sm btn-outline-success">
                             + Sinh Đơn PO
                         </button>
                     </td>
                 </tr>
             `);
+
             bootstrap.Modal.getInstance(document.getElementById('addAppendixModal')).hide();
             this.reset();
         });
