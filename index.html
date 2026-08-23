@@ -132,12 +132,6 @@
             margin-bottom: 10px;
             position: relative;
         }
-
-        .contact-box .remove-contact-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-        }
     </style>
 </head>
 <body>
@@ -193,17 +187,6 @@
             <span class="badge bg-success"><i class="fa-solid fa-circle me-1"></i>Hệ thống Online</span>
         </div>
 
-        <div id="dashboard-section" class="tab-content-panel" style="display: none;">
-            <div class="row g-2 mb-3">
-                <div class="col-md-3">
-                    <div class="card-custom border-start border-primary border-4 py-2">
-                        <small class="text-muted fw-bold">TỔNG ĐƠN HÀNG (PO)</small>
-                        <h4 class="fw-bold mb-0 text-primary mt-1">24 Đơn</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- PHÂN HỆ QUẢN LÝ HỢP ĐỒNG & ĐỐI TÁC -->
         <div id="contract-section" class="tab-content-panel">
             
@@ -233,23 +216,26 @@
                                 <thead>
                                     <tr>
                                         <th class="editable-th" data-key="th_out_code"><span class="th-text">SỐ HỢP ĐỒNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="editable-th" data-key="th_out_kind"><span class="th-text">LOẠI HỢP ĐỒNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                                         <th class="editable-th" data-key="th_out_cust"><span class="th-text">KHÁCH HÀNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                                         <th class="editable-th" data-key="th_out_type"><span class="th-text">LOẠI HÌNH</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                                         <th class="editable-th" data-key="th_out_qty"><span class="th-text">SỐ LƯỢNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                                         <th class="editable-th" data-key="th_out_val"><span class="th-text">GIÁ TRỊ HĐ</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                                         <th class="editable-th" data-key="th_out_date"><span class="th-text">HẠN GIAO</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                                        <th class="text-center">PHỤ LỤC & THAO TÁC</th>
+                                        <th class="text-center">THAO TÁC & PHỤ LỤC</th>
                                     </tr>
                                 </thead>
                                 <tbody id="outbound-hd-list">
                                     <tr>
                                         <td class="fw-bold text-primary">HĐ-OUT-2026/GARCO</td>
+                                        <td><span class="badge bg-secondary">Hợp Đồng Kinh Tế</span></td>
                                         <td class="fw-medium">Tổng Công Ty May 10</td>
                                         <td><span class="badge bg-info text-dark">FOB</span></td>
                                         <td class="fw-bold">50,000 Pcs</td>
                                         <td class="fw-bold text-success">$ 175,000 USD</td>
                                         <td>30/10/2026</td>
                                         <td class="text-center">
+                                            <button class="btn btn-outline-dark btn-sm py-0 px-2" onclick="viewContractDetails('OUTBOUND', 0)"><i class="fa-solid fa-eye me-1"></i>Xem Chi Tiết</button>
                                             <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="showAppendix('HĐ-OUT-2026/GARCO')"><i class="fa-solid fa-paperclip me-1"></i>Phụ Lục (1)</button>
                                             <button class="btn btn-outline-warning btn-sm py-0 px-2 ms-1" onclick="openAddAppendix('HĐ-OUT-2026/GARCO')">+ Phụ Lục</button>
                                         </td>
@@ -272,23 +258,26 @@
                                 <thead>
                                     <tr>
                                         <th class="editable-th" data-key="th_in_code"><span class="th-text">SỐ HỢP ĐỒNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                                        <th class="editable-th" data-key="th_in_kind"><span class="th-text">LOẠI HỢP ĐỒNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                                         <th class="editable-th" data-key="th_in_supp"><span class="th-text">NHÀ CUNG CẤP / XƯỞNG GC</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                                         <th class="editable-th" data-key="th_in_type"><span class="th-text">MỤC ĐÍCH</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                                         <th class="editable-th" data-key="th_in_qty"><span class="th-text">KHỐI LƯỢNG/SL</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                                         <th class="editable-th" data-key="th_in_val"><span class="th-text">TỔNG CHI PHÍ</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                                         <th class="editable-th" data-key="th_in_date"><span class="th-text">HẠN HOÀN THÀNH</span> <i class="fa-solid fa-pen edit-icon"></i></th>
-                                        <th class="text-center">PHỤ LỤC & THAO TÁC</th>
+                                        <th class="text-center">THAO TÁC & PHỤ LỤC</th>
                                     </tr>
                                 </thead>
                                 <tbody id="inbound-hd-list">
                                     <tr>
                                         <td class="fw-bold text-danger">HĐ-IN-2026/TEX-01</td>
+                                        <td><span class="badge bg-dark">Hợp Đồng Nguyên Tắc</span></td>
                                         <td class="fw-medium">Cty Vải Dệt Nam Định</td>
                                         <td><span class="badge bg-secondary">Mua Vải Cotton</span></td>
                                         <td class="fw-bold">12,000 Mét</td>
                                         <td class="fw-bold text-danger">480,000,000 VNĐ</td>
                                         <td>15/09/2026</td>
                                         <td class="text-center">
+                                            <button class="btn btn-outline-dark btn-sm py-0 px-2" onclick="viewContractDetails('INBOUND', 0)"><i class="fa-solid fa-eye me-1"></i>Xem Chi Tiết</button>
                                             <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="showAppendix('HĐ-IN-2026/TEX-01')"><i class="fa-solid fa-paperclip me-1"></i>Phụ Lục (0)</button>
                                             <button class="btn btn-outline-warning btn-sm py-0 px-2 ms-1" onclick="openAddAppendix('HĐ-IN-2026/TEX-01')">+ Phụ Lục</button>
                                         </td>
@@ -299,7 +288,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: DANH SÁCH ĐỐI TÁC (ĐÃ NÂNG CẤP DỮ LIỆU ĐỒNG BỘ ĐỘNG) -->
+                <!-- TAB 3: DANH SÁCH ĐỐI TÁC -->
                 <div class="tab-pane fade" id="tab-partners">
                     <div class="card-custom">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -319,9 +308,7 @@
                                         <th class="text-center">CHI TIẾT</th>
                                     </tr>
                                 </thead>
-                                <tbody id="partner-list-body">
-                                    <!-- Render dữ liệu mẫu qua JS -->
-                                </tbody>
+                                <tbody id="partner-list-body"></tbody>
                             </table>
                         </div>
                     </div>
@@ -352,42 +339,77 @@
             </div>
 
         </div>
-
-        <div id="hr-section" class="tab-content-panel card-custom" style="display: none;"><h6 class="fw-bold mb-0 text-dark">QUẢN LÝ NHÂN SỰ & DATA</h6></div>
-        <div id="production-section" class="tab-content-panel card-custom" style="display: none;"><h6 class="fw-bold mb-0 text-dark">QUẢN LÝ SẢN XUẤT</h6></div>
-        <div id="finance-section" class="tab-content-panel card-custom" style="display: none;"><h6 class="fw-bold mb-0 text-dark">QUẢN LÝ TÀI CHÍNH</h6></div>
-        <div id="access-section" class="tab-content-panel card-custom" style="display: none;"><h6 class="fw-bold mb-0 text-dark">QUẢN LÝ QUYỀN TRUY CẬP</h6></div>
     </div>
 
-    <!-- MODAL 1: TẠO HỢP ĐỒNG -->
+    <!-- MODAL 1: TẠO HỢP ĐỒNG (ĐÃ CẬP NHẬT TRƯỜNG TÙY CHỈNH & LOẠI HỢP ĐỒNG) -->
     <div class="modal fade" id="addContractModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header py-2 text-white" id="modalContractHeader">
                     <h6 class="modal-title fw-bold" id="modalContractTitle"><i class="fa-solid fa-file-signature me-1"></i>Tạo Hợp Đồng</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formAddContract" class="row g-2">
+                    <form id="formAddContract">
                         <input type="hidden" id="hd_category_type" value="OUTBOUND">
                         
-                        <div class="col-md-6"><label class="form-label mb-1">Số Hợp Đồng</label><input type="text" id="hd_code" class="form-control" placeholder="VD: HĐ-2026/MAY-01" required></div>
-                        <div class="col-md-6">
-                            <label class="form-label mb-1">Chọn Đối Tác</label>
-                            <select id="hd_partner" class="form-select" required></select>
+                        <!-- 1. THÔNG TIN CƠ BẢN CỦA HỢP ĐỒNG -->
+                        <div class="fw-bold text-primary border-bottom pb-1 mb-2 fs-7"><i class="fa-solid fa-file-contract me-1"></i>THÔNG TIN CƠ BẢN HỢP ĐỒNG</div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label mb-1">Số Hợp Đồng *</label>
+                                <input type="text" id="hd_code" class="form-control" placeholder="VD: HĐ-2026/MAY-01" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label mb-1">Loại Hợp Đồng *</label>
+                                <select id="hd_kind" class="form-select" required>
+                                    <option value="Hợp Đồng Kinh Tế">Hợp Đồng Kinh Tế</option>
+                                    <option value="Hợp Đồng Nguyên Tắc">Hợp Đồng Nguyên Tắc</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label mb-1">Chọn Tên Đối Tác *</label>
+                                <select id="hd_partner" class="form-select" required></select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label mb-1">Loại Hình / Mục Đích</label>
+                                <input type="text" id="hd_type" class="form-control" placeholder="FOB / CM / Mua vải..." required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label mb-1">Số Lượng / Khối Lượng</label>
+                                <input type="text" id="hd_qty" class="form-control" placeholder="VD: 50,000 Pcs / 10,000m" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label mb-1">Tổng Giá Trị Hợp Đồng</label>
+                                <input type="text" id="hd_val" class="form-control fw-bold text-success" placeholder="VD: $150,000 USD hoặc 300,000,000 VNĐ" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label mb-1">Hạn Hoàn Thành / Giao Hàng</label>
+                                <input type="date" id="hd_date" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label mb-1">Ghi Chú Hợp Đồng</label>
+                                <input type="text" id="hd_note" class="form-control" placeholder="Các điều khoản sơ bộ...">
+                            </div>
                         </div>
-                        <div class="col-md-4"><label class="form-label mb-1">Loại Hình / Mục Đích</label><input type="text" id="hd_type" class="form-control" placeholder="FOB / CM / Mua vải..." required></div>
-                        <div class="col-md-4"><label class="form-label mb-1">Số Lượng / Khối Lượng</label><input type="text" id="hd_qty" class="form-control" placeholder="VD: 50,000 Pcs / 10,000m" required></div>
-                        <div class="col-md-4"><label class="form-label mb-1">Tổng Giá Trị Hợp Đồng</label><input type="text" id="hd_val" class="form-control fw-bold text-success" placeholder="VD: $150,000 USD hoặc 300,000,000 VNĐ" required></div>
-                        <div class="col-md-6"><label class="form-label mb-1">Hạn Hoàn Thành / Giao Hàng</label><input type="date" id="hd_date" class="form-control" required></div>
-                        <div class="col-12 mt-3"><button type="submit" class="btn fw-bold w-100 text-white" id="btnSubmitContract">Lưu Hợp Đồng</button></div>
+
+                        <!-- 2. CÁC TRƯỜNG THÔNG TIN HỢP ĐỒNG TÙY CHỈNH (MỞ RỘNG ĐỘNG) -->
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-1 mb-2">
+                            <span class="fw-bold text-dark fs-7"><i class="fa-solid fa-sliders me-1 text-warning"></i>TRƯỜNG THÔNG TIN HỢP ĐỒNG TÙY CHỈNH</span>
+                            <button type="button" class="btn btn-outline-warning btn-sm py-0 px-2 fw-bold" onclick="addCustomContractField()"><i class="fa-solid fa-plus me-1"></i>Thêm trường thông tin tùy chỉnh</button>
+                        </div>
+                        <div id="custom-contract-fields-container" class="mb-3">
+                            <!-- Trường tùy chỉnh của Hợp đồng sẽ được thêm ở đây -->
+                        </div>
+
+                        <div class="mt-3"><button type="submit" class="btn fw-bold w-100 text-white py-2" id="btnSubmitContract">Lưu Hợp Đồng</button></div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 2: THÊM ĐỐI TÁC MỚI (ĐÃ NÂNG CẤP ĐỘNG & NHIỀU ĐẦU MỐI LIÊN HỆ) -->
+    <!-- MODAL 2: THÊM ĐỐI TÁC MỚI -->
     <div class="modal fade" id="addPartnerModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content border-0 shadow">
@@ -397,8 +419,6 @@
                 </div>
                 <div class="modal-body">
                     <form id="formAddPartner">
-                        
-                        <!-- 1. THÔNG TIN CÔNG TY -->
                         <div class="fw-bold text-success border-bottom pb-1 mb-2 fs-7"><i class="fa-solid fa-building me-1"></i>THÔNG TIN CÔNG TY / ĐƠN VỊ</div>
                         <div class="row g-2 mb-3">
                             <div class="col-md-4"><label class="form-label mb-1">Mã Đối Tác</label><input type="text" id="part_code" class="form-control" placeholder="DT-MAY10" required></div>
@@ -412,27 +432,20 @@
                             <div class="col-md-8"><label class="form-label mb-1">Tên Công Ty / Đơn Vị</label><input type="text" id="part_name" class="form-control" placeholder="Tổng Công Ty May 10 - CTCP" required></div>
                             <div class="col-md-4"><label class="form-label mb-1">Số Điện Thoại Tổng Đài</label><input type="text" id="part_phone" class="form-control" placeholder="0243.827.1010"></div>
                             <div class="col-md-12"><label class="form-label mb-1">Địa Chỉ Văn Phòng / Xưởng</label><input type="text" id="part_address" class="form-control" placeholder="Số 76 Nguyễn Văn Linh, Long Biên, Hà Nội"></div>
-                            <div class="col-md-12"><label class="form-label mb-1">Ghi Chú Công Ty</label><textarea id="part_company_note" class="form-control" rows="2" placeholder="VD: Nhà cung cấp uy tín, thanh toán gối đầu 30 ngày..."></textarea></div>
+                            <div class="col-md-12"><label class="form-label mb-1">Ghi Chú Công Ty</label><textarea id="part_company_note" class="form-control" rows="2" placeholder="VD: Nhà cung cấp uy tín..."></textarea></div>
                         </div>
 
-                        <!-- 2. CÁC TRƯỜNG THÔNG TIN TÙY CHỈNH CHO CÔNG TY -->
                         <div class="d-flex justify-content-between align-items-center border-bottom pb-1 mb-2">
                             <span class="fw-bold text-dark fs-7"><i class="fa-solid fa-sliders me-1 text-warning"></i>TRƯỜNG THÔNG TIN CÔNG TY TÙY CHỈNH</span>
                             <button type="button" class="btn btn-outline-warning btn-sm py-0 px-2 fw-bold" onclick="addCustomCompanyField()"><i class="fa-solid fa-plus me-1"></i>Thêm trường thông tin công ty</button>
                         </div>
-                        <div id="custom-company-fields-container" class="mb-3">
-                            <!-- Render trường tùy chỉnh ở đây -->
-                        </div>
+                        <div id="custom-company-fields-container" class="mb-3"></div>
 
-                        <!-- 3. DANH BẠ NGƯỜI LIÊN HỆ ĐỘNG -->
                         <div class="d-flex justify-content-between align-items-center border-bottom pb-1 mb-2">
                             <span class="fw-bold text-primary fs-7"><i class="fa-solid fa-users me-1"></i>DANH SÁCH NGƯỜI LIÊN HỆ (ĐẦU MỐI VỊ TRÍ)</span>
                             <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 fw-bold" onclick="addContactField()"><i class="fa-solid fa-user-plus me-1"></i>Thêm người liên hệ</button>
                         </div>
-                        
-                        <div id="contacts-container">
-                            <!-- Các block Người liên hệ 1, 2, 3... sẽ được render tự động bằng Javascript -->
-                        </div>
+                        <div id="contacts-container"></div>
 
                         <div class="mt-3"><button type="submit" class="btn btn-success fw-bold w-100 py-2"><i class="fa-solid fa-floppy-disk me-1"></i>LƯU ĐỐI TÁC VÀ BỘ DANH BẠ</button></div>
                     </form>
@@ -441,7 +454,20 @@
         </div>
     </div>
 
-    <!-- MODAL 3: THÊM PHỤ LỤC HỢP ĐỒNG -->
+    <!-- MODAL 3: XEM CHI TIẾT HỢP ĐỒNG -->
+    <div class="modal fade" id="viewContractModal" tabindex="-1">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white py-2">
+                    <h6 class="modal-title fw-bold" id="viewContractTitle"><i class="fa-solid fa-file-circle-info me-1"></i>Chi Tiết Hợp Đồng</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewContractBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: THÊM PHỤ LỤC HỢP ĐỒNG -->
     <div class="modal fade" id="addAppendixModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
@@ -464,299 +490,147 @@
         </div>
     </div>
 
-    <!-- MODAL 4: XEM CHI TIẾT ĐỐI TÁC & DANH BẠ LIÊN HỆ -->
-    <div class="modal fade" id="viewPartnerModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-dark text-white py-2">
-                    <h6 class="modal-title fw-bold" id="viewPartnerTitle"><i class="fa-solid fa-id-card me-1"></i>Chi Tiết Đối Tác</h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="viewPartnerBody">
-                    <!-- Nội dung chi tiết Render từ JS -->
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- SCRIPTS -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const sampleAppendixData = {
-            'HĐ-OUT-2026/GARCO': [
-                { code: 'PL-01/GARCO', date: '15/08/2026', desc: 'Bổ sung 5,000 áo Polo màu Trắng', qty: '+5,000 Pcs', val: '+$ 17,500 USD' }
-            ]
-        };
-
-        // Danh sách đối tác lưu trữ mở rộng bao gồm danh bạ người liên hệ và trường tùy chỉnh
-        let partnersList = [
-            {
-                code: 'DT-MAY10',
-                name: 'Tổng Công Ty May 10',
-                type: 'Khách Hàng (Đầu Ra)',
-                phone: '024.3827.1010',
-                address: 'Sài Đồng, Long Biên, Hà Nội',
-                tax: '0100100123',
-                company_note: 'Khách hàng truyền thống, thanh toán đúng hạn.',
-                custom_company_fields: [
-                    { label: 'Quy Mô Công Ty', value: 'Over 10,000 công nhân' }
-                ],
-                contacts: [
-                    { name: 'Nguyễn Văn A', age: '42', phone: '0912.345.678', zalo: '0912345678', social: 'linkedin.com/in/nguyenvana', role: 'Trưởng Phòng Mua Hàng', note: 'Thích trao đổi qua Zalo vào buổi sáng.' },
-                    { name: 'Trần Thị B', age: '35', phone: '0988.765.432', zalo: '0988765432', social: 'facebook.com/tranb', role: 'Quản Lý QC/Kỹ Thuật', note: 'Chịu trách nhiệm duyệt mẫu vải ban đầu.' }
-                ]
-            },
-            {
-                code: 'DT-NDTEXTILE',
-                name: 'Cty Vải Dệt Nam Định',
-                type: 'Nhà Cung Cấp (Đầu Vào)',
-                phone: '0228.3849.555',
-                address: 'TP. Nam Định',
-                tax: '0600123456',
-                company_note: 'Chuyên vải Cotton 100%, chất lượng ổn định.',
-                custom_company_fields: [],
-                contacts: [
-                    { name: 'Lê Văn C', age: '38', phone: '0904.111.222', zalo: '0904111222', social: '', role: 'Giám Đốc Kinh Doanh', note: 'Người chốt hợp đồng và hạn mức công nợ.' }
-                ]
-            }
+        // Mảng lưu trữ danh sách hợp đồng mẫu
+        let outboundContracts = [
+            { code: 'HĐ-OUT-2026/GARCO', kind: 'Hợp Đồng Kinh Tế', partner: 'Tổng Công Ty May 10', type: 'FOB', qty: '50,000 Pcs', val: '$ 175,000 USD', date: '2026-10-30', note: 'Hợp đồng xuất khẩu Polo', custom_fields: [{label: 'Điều khoản thanh toán', value: 'LC trả chậm 30 ngày'}] }
         ];
 
-        let contactCounter = 0;
+        let inboundContracts = [
+            { code: 'HĐ-IN-2026/TEX-01', kind: 'Hợp Đồng Nguyên Tắc', partner: 'Cty Vải Dệt Nam Định', type: 'Mua Vải Cotton', qty: '12,000 Mét', val: '480,000,000 VNĐ', date: '2026-09-15', note: 'Cung cấp vải Cotton cho đơn may áo khoác', custom_fields: [{label: 'Địa điểm giao vải', value: 'Kho Xưởng 2 - Nam Định'}] }
+        ];
+
+        let partnersList = [
+            { code: 'DT-MAY10', name: 'Tổng Công Ty May 10', type: 'Khách Hàng (Đầu Ra)', phone: '024.3827.1010', address: 'Sài Đồng, Long Biên, Hà Nội', tax: '0100100123', company_note: 'Khách hàng truyền thống', contacts: [{name: 'Nguyễn Văn A', role: 'Trưởng Phòng Mua Hàng', phone: '0912.345.678'}] },
+            { code: 'DT-NDTEXTILE', name: 'Cty Vải Dệt Nam Định', type: 'Nhà Cung Cấp (Đầu Vào)', phone: '0228.3849.555', address: 'TP. Nam Định', tax: '0600123456', company_note: 'Chuyên vải Cotton 100%', contacts: [{name: 'Lê Văn C', role: 'Giám Đốc Kinh Doanh', phone: '0904.111.222'}] }
+        ];
+
+        const sampleAppendixData = {
+            'HĐ-OUT-2026/GARCO': [{ code: 'PL-01/GARCO', date: '15/08/2026', desc: 'Bổ sung 5,000 áo Polo màu Trắng', qty: '+5,000 Pcs', val: '+$ 17,500 USD' }]
+        };
 
         $(document).ready(function() {
-            loadCustomHeaderTitles();
             renderPartnerTable();
             syncPartnerDropdown();
-
-            $('.editable-th').on('dblclick click', function() {
-                let thElem = $(this);
-                let currentText = thElem.find('.th-text').text().trim();
-                let storageKey = thElem.data('key');
-
-                let newTitle = prompt("Nhập tên đầu mục mới cho cột này:", currentText);
-                if (newTitle !== null && newTitle.trim() !== "") {
-                    thElem.find('.th-text').text(newTitle.trim().toUpperCase());
-                    if(storageKey) {
-                        localStorage.setItem('ERP_HEADER_' + storageKey, newTitle.trim().toUpperCase());
-                    }
-                }
-            });
-
-            // Mặc định tự thêm Người liên hệ 1 khi mở modal
-            $('#addPartnerModal').on('show.bs.modal', function () {
-                if($('#contacts-container').is(':empty')){
-                    addContactField();
-                }
-            });
         });
 
-        //Render danh sách Đối tác ra bảng
-        function renderPartnerTable() {
-            let tbody = $('#partner-list-body');
-            tbody.empty();
+        // Thêm trường tùy chỉnh Hợp đồng
+        function addCustomContractField() {
+            let fieldId = 'custom_hd_' + Date.now();
+            let html = `
+                <div class="row g-2 mb-2 align-items-center" id="${fieldId}">
+                    <div class="col-5"><input type="text" class="form-control custom-hd-label" placeholder="Tên trường (VD: Điều khoản thanh toán, Cảng giao...)"></div>
+                    <div class="col-6"><input type="text" class="form-control custom-hd-value" placeholder="Giá trị (VD: LC 60 ngày / Cảng Hải Phòng)"></div>
+                    <div class="col-1 text-center">
+                        <button type="button" class="btn btn-outline-danger btn-sm p-1" onclick="$('#${fieldId}').remove()"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+            `;
+            $('#custom-contract-fields-container').append(html);
+        }
 
-            partnersList.forEach((p, index) => {
-                let badgeClass = p.type.includes('Khách Hàng') ? 'bg-primary' : 'bg-danger';
-                let mainContact = (p.contacts && p.contacts.length > 0) ? `${p.contacts[0].name} (${p.contacts[0].role || 'Đầu mối'})` : 'Chưa cập nhật';
+        // Submit Thêm Hợp Đồng
+        $('#formAddContract').submit(function(e) {
+            e.preventDefault();
+            let catType = $('#hd_category_type').val();
+            
+            // Tối ưu các trường tùy chỉnh được thêm động
+            let custom_fields = [];
+            $('#custom-contract-fields-container .row').each(function() {
+                let label = $(this).find('.custom-hd-label').val();
+                let value = $(this).find('.custom-hd-value').val();
+                if(label && label.trim() !== "") {
+                    custom_fields.push({ label: label.trim(), value: value });
+                }
+            });
 
-                tbody.append(`
+            let contractObj = {
+                code: $('#hd_code').val(),
+                kind: $('#hd_kind').val(),
+                partner: $('#hd_partner').val(),
+                type: $('#hd_type').val(),
+                qty: $('#hd_qty').val(),
+                val: $('#hd_val').val(),
+                date: $('#hd_date').val(),
+                note: $('#hd_note').val(),
+                custom_fields: custom_fields
+            };
+
+            if(catType === 'OUTBOUND') {
+                outboundContracts.push(contractObj);
+                renderContractTable('OUTBOUND');
+            } else {
+                inboundContracts.push(contractObj);
+                renderContractTable('INBOUND');
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('addContractModal')).hide();
+            this.reset();
+            $('#custom-contract-fields-container').empty();
+        });
+
+        // Render lại bảng Hợp đồng
+        function renderContractTable(catType) {
+            let isOut = (catType === 'OUTBOUND');
+            let targetList = isOut ? '#outbound-hd-list' : '#inbound-hd-list';
+            let listData = isOut ? outboundContracts : inboundContracts;
+            let codeColor = isOut ? 'text-primary' : 'text-danger';
+
+            $(targetList).empty();
+            listData.forEach((item, index) => {
+                let kindBadge = item.kind === 'Hợp Đồng Nguyên Tắc' ? 'bg-dark' : 'bg-secondary';
+                $(targetList).append(`
                     <tr>
-                        <td class="fw-bold text-dark">${p.code}</td>
-                        <td class="fw-bold text-primary">${p.name}</td>
-                        <td><span class="badge ${badgeClass}">${p.type}</span></td>
-                        <td>${p.phone || '-'}</td>
-                        <td class="fw-medium text-success">${mainContact}</td>
-                        <td class="text-muted" style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.company_note || '-'}</td>
+                        <td class="fw-bold ${codeColor}">${item.code}</td>
+                        <td><span class="badge ${kindBadge}">${item.kind}</span></td>
+                        <td class="fw-medium">${item.partner}</td>
+                        <td><span class="badge bg-info text-dark">${item.type}</span></td>
+                        <td class="fw-bold">${item.qty}</td>
+                        <td class="fw-bold ${codeColor}">${item.val}</td>
+                        <td>${item.date}</td>
                         <td class="text-center">
-                            <button class="btn btn-outline-dark btn-sm py-0 px-2" onclick="viewPartnerDetails(${index})"><i class="fa-solid fa-eye me-1"></i>Xem Chi Tiết (${p.contacts ? p.contacts.length : 0})</button>
+                            <button class="btn btn-outline-dark btn-sm py-0 px-2" onclick="viewContractDetails('${catType}', ${index})"><i class="fa-solid fa-eye me-1"></i>Chi Tiết</button>
+                            <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="showAppendix('${item.code}')"><i class="fa-solid fa-paperclip me-1"></i>Phụ Lục</button>
+                            <button class="btn btn-outline-warning btn-sm py-0 px-2 ms-1" onclick="openAddAppendix('${item.code}')">+ Phụ Lục</button>
                         </td>
                     </tr>
                 `);
             });
         }
 
-        // Thêm trường tùy chỉnh cho Công ty
-        function addCustomCompanyField() {
-            let fieldId = 'custom_comp_' + Date.now();
-            let html = `
-                <div class="row g-2 mb-2 align-items-center" id="${fieldId}">
-                    <div class="col-5"><input type="text" class="form-control custom-comp-label" placeholder="Tên trường (VD: Hạn Mức Tín Dụng)"></div>
-                    <div class="col-6"><input type="text" class="form-control custom-comp-value" placeholder="Giá trị (VD: 200,000,000 VNĐ)"></div>
-                    <div class="col-1 text-center">
-                        <button type="button" class="btn btn-outline-danger btn-sm p-1" onclick="$('#${fieldId}').remove()"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
-                </div>
-            `;
-            $('#custom-company-fields-container').append(html);
-        }
-
-        // Thêm Block Người Liên Hệ
-        function addContactField() {
-            contactCounter++;
-            let contactId = 'contact_block_' + Date.now();
-            
-            let html = `
-                <div class="contact-box" id="${contactId}">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-bold text-primary fs-7"><i class="fa-solid fa-user-tag me-1"></i>NGƯỜI LIÊN HỆ ${$('#contacts-container .contact-box').length + 1}</span>
-                        <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 remove-contact-btn" onclick="removeContactBlock('${contactId}')"><i class="fa-solid fa-trash me-1"></i>Xóa đầu mối này</button>
-                    </div>
-                    <div class="row g-2">
-                        <div class="col-md-4"><label class="form-label mb-1">Tên Người Liên Hệ *</label><input type="text" class="form-control c-name" placeholder="Nguyễn Văn A" required></div>
-                        <div class="col-md-2"><label class="form-label mb-1">Tuổi</label><input type="number" class="form-control c-age" placeholder="30"></div>
-                        <div class="col-md-3"><label class="form-label mb-1">Mảng Phụ Trách</label><input type="text" class="form-control c-role" placeholder="Mua hàng / QC / Kế toán..."></div>
-                        <div class="col-md-3"><label class="form-label mb-1">Số Điện Thoại</label><input type="text" class="form-control c-phone" placeholder="0912.xxx.xxx"></div>
-                        <div class="col-md-4"><label class="form-label mb-1">Zalo</label><input type="text" class="form-control c-zalo" placeholder="Số ĐT Zalo"></div>
-                        <div class="col-md-4"><label class="form-label mb-1">Mạng Xã Hội Khác</label><input type="text" class="form-control c-social" placeholder="Facebook / LinkedIn URL"></div>
-                        <div class="col-md-4"><label class="form-label mb-1">Ghi Chú Vị Trí / Sở Thích</label><input type="text" class="form-control c-note" placeholder="Thói quen làm việc, thời gian gọi..."></div>
-                    </div>
-                </div>
-            `;
-            $('#contacts-container').append(html);
-        }
-
-        function removeContactBlock(id) {
-            $('#' + id).remove();
-            // Đánh số lại thứ tự người liên hệ
-            $('#contacts-container .contact-box').each(function(index) {
-                $(this).find('.contact-box-title').text(`NGƯỜI LIÊN HỆ ${index + 1}`);
-            });
-        }
-
-        // Submit Thêm Đối Tác Mới
-        $('#formAddPartner').submit(function(e) {
-            e.preventDefault();
-            
-            let code = $('#part_code').val();
-            let name = $('#part_name').val();
-            let type = $('#part_type').val();
-            let phone = $('#part_phone').val();
-            let tax = $('#part_tax').val();
-            let address = $('#part_address').val();
-            let company_note = $('#part_company_note').val();
-
-            // Lấy các trường tùy chỉnh công ty
-            let custom_company_fields = [];
-            $('#custom-company-fields-container .row').each(function() {
-                let label = $(this).find('.custom-comp-label').val();
-                let value = $(this).find('.custom-comp-value').val();
-                if(label && label.trim() !== "") {
-                    custom_company_fields.push({ label: label.trim(), value: value });
-                }
-            });
-
-            // Lấy danh sách người liên hệ
-            let contacts = [];
-            $('#contacts-container .contact-box').each(function() {
-                let cName = $(this).find('.c-name').val();
-                if(cName && cName.trim() !== "") {
-                    contacts.push({
-                        name: cName,
-                        age: $(this).find('.c-age').val(),
-                        role: $(this).find('.c-role').val(),
-                        phone: $(this).find('.c-phone').val(),
-                        zalo: $(this).find('.c-zalo').val(),
-                        social: $(this).find('.c-social').val(),
-                        note: $(this).find('.c-note').val()
-                    });
-                }
-            });
-
-            partnersList.push({
-                code: code,
-                name: name,
-                type: type,
-                phone: phone,
-                tax: tax,
-                address: address,
-                company_note: company_note,
-                custom_company_fields: custom_company_fields,
-                contacts: contacts
-            });
-
-            renderPartnerTable();
-            syncPartnerDropdown();
-
-            bootstrap.Modal.getInstance(document.getElementById('addPartnerModal')).hide();
-            this.reset();
-            $('#contacts-container').empty();
-            $('#custom-company-fields-container').empty();
-        });
-
-        // Xem Chi Tiết Đối Tác
-        function viewPartnerDetails(index) {
-            let p = partnersList[index];
-            $('#viewPartnerTitle').html(`<i class="fa-solid fa-id-card me-1"></i>Chi Tiết Chi Tiết: <span class="text-warning">${p.name}</span>`);
+        // Xem Chi Tiết Hợp Đồng
+        function viewContractDetails(catType, index) {
+            let item = (catType === 'OUTBOUND') ? outboundContracts[index] : inboundContracts[index];
+            $('#viewContractTitle').html(`<i class="fa-solid fa-file-contract me-1"></i>Chi Tiết Hợp Đồng: <span class="text-warning">${item.code}</span>`);
 
             let customFieldsHtml = '';
-            if(p.custom_company_fields && p.custom_company_fields.length > 0) {
-                customFieldsHtml = '<div class="col-12 mt-2"><div class="fw-bold text-dark mb-1">Thông Tin Tùy Chỉnh Công Ty:</div><ul class="mb-0 ps-3">';
-                p.custom_company_fields.forEach(cf => {
+            if(item.custom_fields && item.custom_fields.length > 0) {
+                customFieldsHtml = '<div class="col-12 mt-2"><div class="fw-bold text-primary mb-1">CÁC THÔNG TIN TÙY CHỈNH MỞ RỘNG:</div><ul class="mb-0 ps-3">';
+                item.custom_fields.forEach(cf => {
                     customFieldsHtml += `<li><strong>${cf.label}:</strong> ${cf.value}</li>`;
                 });
                 customFieldsHtml += '</ul></div>';
             }
 
-            let contactsHtml = '';
-            if(p.contacts && p.contacts.length > 0) {
-                p.contacts.forEach((c, idx) => {
-                    contactsHtml += `
-                        <div class="col-md-6 mb-2">
-                            <div class="card p-2 bg-light border-1">
-                                <div class="fw-bold text-primary mb-1"><i class="fa-solid fa-user me-1"></i>Đầu Mối ${idx + 1}: ${c.name} ${c.age ? `(${c.age} tuổi)` : ''}</div>
-                                <div><strong>Mảng Phụ Trách:</strong> ${c.role || '-'}</div>
-                                <div><strong>SĐT / Zalo:</strong> ${c.phone || '-'} / ${c.zalo || '-'}</div>
-                                <div><strong>Mạng Xã Hội:</strong> ${c.social ? `<a href="${c.social}" target="_blank">${c.social}</a>` : '-'}</div>
-                                <div class="text-muted mt-1"><small><strong>Ghi chú vị trí:</strong> ${c.note || '-'}</small></div>
-                            </div>
-                        </div>
-                    `;
-                });
-            } else {
-                contactsHtml = '<div class="col-12 text-muted">Chưa có người liên hệ nào được lưu.</div>';
-            }
-
             let bodyHtml = `
-                <div class="row g-2 mb-3">
-                    <div class="col-md-6"><strong>Mã Đối Tác:</strong> ${p.code}</div>
-                    <div class="col-md-6"><strong>Phân Loại:</strong> ${p.type}</div>
-                    <div class="col-md-6"><strong>Mã Số Thuế:</strong> ${p.tax || '-'}</div>
-                    <div class="col-md-6"><strong>ĐT Tổng Đài:</strong> ${p.phone || '-'}</div>
-                    <div class="col-12"><strong>Địa Chỉ:</strong> ${p.address || '-'}</div>
-                    <div class="col-12"><strong>Ghi Chú Công Ty:</strong> ${p.company_note || '-'}</div>
+                <div class="row g-2">
+                    <div class="col-md-6"><strong>Số Hợp Đồng:</strong> <span class="text-primary fw-bold">${item.code}</span></div>
+                    <div class="col-md-6"><strong>Loại Hợp Đồng:</strong> <span class="badge bg-dark">${item.kind}</span></div>
+                    <div class="col-md-12"><strong>Tên Đối Tác:</strong> ${item.partner}</div>
+                    <div class="col-md-6"><strong>Loại hình / Mục đích:</strong> ${item.type}</div>
+                    <div class="col-md-6"><strong>Số lượng / Khối lượng:</strong> ${item.qty}</div>
+                    <div class="col-md-6"><strong>Tổng Giá Trị Hợp Đồng:</strong> <span class="text-success fw-bold">${item.val}</span></div>
+                    <div class="col-md-6"><strong>Hạn Giao / Hoàn Thành:</strong> ${item.date}</div>
+                    <div class="col-12"><strong>Ghi Chú Hợp Đồng:</strong> ${item.note || '-'}</div>
                     ${customFieldsHtml}
                 </div>
-                <hr class="my-2">
-                <div class="fw-bold text-success mb-2 fs-7"><i class="fa-solid fa-address-book me-1"></i>DANH SÁCH NGƯỜI LIÊN HỆ (${p.contacts ? p.contacts.length : 0})</div>
-                <div class="row g-2">
-                    ${contactsHtml}
-                </div>
             `;
-
-            $('#viewPartnerBody').html(bodyHtml);
-            let modal = new bootstrap.Modal(document.getElementById('viewPartnerModal'));
+            $('#viewContractBody').html(bodyHtml);
+            let modal = new bootstrap.Modal(document.getElementById('viewContractModal'));
             modal.show();
-        }
-
-        function loadCustomHeaderTitles() {
-            $('.editable-th').each(function() {
-                let storageKey = $(this).data('key');
-                if(storageKey) {
-                    let savedTitle = localStorage.getItem('ERP_HEADER_' + storageKey);
-                    if(savedTitle) {
-                        $(this).find('.th-text').text(savedTitle);
-                    }
-                }
-            });
-        }
-
-        function switchMainTab(sectionId, titleText, element) {
-            $('.tab-content-panel').hide();
-            $('#sidebar .nav-link').removeClass('active');
-            if(element) $(element).addClass('active');
-            if($('#' + sectionId).length > 0) $('#' + sectionId).fadeIn(150);
-            if(titleText) $('#page-heading').text(titleText.toUpperCase());
         }
 
         function setContractCategory(catType) {
@@ -781,6 +655,30 @@
                 if(!catType || (catType === 'OUTBOUND' && p.type.includes('Khách Hàng')) || (catType === 'INBOUND' && p.type.includes('Nhà Cung Cấp'))) {
                     select.append(`<option value="${p.name}">${p.name} (${p.code})</option>`);
                 }
+            });
+        }
+
+        function renderPartnerTable() {
+            let tbody = $('#partner-list-body');
+            tbody.empty();
+
+            partnersList.forEach((p, index) => {
+                let badgeClass = p.type.includes('Khách Hàng') ? 'bg-primary' : 'bg-danger';
+                let mainContact = (p.contacts && p.contacts.length > 0) ? `${p.contacts[0].name} (${p.contacts[0].role || 'Đầu mối'})` : 'Chưa cập nhật';
+
+                tbody.append(`
+                    <tr>
+                        <td class="fw-bold text-dark">${p.code}</td>
+                        <td class="fw-bold text-primary">${p.name}</td>
+                        <td><span class="badge ${badgeClass}">${p.type}</span></td>
+                        <td>${p.phone || '-'}</td>
+                        <td class="fw-medium text-success">${mainContact}</td>
+                        <td class="text-muted">${p.company_note || '-'}</td>
+                        <td class="text-center">
+                            <button class="btn btn-outline-dark btn-sm py-0 px-2" onclick="alert('Xem đối tác ${p.name}')"><i class="fa-solid fa-eye me-1"></i>Xem Chi Tiết</button>
+                        </td>
+                    </tr>
+                `);
             });
         }
 
@@ -814,59 +712,13 @@
             modal.show();
         }
 
-        // Submit Hợp Đồng
-        $('#formAddContract').submit(function(e) {
-            e.preventDefault();
-            let catType = $('#hd_category_type').val();
-            let code = $('#hd_code').val();
-            let partner = $('#hd_partner').val();
-            let type = $('#hd_type').val();
-            let qty = $('#hd_qty').val();
-            let val = $('#hd_val').val();
-            let date = $('#hd_date').val();
-
-            let targetList = (catType === 'OUTBOUND') ? '#outbound-hd-list' : '#inbound-hd-list';
-            let badgeColor = (catType === 'OUTBOUND') ? 'bg-info text-dark' : 'bg-secondary';
-            let codeColor = (catType === 'OUTBOUND') ? 'text-primary' : 'text-danger';
-
-            $(targetList).append(`
-                <tr>
-                    <td class="fw-bold ${codeColor}">${code}</td>
-                    <td class="fw-medium">${partner}</td>
-                    <td><span class="badge ${badgeColor}">${type}</span></td>
-                    <td class="fw-bold">${qty}</td>
-                    <td class="fw-bold ${codeColor}">${val}</td>
-                    <td>${date}</td>
-                    <td class="text-center">
-                        <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="showAppendix('${code}')"><i class="fa-solid fa-paperclip me-1"></i>Phụ Lục (0)</button>
-                        <button class="btn btn-outline-warning btn-sm py-0 px-2 ms-1" onclick="openAddAppendix('${code}')">+ Phụ Lục</button>
-                    </td>
-                </tr>
-            `);
-
-            bootstrap.Modal.getInstance(document.getElementById('addContractModal')).hide();
-            this.reset();
-        });
-
-        // Submit Phụ Lục
-        $('#formAddAppendix').submit(function(e) {
-            e.preventDefault();
-            let hdCode = $('#app_hd_code').val();
-            let appCode = $('#app_code').val();
-            let appDate = $('#app_date').val();
-            let desc = $('#app_desc').val();
-            let qty = $('#app_qty').val();
-            let val = $('#app_val').val();
-
-            if(!sampleAppendixData[hdCode]) {
-                sampleAppendixData[hdCode] = [];
-            }
-
-            sampleAppendixData[hdCode].push({ code: appCode, date: appDate, desc: desc, qty: qty, val: val });
-            bootstrap.Modal.getInstance(document.getElementById('addAppendixModal')).hide();
-            showAppendix(hdCode);
-            this.reset();
-        });
+        function switchMainTab(sectionId, titleText, element) {
+            $('.tab-content-panel').hide();
+            $('#sidebar .nav-link').removeClass('active');
+            if(element) $(element).addClass('active');
+            if($('#' + sectionId).length > 0) $('#' + sectionId).fadeIn(150);
+            if(titleText) $('#page-heading').text(titleText.toUpperCase());
+        }
     </script>
 </body>
 </html>
