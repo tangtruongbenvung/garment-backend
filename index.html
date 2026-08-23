@@ -12,7 +12,7 @@
     
     <style>
         :root {
-            --sidebar-w: 250px;
+            --sidebar-w: 230px;
             --sidebar-bg: #0f172a;
             --sidebar-active: #2563eb;
             --sidebar-hover: #1e293b;
@@ -21,18 +21,19 @@
             --bg-main: #f8fafc;
         }
 
-        /* Thu nhỏ font tổng thể hệ thống */
+        /* Thu nhỏ font tổng thể hệ thống xuống 11px */
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background-color: var(--bg-main);
-            font-size: 12px; /* Giảm cỡ chữ xuống 12px */
+            font-size: 11px;
             color: #334155;
             overflow-x: hidden;
         }
 
         .form-control, .form-select, .btn {
-            font-size: 12px; /* Đồng bộ font cho Input & Button */
-            padding: 0.35rem 0.65rem;
+            font-size: 11px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
         }
 
         /* --- SIDEBAR STYLING --- */
@@ -46,16 +47,16 @@
             color: var(--sidebar-text);
             overflow-y: auto;
             z-index: 1000;
-            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+            box-shadow: 2px 0 6px rgba(0, 0, 0, 0.05);
             display: flex;
             flex-direction: column;
         }
 
-        #sidebar::-webkit-scrollbar { width: 4px; }
+        #sidebar::-webkit-scrollbar { width: 3px; }
         #sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
         #sidebar .brand {
-            padding: 14px 16px;
+            padding: 10px 12px;
             border-bottom: 1px solid #1e293b;
             background: #090d16;
             position: sticky;
@@ -64,20 +65,20 @@
         }
 
         #sidebar .menu-category {
-            font-size: 9.5px;
+            font-size: 8.5px;
             text-transform: uppercase;
             letter-spacing: 0.8px;
             color: #64748b;
             font-weight: 700;
-            padding: 12px 16px 4px 16px;
+            padding: 10px 12px 3px 12px;
         }
 
         #sidebar .nav-link {
             color: var(--sidebar-text);
-            padding: 7px 12px;
+            padding: 5px 10px;
             font-weight: 500;
-            border-radius: 6px;
-            margin: 1px 8px;
+            border-radius: 4px;
+            margin: 1px 6px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -93,98 +94,115 @@
         #sidebar .nav-link.active {
             color: var(--sidebar-text-active);
             background-color: var(--sidebar-active);
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
         }
 
         #sidebar .nav-link .menu-icon {
-            width: 20px;
-            font-size: 13px;
+            width: 18px;
+            font-size: 12px;
             text-align: center;
-            margin-right: 8px;
+            margin-right: 6px;
         }
 
         #sidebar .submenu {
             padding-left: 0;
             display: none;
             background: #1e293b;
-            border-radius: 6px;
-            margin: 2px 8px 6px 8px;
-            padding: 4px 0;
+            border-radius: 4px;
+            margin: 2px 6px;
+            padding: 2px 0;
         }
 
         #sidebar .submenu .nav-link {
-            margin: 1px 6px;
-            padding: 6px 10px;
-            font-size: 11.5px;
+            margin: 1px 4px;
+            padding: 4px 8px;
+            font-size: 10.5px;
             color: #cbd5e1;
-        }
-
-        #sidebar .submenu .nav-link:hover {
-            background-color: #334155;
-            color: #fff;
         }
 
         /* --- MAIN CONTENT LAYOUT --- */
         #main-content {
             margin-left: var(--sidebar-w);
-            padding: 16px 24px;
+            padding: 12px 18px;
             min-height: 100vh;
         }
 
         .card-custom {
             background: #fff;
-            border-radius: 8px;
+            border-radius: 6px;
             border: 1px solid #e2e8f0;
             box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-            padding: 16px;
-            margin-bottom: 16px;
+            padding: 12px;
+            margin-bottom: 12px;
         }
 
+        /* THU NHỎ & CHỈNH SỬA EDITABLE HEADER */
         .table th {
             background-color: #f8fafc;
             text-transform: uppercase;
-            font-size: 10.5px;
+            font-size: 9.5px;
             letter-spacing: 0.5px;
-            color: #64748b;
+            color: #475569;
             font-weight: 700;
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .editable-th {
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .editable-th:hover {
+            background-color: #e2e8f0 !important;
+        }
+
+        .editable-th .edit-icon {
+            opacity: 0.2;
+            font-size: 9px;
+            margin-left: 4px;
+        }
+
+        .editable-th:hover .edit-icon {
+            opacity: 1;
+            color: #2563eb;
         }
 
         .table td {
-            padding: 10px 12px;
+            padding: 6px 10px;
             vertical-align: middle;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .kpi-card {
-            border-radius: 8px;
-            padding: 14px;
+            border-radius: 6px;
+            padding: 10px 12px;
             background: #fff;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
         }
 
         .badge {
-            padding: 4px 8px;
+            padding: 3px 6px;
             font-weight: 600;
-            font-size: 11px;
-            border-radius: 4px;
+            font-size: 10px;
+            border-radius: 3px;
         }
     </style>
 </head>
 <body>
 
-    <!-- SIDEBAR NAVIGATION (CỘT TRÁI - GỌN GÀNG) -->
+    <!-- SIDEBAR NAVIGATION (CỘT TRÁI) -->
     <div id="sidebar">
         <!-- Logo Brand -->
         <div class="brand d-flex align-items-center">
-            <div class="bg-primary text-white p-1 rounded-2 me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                <i class="fa-solid fa-shirt fs-6"></i>
+            <div class="bg-primary text-white rounded me-2 d-flex align-items-center justify-content-center" style="width: 26px; height: 26px;">
+                <i class="fa-solid fa-shirt fs-7"></i>
             </div>
             <div>
-                <h6 class="fw-bold text-white mb-0" style="letter-spacing: 0.5px; font-size: 13px;">GARMENT ERP</h6>
-                <small class="text-muted" style="font-size: 10px;">Quản Lý May Mặc Cloud</small>
+                <h6 class="fw-bold text-white mb-0" style="letter-spacing: 0.5px; font-size: 12px;">GARMENT ERP</h6>
+                <small class="text-muted" style="font-size: 9px;">Quản Lý May Mặc Cloud</small>
             </div>
         </div>
 
@@ -204,15 +222,15 @@
                     <i class="fa-solid fa-database menu-icon text-warning"></i>
                     <span>Dữ Liệu Nguồn</span>
                 </div>
-                <i class="fa-solid fa-chevron-down opacity-50" style="font-size: 9px;"></i>
+                <i class="fa-solid fa-chevron-down opacity-50" style="font-size: 8px;"></i>
             </a>
             <div class="submenu" id="sub-masterdata">
-                <a class="nav-link" onclick="switchMainTab('master-kh-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Khách hàng Đã/Đang làm</a>
-                <a class="nav-link" onclick="switchMainTab('master-congdoan-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Danh sách Công đoạn</a>
-                <a class="nav-link" onclick="switchMainTab('master-nhansu-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Danh sách Nhân sự</a>
-                <a class="nav-link" onclick="switchMainTab('master-xgc-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Xưởng Gia Công</a>
-                <a class="nav-link" onclick="switchMainTab('master-xgc-tiemnang-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>XGC Tiềm Năng</a>
-                <a class="nav-link" onclick="switchMainTab('master-kh-tiemnang-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>KH Tiềm năng</a>
+                <a class="nav-link" onclick="switchMainTab('master-kh-section', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Khách hàng Đã/Đang làm</a>
+                <a class="nav-link" onclick="switchMainTab('master-congdoan-section', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Danh sách Công đoạn</a>
+                <a class="nav-link" onclick="switchMainTab('master-nhansu-section', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Danh sách Nhân sự</a>
+                <a class="nav-link" onclick="switchMainTab('master-xgc-section', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Xưởng Gia Công</a>
+                <a class="nav-link" onclick="switchMainTab('master-xgc-tiemnang-section', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>XGC Tiềm Năng</a>
+                <a class="nav-link" onclick="switchMainTab('master-kh-tiemnang-section', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>KH Tiềm năng</a>
             </div>
 
             <div class="menu-category">Quản Lý Vận Hành</div>
@@ -222,12 +240,12 @@
                     <i class="fa-solid fa-file-contract menu-icon text-primary"></i>
                     <span>Quản Lý Đơn Hàng</span>
                 </div>
-                <i class="fa-solid fa-chevron-down opacity-50" style="font-size: 9px;"></i>
+                <i class="fa-solid fa-chevron-down opacity-50" style="font-size: 8px;"></i>
             </a>
             <div class="submenu" id="sub-orders">
-                <a class="nav-link" onclick="switchMainTab('contract-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Hợp đồng Sản xuất</a>
-                <a class="nav-link" onclick="switchMainTab('appendix-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Phụ lục Hợp đồng</a>
-                <a class="nav-link" onclick="switchMainTab('po-section', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Đơn hàng PO Tổng thể</a>
+                <a class="nav-link" onclick="switchMainTab('contract-section', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Hợp đồng Sản xuất</a>
+                <a class="nav-link" onclick="switchMainTab('appendix-section', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Phụ lục Hợp đồng</a>
+                <a class="nav-link" onclick="switchMainTab('po-section', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Đơn hàng PO Tổng thể</a>
             </div>
 
             <a class="nav-link" onclick="toggleSubmenu('sub-mfg')">
@@ -235,14 +253,14 @@
                     <i class="fa-solid fa-industry menu-icon text-success"></i>
                     <span>Quản Lý Sản Xuất</span>
                 </div>
-                <i class="fa-solid fa-chevron-down opacity-50" style="font-size: 9px;"></i>
+                <i class="fa-solid fa-chevron-down opacity-50" style="font-size: 8px;"></i>
             </a>
             <div class="submenu" id="sub-mfg">
-                <a class="nav-link" onclick="switchMainTab('mfg-truoccat', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Trước cắt (NPL & Định mức)</a>
-                <a class="nav-link" onclick="switchMainTab('mfg-maymau', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>May mẫu & Giác sơ đồ</a>
-                <a class="nav-link" onclick="switchMainTab('mfg-maydaitra', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>May đại trà & BTP</a>
-                <a class="nav-link" onclick="switchMainTab('mfg-hoanthien', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Hoàn thiện & Đóng gói</a>
-                <a class="nav-link" onclick="switchMainTab('mfg-xuathang', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Xuất hàng & Quyết toán</a>
+                <a class="nav-link" onclick="switchMainTab('mfg-truoccat', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Trước cắt (NPL & Định mức)</a>
+                <a class="nav-link" onclick="switchMainTab('mfg-maymau', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>May mẫu & Giác sơ đồ</a>
+                <a class="nav-link" onclick="switchMainTab('mfg-maydaitra', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>May đại trà & BTP</a>
+                <a class="nav-link" onclick="switchMainTab('mfg-hoanthien', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Hoàn thiện & Đóng gói</a>
+                <a class="nav-link" onclick="switchMainTab('mfg-xuathang', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Xuất hàng & Quyết toán</a>
             </div>
 
             <div class="menu-category">Nguồn Lực & Tài Chính</div>
@@ -252,13 +270,13 @@
                     <i class="fa-solid fa-users menu-icon text-danger"></i>
                     <span>Quản Lý Nhân Sự</span>
                 </div>
-                <i class="fa-solid fa-chevron-down opacity-50" style="font-size: 9px;"></i>
+                <i class="fa-solid fa-chevron-down opacity-50" style="font-size: 8px;"></i>
             </a>
             <div class="submenu" id="sub-hr">
-                <a class="nav-link" onclick="switchMainTab('hr-list', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Thông tin Chi tiết Nhân sự</a>
-                <a class="nav-link" onclick="switchMainTab('hr-chamcong', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Bảng Chấm Công</a>
-                <a class="nav-link" onclick="switchMainTab('hr-thongke', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Thống kê Công đoạn SP</a>
-                <a class="nav-link" onclick="switchMainTab('hr-luong', this)"><i class="fa-regular fa-circle me-2" style="font-size: 8px;"></i>Lương Sản Phẩm & Phụ Cấp</a>
+                <a class="nav-link" onclick="switchMainTab('hr-list', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Thông tin Chi tiết Nhân sự</a>
+                <a class="nav-link" onclick="switchMainTab('hr-chamcong', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Bảng Chấm Công</a>
+                <a class="nav-link" onclick="switchMainTab('hr-thongke', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Thống kê Công đoạn SP</a>
+                <a class="nav-link" onclick="switchMainTab('hr-luong', this)"><i class="fa-regular fa-circle me-1" style="font-size: 7px;"></i>Lương Sản Phẩm & Phụ Cấp</a>
             </div>
 
             <a class="nav-link" onclick="switchMainTab('finance-section', this)">
@@ -274,62 +292,58 @@
     <div id="main-content">
         
         <!-- HEADER TOOLBAR -->
-        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
             <div>
-                <h5 class="fw-bold text-dark mb-0" id="page-heading">Trang Chủ Báo Cáo</h5>
-                <small class="text-muted">Đồng bộ dữ liệu quản lý may mặc theo thời gian thực</small>
+                <h6 class="fw-bold text-dark mb-0" id="page-heading">TRANG CHỦ BÁO CÁO</h6>
+                <small class="text-muted" style="font-size: 10px;">💡 Click đúp vào tiêu đề cột bất kỳ để đổi tên trực tiếp trên Web</small>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm shadow-sm" onclick="openCustomFieldModal()">
-                    <i class="fa-solid fa-sliders me-1"></i>⚙️ Tùy biến Cột dữ liệu
+            <div class="d-flex gap-1">
+                <button class="btn btn-outline-secondary btn-sm" onclick="openCustomFieldModal()">
+                    <i class="fa-solid fa-sliders me-1"></i>⚙️ Tùy biến Cột
                 </button>
-                <button class="btn btn-primary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#addContractModal">
-                    <i class="fa-solid fa-plus me-1"></i>+ Tạo Hợp Đồng Mới
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addContractModal">
+                    <i class="fa-solid fa-plus me-1"></i>+ Tạo Hợp Đồng
                 </button>
             </div>
         </div>
 
         <!-- 1. DASHBOARD OVERVIEW -->
         <div id="dashboard-section" class="tab-content-panel">
-            <div class="row g-2 mb-3">
+            <div class="row g-2 mb-2">
                 <div class="col-md-3">
                     <div class="kpi-card">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-muted small">Hợp Đồng Đang Chạy</span>
+                            <span class="text-muted">Hợp Đồng Đang Chạy</span>
                             <span class="badge bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-file-contract"></i></span>
                         </div>
-                        <div class="fs-5 fw-bold text-dark" id="kpi-contracts">2 HĐ</div>
-                        <span class="text-success small" style="font-size: 11px;"><i class="fa-solid fa-arrow-up me-1"></i>Đang hoạt động</span>
+                        <div class="fs-6 fw-bold text-dark" id="kpi-contracts">2 HĐ</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="kpi-card">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-muted small">Tổng Sản Lượng PO</span>
+                            <span class="text-muted">Tổng Sản Lượng PO</span>
                             <span class="badge bg-info bg-opacity-10 text-info"><i class="fa-solid fa-boxes-stacked"></i></span>
                         </div>
-                        <div class="fs-5 fw-bold text-dark" id="kpi-pcs">25,000 Pcs</div>
-                        <span class="text-muted small" style="font-size: 11px;">Toàn bộ chuyền</span>
+                        <div class="fs-6 fw-bold text-dark" id="kpi-pcs">25,000 Pcs</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="kpi-card">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-muted small">Doanh Thu CM Dự Kiến</span>
+                            <span class="text-muted">Doanh Thu CM Dự Kiến</span>
                             <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-dollar-sign"></i></span>
                         </div>
-                        <div class="fs-5 fw-bold text-success" id="kpi-revenue">$62,500.00</div>
-                        <span class="text-success small" style="font-size: 11px;">Tỷ lệ quy đổi chuẩn</span>
+                        <div class="fs-6 fw-bold text-success" id="kpi-revenue">$62,500.00</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="kpi-card">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-muted small">Chuyền Sản Xuất</span>
+                            <span class="text-muted">Chuyền Sản Xuất</span>
                             <span class="badge bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-industry"></i></span>
                         </div>
-                        <div class="fs-5 fw-bold text-dark">8 Chuyền Active</div>
-                        <span class="text-muted small" style="font-size: 11px;">Hiệu suất 92%</span>
+                        <div class="fs-6 fw-bold text-dark">8 Chuyền Active</div>
                     </div>
                 </div>
             </div>
@@ -337,21 +351,21 @@
 
         <!-- 2. HỢP ĐỒNG SẢN XUẤT -->
         <div id="contract-section" class="tab-content-panel card-custom" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-file-signature me-2 text-primary"></i>Danh Sách Hợp Đồng Sản Xuất</h6>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-file-signature me-1 text-primary"></i>DANH SÁCH HỢP ĐỒNG SẢN XUẤT</h6>
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addContractModal">+ Thêm Hợp Đồng</button>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Mã Hợp Đồng</th>
-                            <th>Khách Hàng (Đối Tác)</th>
-                            <th>Loại Hợp Đồng</th>
-                            <th>Ngày Ký</th>
-                            <th>Trạng Thái</th>
-                            <th class="custom-col-target">Trường Tùy Biến</th>
-                            <th>Thao Tác Kế Thừa</th>
+                            <th class="editable-th" data-key="th_hd_code"><span class="th-text">MÃ HỢP ĐỒNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_hd_customer"><span class="th-text">KHÁCH HÀNG (ĐỐI TÁC)</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_hd_type"><span class="th-text">LOẠI HỢP ĐỒNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_hd_date"><span class="th-text">NGÀY KÝ</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_hd_status"><span class="th-text">TRẠNG THÁI</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th custom-col-target" data-key="th_hd_custom"><span class="th-text">TRƯỜNG TÙY BIẾN</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_hd_action"><span class="th-text">THAO TÁC KẾ THỪA</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                         </tr>
                     </thead>
                     <tbody id="contract-list">
@@ -363,7 +377,7 @@
                             <td><span class="badge bg-success bg-opacity-10 text-success">Đang Hiệu Lực</span></td>
                             <td class="text-muted">--</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary" onclick="openAddAppendixModal('HD-2026/GARCO10')">
+                                <button class="btn btn-sm btn-outline-primary py-0" onclick="openAddAppendixModal('HD-2026/GARCO10')">
                                     + Tạo Phụ Lục
                                 </button>
                             </td>
@@ -376,7 +390,7 @@
                             <td><span class="badge bg-success bg-opacity-10 text-success">Đang Hiệu Lực</span></td>
                             <td class="text-muted">--</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary" onclick="openAddAppendixModal('HD-2026/VTG')">
+                                <button class="btn btn-sm btn-outline-primary py-0" onclick="openAddAppendixModal('HD-2026/VTG')">
                                     + Tạo Phụ Lục
                                 </button>
                             </td>
@@ -386,23 +400,23 @@
             </div>
         </div>
 
-        <!-- 3. PHỤ LỤC HỢP ĐỒNG -->
+        <!-- 3. PHỤ LỤC HỢP ĐỒNG (CÁC ĐẦU MỤC NỘI DUNG NHƯ TRONG ẢNH CÓ THỂ CHỈNH SỬA) -->
         <div id="appendix-section" class="tab-content-panel card-custom" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-paperclip me-2 text-warning"></i>Danh Sách Phụ Lục Hợp Đồng</h6>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-paperclip me-1 text-warning"></i>DANH SÁCH PHỤ LỤC HỢP ĐỒNG</h6>
                 <button class="btn btn-warning text-dark btn-sm fw-bold" onclick="openAddAppendixModal()">+ Tạo Phụ Lục Mới</button>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Mã Phụ Lục</th>
-                            <th>Hợp Đồng Cha</th>
-                            <th>Khách Hàng (Tự Kế Thừa)</th>
-                            <th>Mã Style / Chủng Loại</th>
-                            <th>Đơn Giá CM ($)</th>
-                            <th class="custom-col-target">Trường Tùy Biến</th>
-                            <th>Thao Tác</th>
+                            <th class="editable-th" data-key="th_pl_code"><span class="th-text">MÃ PHỤ LỤC</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_pl_parent"><span class="th-text">HỢP ĐỒNG CHA</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_pl_customer"><span class="th-text">KHÁCH HÀNG (KẾ THỪA)</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_pl_style"><span class="th-text">MÃ STYLE / CHỦNG LOẠI</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_pl_price"><span class="th-text">ĐƠN GIÁ CM ($)</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th custom-col-target" data-key="th_pl_custom"><span class="th-text">TRƯỜNG TÙY BIẾN</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_pl_action"><span class="th-text">THAO TÁC KẾ THỪA</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                         </tr>
                     </thead>
                     <tbody id="appendix-list">
@@ -414,7 +428,7 @@
                             <td class="fw-bold text-success">$2.50</td>
                             <td class="text-muted">--</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-success">
+                                <button class="btn btn-sm btn-outline-success py-0">
                                     + Sinh Đơn PO
                                 </button>
                             </td>
@@ -426,22 +440,22 @@
 
         <!-- 4. ĐƠN HÀNG PO TỔNG THỂ -->
         <div id="po-section" class="tab-content-panel card-custom" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-boxes-stacked me-2 text-success"></i>Danh Sách Đơn Hàng PO Chi Tiết</h6>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0 text-dark fs-7"><i class="fa-solid fa-boxes-stacked me-1 text-success"></i>DANH SÁCH ĐƠN HÀNG PO CHI TIẾT</h6>
                 <button class="btn btn-success btn-sm">+ Tạo PO Chi Tiết</button>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Mã PO</th>
-                            <th>Nguồn Phụ Lục</th>
-                            <th>Khách Hàng</th>
-                            <th>Mã Style</th>
-                            <th>Dải Size (S/M/L/XL/XXL)</th>
-                            <th>Tổng SL</th>
-                            <th>Doanh Thu CM</th>
-                            <th>Tiến Độ</th>
+                            <th class="editable-th" data-key="th_po_code"><span class="th-text">MÃ PO</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_po_source"><span class="th-text">NGUỒN PHỤ LỤC</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_po_customer"><span class="th-text">KHÁCH HÀNG</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_po_style"><span class="th-text">MÃ STYLE</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_po_size"><span class="th-text">DẢI SIZE (S/M/L/XL)</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_po_qty"><span class="th-text">TỔNG SL</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_po_rev"><span class="th-text">DOANH THU CM</span> <i class="fa-solid fa-pen edit-icon"></i></th>
+                            <th class="editable-th" data-key="th_po_status"><span class="th-text">TIẾN ĐỘ</span> <i class="fa-solid fa-pen edit-icon"></i></th>
                         </tr>
                     </thead>
                     <tbody id="po-list">
@@ -462,8 +476,8 @@
 
         <!-- GENERIC PANEL -->
         <div id="generic-section" class="tab-content-panel card-custom" style="display: none;">
-            <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-0">
-                <i class="fa-solid fa-circle-info fs-4 me-3 text-info"></i>
+            <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-0 p-2">
+                <i class="fa-solid fa-circle-info fs-5 me-2 text-info"></i>
                 <div>
                     <strong class="d-block mb-1">Phân hệ đang kết nối dữ liệu tự động:</strong> 
                     Nội dung quản lý chi tiết đang được đồng bộ theo thời gian thực từ quy trình Hợp Đồng & Phụ Lục.
@@ -500,7 +514,7 @@
         </div>
     </div>
 
-    <!-- MODAL 2: TẠO PHỤ LỤC HỢP ĐỒNG (THẢ XUỐNG CHỌN HỢP ĐỒNG) -->
+    <!-- MODAL 2: TẠO PHỤ LỤC HỢP ĐỒNG -->
     <div class="modal fade" id="addAppendixModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
@@ -510,12 +524,10 @@
                 </div>
                 <div class="modal-body">
                     <form id="formAppendix" class="row g-2">
-                        <!-- MENU THẢ XUỐNG CHỌN HỢP ĐỒNG CHA -->
                         <div class="col-12">
                             <label class="form-label fw-bold text-dark mb-1">Chọn Hợp Đồng Nguồn (Menu thả xuống)</label>
                             <select id="app_parent_select" class="form-select border-warning fw-medium" onchange="onContractSelectChange()" required>
                                 <option value="">-- Click để chọn Hợp Đồng --</option>
-                                <!-- Render danh sách Hợp Đồng qua JavaScript -->
                             </select>
                         </div>
                         <div class="col-6"><label class="form-label fw-medium mb-1">Mã Phụ Lục Mới</label><input type="text" id="app_code" class="form-control" required placeholder="VD: PL-02/..."></div>
@@ -562,11 +574,44 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Dữ liệu bộ nhớ tạm danh sách Hợp đồng để đồng bộ Dropdown
         let contractsData = [
             { code: 'HD-2026/GARCO10', customer: 'Tổng Công Ty May 10' },
             { code: 'HD-2026/VTG', customer: 'Tập đoàn Dệt May Việt Tiến' }
         ];
+
+        $(document).ready(function() {
+            // Load lại tiêu đề cột đã lưu trong LocalStorage khi trang web tải xong
+            loadCustomHeaderTitles();
+
+            // Lắng nghe sự kiện Click/Double Click vào tiêu đề cột để Đổi tên trực tiếp
+            $('.editable-th').on('dblclick click', function(e) {
+                // Tránh trigger trùng lắp khi click icon
+                let thElem = $(this);
+                let currentText = thElem.find('.th-text').text().trim();
+                let storageKey = thElem.data('key');
+
+                let newTitle = prompt("Nhập tên đầu mục mới cho cột này:", currentText);
+                if (newTitle !== null && newTitle.trim() !== "") {
+                    thElem.find('.th-text').text(newTitle.trim().toUpperCase());
+                    if(storageKey) {
+                        localStorage.setItem('ERP_HEADER_' + storageKey, newTitle.trim().toUpperCase());
+                    }
+                }
+            });
+        });
+
+        // Hàm khôi phục tên tiêu đề cột đã chỉnh sửa từ bộ nhớ trình duyệt
+        function loadCustomHeaderTitles() {
+            $('.editable-th').each(function() {
+                let storageKey = $(this).data('key');
+                if(storageKey) {
+                    let savedTitle = localStorage.getItem('ERP_HEADER_' + storageKey);
+                    if(savedTitle) {
+                        $(this).find('.th-text').text(savedTitle);
+                    }
+                }
+            });
+        }
 
         function toggleSubmenu(id) {
             $(`#${id}`).slideToggle(180);
@@ -590,18 +635,15 @@
             $('#page-heading').text(titleText);
         }
 
-        // Mở Modal Phụ Lục & Đồng bộ Menu thả xuống chọn Hợp đồng
         function openAddAppendixModal(targetContractCode = null) {
             let selectElem = $('#app_parent_select');
             selectElem.empty();
             selectElem.append('<option value="">-- Click để chọn Hợp Đồng --</option>');
 
-            // Render các Option Hợp đồng từ Dữ liệu
             contractsData.forEach(item => {
                 selectElem.append(`<option value="${item.code}" data-customer="${item.customer}">${item.code} - (${item.customer})</option>`);
             });
 
-            // Nếu gọi từ nút bấm ở dòng Hợp đồng cụ thể
             if(targetContractCode) {
                 selectElem.val(targetContractCode);
                 onContractSelectChange();
@@ -613,7 +655,6 @@
             new bootstrap.Modal(document.getElementById('addAppendixModal')).show();
         }
 
-        // Sự kiện khi người dùng Chọn 1 Hợp đồng trong Thẻ Thả Xuống (Dropdown)
         function onContractSelectChange() {
             let selectedOption = $('#app_parent_select option:selected');
             let customerName = selectedOption.data('customer');
@@ -628,14 +669,24 @@
             let colName = $('#newColumnName').val();
             if(!colName) return alert("Vui lòng nhập tên cột!");
             
-            $('.custom-col-target').before(`<th class="bg-warning bg-opacity-10 text-dark">${colName}</th>`);
+            let keyId = 'custom_' + Date.now();
+            $('.custom-col-target').before(`<th class="editable-th bg-warning bg-opacity-10 text-dark" data-key="${keyId}"><span class="th-text">${colName.toUpperCase()}</span> <i class="fa-solid fa-pen edit-icon"></i></th>`);
             $('.table tbody tr').each(function() {
                 $(this).find('td:last-child').before(`<td><input type="text" class="form-control form-control-sm" placeholder="${colName}..."></td>`);
             });
 
+            // Gán lại sự kiện click chỉnh sửa cho cột mới
+            $(`[data-key="${keyId}"]`).on('dblclick click', function() {
+                let thElem = $(this);
+                let currentText = thElem.find('.th-text').text().trim();
+                let newTitle = prompt("Nhập tên đầu mục mới cho cột này:", currentText);
+                if (newTitle !== null && newTitle.trim() !== "") {
+                    thElem.find('.th-text').text(newTitle.trim().toUpperCase());
+                }
+            });
+
             bootstrap.Modal.getInstance(document.getElementById('customFieldModal')).hide();
             $('#newColumnName').val('');
-            alert(`Đã thêm cột tùy biến: "${colName}"`);
         }
 
         // Form Tạo Hợp Đồng Mới
@@ -646,10 +697,8 @@
             let type = $('#c_type').val();
             let date = $('#c_date').val() || 'Vừa ký';
 
-            // Thêm vào bộ nhớ dữ liệu Hợp đồng
             contractsData.push({ code: code, customer: cust });
 
-            // Render vào Bảng Hợp Đồng
             $('#contract-list').append(`
                 <tr>
                     <td class="fw-bold text-primary">${code}</td>
@@ -659,16 +708,14 @@
                     <td><span class="badge bg-success bg-opacity-10 text-success">Đang Hiệu Lực</span></td>
                     <td class="text-muted">--</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary" onclick="openAddAppendixModal('${code}')">
+                        <button class="btn btn-sm btn-outline-primary py-0" onclick="openAddAppendixModal('${code}')">
                             + Tạo Phụ Lục
                         </button>
                     </td>
                 </tr>
             `);
 
-            // Cập nhật lại đếm số lượng HĐ trên KPI
             $('#kpi-contracts').text(`${contractsData.length} HĐ`);
-
             bootstrap.Modal.getInstance(document.getElementById('addContractModal')).hide();
             this.reset();
         });
@@ -691,7 +738,7 @@
                     <td class="fw-bold text-success">$${parseFloat(price).toFixed(2)}</td>
                     <td class="text-muted">--</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-success">
+                        <button class="btn btn-sm btn-outline-success py-0">
                             + Sinh Đơn PO
                         </button>
                     </td>
