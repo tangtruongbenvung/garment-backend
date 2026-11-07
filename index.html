@@ -10,6 +10,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Thư viện hỗ trợ đọc File Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Chỉ dùng publishable/anon key (không sử dụng service_role) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="dd-config.js"></script>
     <!-- Thư viện OCR nhận diện chữ từ ảnh chụp -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
@@ -69,22 +72,31 @@
         <form onsubmit="handleLogin(event)">
             <div class="mb-2">
                 <label class="form-label fw-bold">Tài khoản:</label>
-                <input type="text" class="form-control form-control-sm" value="Nguyễn Tuấn Chung" required>
+                <input type="email" id="login-email" class="form-control form-control-sm" autocomplete="username" placeholder="Email đăng nhập" required>
             </div>
             <div class="mb-3">
                 <label class="form-label fw-bold">Mật khẩu:</label>
-                <input type="password" class="form-control form-control-sm" value="123456" required>
+                <input type="password" id="login-password" class="form-control form-control-sm" autocomplete="current-password" placeholder="Mật khẩu" required>
             </div>
-            <button type="submit" class="btn btn-primary w-100 fw-bold btn-sm">ĐĂNG NHẬP HỆ THỐNG</button>
+            <button type="submit" id="login-submit" class="btn btn-primary w-100 fw-bold btn-sm">ĐĂNG NHẬP HỆ THỐNG</button>
+            <div id="auth-message" class="small mt-2" role="status" aria-live="polite"></div>
+            <button type="button" class="btn btn-link btn-sm px-0" onclick="sendPasswordReset()">Quên mật khẩu?</button>
         </form>
+        <div id="password-setup" class="d-none">
+          <p class="small text-muted">Thiết lập mật khẩu cho tài khoản vừa kích hoạt.</p>
+          <label class="form-label fw-bold">Mật khẩu mới (ít nhất 12 ký tự)</label>
+          <input id="new-password" type="password" autocomplete="new-password" class="form-control form-control-sm mb-2" minlength="12">
+          <button type="button" class="btn btn-primary btn-sm w-100" onclick="setNewPassword()">Lưu mật khẩu</button>
+        </div>
     </div>
 </div>
 
+<!-- DD-004: Các form ERP chỉ là giao diện thử nghiệm; chưa lưu dữ liệu vào Supabase. -->
 <!-- SIDEBAR NAV -->
 <div id="sidebar" class="d-none">
     <div class="p-3 border-bottom border-secondary">
-        <div class="fw-bold text-white"><i class="fa-solid fa-industry text-primary me-2"></i>ĐỨC DUY ERP</div>
-        <div class="text-success fw-bold mt-1 font-compact">Nguyễn Tuấn Chung (Admin)</div>
+        <div class="fw-bold text-white"><i class="fa-solid fa-industry text-primary me-2"></i>ĐỨC DUY ERP — TEST</div>
+        <div id="current-user-label" class="text-success fw-bold mt-1 font-compact">Đã xác thực</div>
     </div>
     <div class="p-2">
         <button class="nav-btn active" onclick="showModule('doitac')"><i class="fa-solid fa-users"></i> 1. Danh Sách Đối Tác</button>
@@ -483,66 +495,107 @@
 </div>
 
 <script>
-    let partners = [
-        { id: 1, mst: "2233445566", name: "Công ty TNHH ABC", address: "Hà Nội", contacts: [{ name: "Mr. K", role: "Kỹ Thuật", phone: "0988123456", note: "" }] },
-        { id: 2, mst: "0109998888", name: "CÔNG TY TNHH ĐẦU TƯ ĐỨC DUY", address: "Hải Phòng", contacts: [{ name: "Nguyễn Tuấn Chung", role: "Quản lý", phone: "0912345678", note: "" }] }
-    ];
+    // Dữ liệu demo đã được gỡ khỏi phiên bản xác thực. 
+    // Dữ liệu nghiệp vụ Supabase sẽ được tích hợp qua API/RLS trong giai đoạn tiếp theo.
+    let partners = [];
+    let contracts = [];
+    let subContracts = [];
+    let thuChis = [];
 
-    let contracts = [
-        { 
-            id: 1, 
-            partnerId: 1, 
-            code: "HĐKT012026", 
-            type: "HĐKT",
-            products: [
-                {
-                    masp: "SS26-D205",
-                    name: "Áo Polo Nam",
-                    defaultPrice: 250000,
-                    variants: [
-                        { color: "Đen", size: "S", qtyPlan: 100, price: 250000, qtyReal: 100 },
-                        { color: "Đen", size: "M", qtyPlan: 200, price: 250000, qtyReal: 200 },
-                        { color: "Trắng", size: "XL", qtyPlan: 150, price: 260000, qtyReal: 150 }
-                    ]
-                }
-            ],
-            paid: 15000000, discount: 0 
-        },
-        { id: 2, partnerId: 2, code: "HĐNT-AW26", type: "HĐNT", products: [], paid: 50000000, discount: 0 }
-    ];
+    // DD-004: Authentication test only. NOT a replacement for server-enforced role checks.
+    const DD_AUTH_URL = 'https://ykhrtrvstymfjnzdgzna.supabase.co';
+    const DD_PUBLIC_KEY = window.DD_CONFIG?.supabasePublishableKey || '';
+    const DD_AUTH_READY = DD_PUBLIC_KEY.length > 15 && !DD_PUBLIC_KEY.includes('DIEN_');
+    const ddAuth = DD_AUTH_READY && window.supabase?.createClient
+      ? window.supabase.createClient(DD_AUTH_URL, DD_PUBLIC_KEY, {
+          auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
+        }) : null;
+    let ddIsSettingPassword = false;
 
-    let subContracts = [
-        { 
-            id: 1, 
-            contractId: 2, 
-            plCode: "PL01/HĐNT", 
-            date: "2026-08-15", 
-            products: [
-                {
-                    masp: "AW26-D72",
-                    name: "Áo Khoác Bomber",
-                    defaultPrice: 650000,
-                    variants: [
-                        { color: "Xanh Navy", size: "M", qtyPlan: 80, price: 650000, qtyReal: 80 },
-                        { color: "Xanh Navy", size: "L", qtyPlan: 120, price: 650000, qtyReal: 120 }
-                    ]
-                }
-            ],
-            exp1: 100, exp2: 100, exp3: 0 
-        }
-    ];
-
-    let thuChis = [
-        { id: 1, date: "2026-08-16", content: "Ứng tiền đợt 1 HĐKT", hdCode: "HĐKT012026", plCode: "PL01/HĐKT", masp: "SS26-D205", thu: 10000000, chi: 0 }
-    ];
-
-    function handleLogin(e) {
-        e.preventDefault();
+    function authMessage(text, error = false) {
+        const el = document.getElementById('auth-message');
+        el.textContent = text;
+        el.className = 'small mt-2 ' + (error ? 'text-danger' : 'text-muted');
+    }
+    function showLogin() {
+        $('#login-screen').removeClass('d-none');
+        $('#sidebar, #main-content').addClass('d-none');
+    }
+    function showPasswordSetup() {
+        ddIsSettingPassword = true;
+        $('#login-screen').removeClass('d-none');
+        $('#sidebar, #main-content').addClass('d-none');
+        $('#password-setup').removeClass('d-none');
+        $('#login-screen form').addClass('d-none');
+        authMessage('Vui lòng đặt mật khẩu mới cho tài khoản.');
+    }
+    function showERP(session) {
+        if (!session?.user || ddIsSettingPassword) return;
         $('#login-screen').addClass('d-none');
         $('#sidebar, #main-content').removeClass('d-none');
+        $('#current-user-label').text(session.user.email || 'Đã xác thực');
         renderAllModules();
     }
-    function handleLogout() { location.reload(); }
+    async function handleLogin(e) {
+        e.preventDefault();
+        if (!ddAuth) { authMessage('Chưa cấu hình Supabase publishable key trong dd-config.js.', true); return; }
+        const button = document.getElementById('login-submit');
+        button.disabled = true;
+        authMessage('Đang xác thực...');
+        try {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const {data, error} = await ddAuth.auth.signInWithPassword({email, password});
+            if (error) throw error;
+            if (data?.session) showERP(data.session);
+        } catch(err) { authMessage('Đăng nhập thất bại. Kiểm tra email, mật khẩu và trạng thái xác minh tài khoản.', true); }
+        finally { button.disabled = false; }
+    }
+    async function handleLogout() {
+        if (ddAuth) await ddAuth.auth.signOut();
+        showLogin();
+        authMessage('Đã đăng xuất.');
+    }
+    async function sendPasswordReset() {
+        if (!ddAuth) { authMessage('Chưa cấu hình kết nối Supabase.', true); return; }
+        const email = document.getElementById('login-email').value.trim();
+        if (!email) { authMessage('Nhập email tài khoản trước khi yêu cầu đặt lại mật khẩu.', true); return; }
+        const {error} = await ddAuth.auth.resetPasswordForEmail(email, {redirectTo: location.origin + location.pathname});
+        authMessage(error ? 'Không thể gửi yêu cầu. Kiểm tra cấu hình hoặc thử lại.' : 'Nếu email hợp lệ, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.', !!error);
+    }
+    async function setNewPassword() {
+        if (!ddAuth) return;
+        const password = document.getElementById('new-password').value;
+        if (password.length < 12) { authMessage('Mật khẩu mới cần ít nhất 12 ký tự.', true); return; }
+        const {error} = await ddAuth.auth.updateUser({password});
+        if (error) { authMessage('Không thể cập nhật mật khẩu: ' + error.message, true); return; }
+        ddIsSettingPassword = false;
+        $('#password-setup').addClass('d-none');
+        $('#login-screen form').removeClass('d-none');
+        const {data} = await ddAuth.auth.getSession();
+        if (data.session) showERP(data.session); else showLogin();
+        history.replaceState(null, '', location.pathname);
+    }
+    (function initDDAuth() {
+        showLogin();
+        if (!ddAuth) { authMessage('Chưa kết nối: cần điền publishable key vào dd-config.js.', true); return; }
+        const isInvite = new URLSearchParams(location.hash.substring(1)).get('type') === 'invite'
+            || new URLSearchParams(location.search).get('type') === 'invite';
+        // Auth state event is managed by Supabase JS; no local password fallback.
+        ddAuth.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY' || (isInvite && session && !ddIsSettingPassword)) {
+                showPasswordSetup();
+            } else if (event === 'SIGNED_OUT') {
+                ddIsSettingPassword = false;
+                showLogin();
+            } else if (session && !ddIsSettingPassword) {
+                showERP(session);
+            }
+        });
+        ddAuth.auth.getSession().then(({data}) => {
+            if (data.session && !isInvite && !ddIsSettingPassword) showERP(data.session);
+        });
+    })();
 
     function showModule(modId) {
         $('.mod-view').addClass('d-none');
