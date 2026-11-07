@@ -56,7 +56,22 @@ async function reload(){const [a,b,c,d,e,f,g,h]=await Promise.all([
  $('sMaterials').textContent=mats.length;$('sPackages').textContent=packs.length;$('sPending').textContent=docs.filter(x=>x.status==='submitted').length;$('sOrders').textContent=new Set(plans.map(x=>x.order_code)).size;
  drawMaterials();fillSelectors();drawStock();drawUsage();drawDocs();if((h.count||0)>ledger.length)msg('Sổ vật tư vượt '+ledger.length+' dòng đã tải: tạm ngừng dùng số tổng hợp, cần chuyển sang báo cáo phân trang/RPC.',true)
 }
-async function saveMaterial(){if(!isCEO)throw Error('Chỉ CEO được tạo mã vật tư');const r=await client.from('dd10m_materials').insert({company_id:COMPANY,material_code:$('matCode').value.trim(),material_name:$('matName').value.trim(),category:$('matCategory').value,base_unit:$('matUnit').value.trim(),color:$('matColor').value.trim()||'-',specification:$('matSpec').value.trim(),owner_name:$('matOwner').value.trim()}).select('id');if(req(r,'Lưu vật tư').length!==1)throw Error('Lưu vật tư không trả về bản ghi');msg('Đã lưu mã vật tư');await reload()}
+async function saveMaterial(){
+ if(!isCEO)throw Error('Chỉ CEO được tạo mã vật tư');
+ const fields=[['matCode','Mã vật tư'],['matName','Tên vật tư'],['matUnit','Đơn vị tính gốc']];
+ const missing=[];
+ for(const [id,label] of fields){const el=$(id);const empty=!el.value.trim();el.style.borderColor=empty?'#d32f2f':'';el.setAttribute('aria-invalid',String(empty));if(empty)missing.push({el,label});}
+ if(missing.length){missing[0].el.focus();throw Error('Chưa thể lưu: cần nhập '+missing.map(x=>x.label).join(', ')+'.');}
+ const material_code=$('matCode').value.trim(),material_name=$('matName').value.trim(),base_unit=$('matUnit').value.trim();
+ const payload={company_id:COMPANY,material_code,material_name,category:$('matCategory').value,base_unit,color:$('matColor').value.trim()||'-',specification:$('matSpec').value.trim(),owner_name:$('matOwner').value.trim()};
+ const r=await client.from('dd10m_materials').insert(payload).select('id,material_code,material_name,base_unit');
+ if(r.error?.code==='23505')throw Error('Mã vật tư đã tồn tại với chủ sở hữu này.');
+ if(r.error?.code==='23514')throw Error('Dữ liệu chưa hợp lệ: kiểm tra mã, tên và đơn vị tính gốc. '+r.error.message);
+ const saved=req(r,'Lưu vật tư');if(saved.length!==1)throw Error('Không nhận được xác nhận bản ghi đã lưu');
+ if(saved[0].material_code!==material_code||saved[0].material_name!==material_name||saved[0].base_unit!==base_unit)throw Error('Dữ liệu phản hồi không khớp; cần kiểm tra lại');
+ await reload();msg('Đã lưu vật tư '+material_code+' ('+base_unit+').');
+ $('matCode').value='';$('matName').value='';$('matUnit').value='';$('matColor').value='';$('matSpec').value='';
+}
 async function saveUnit(){if(!isCEO)throw Error('Chỉ CEO được khai quy đổi');const material_id=$('unitMaterial').value,unit_code=$('unitCode').value.trim(),factor_to_base=num($('unitFactor').value);if(!material_id||!unit_code||!(factor_to_base>0))throw Error('Cần mã vật tư, đơn vị phụ và hệ số >0');const r=await client.from('dd10m_units').upsert({company_id:COMPANY,material_id,unit_code,factor_to_base},{onConflict:'material_id,unit_code'}).select('id');if(req(r,'Quy đổi').length!==1)throw Error('Không thấy bản ghi quy đổi');msg('Đã lưu quy đổi');await reload()}
 async function savePack(){if(!canDoc)throw Error('Không có quyền lập mã kiện');const r=await client.rpc('dd10m_create_package',{p_material_id:$('packMaterial').value,p_package_code:$('packCode').value.trim(),p_lot_code:$('packLot').value.trim(),p_order_code:$('packOrder').value.trim(),p_note:$('packNote').value.trim()});req(r,'Tạo cây/cuộn/kiện');msg('Đã tạo mã cây/cuộn/kiện (chưa nhập tồn)');await reload()}
 async function savePlan(){if(!isCEO)throw Error('Chỉ CEO được sửa định mức');const order_code=$('planOrder').value.trim(),material_id=$('planMaterial').value,planned_qty_base=num($('planQty').value);if(!order_code||!material_id||!(planned_qty_base>=0))throw Error('Đơn hàng, vật tư và định mức không hợp lệ');let r=await client.from('dd10m_order_requirements').upsert({company_id:COMPANY,order_code,material_id,planned_qty_base},{onConflict:'company_id,order_code,material_id'}).select('id');if(req(r,'Lưu định mức').length!==1)throw Error('Lưu định mức không trả về dòng');msg('Đã lưu định mức đơn hàng');await reload()}
