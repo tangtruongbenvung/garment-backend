@@ -105,7 +105,8 @@
         <button class="nav-btn" onclick="showModule('thuchi')"><i class="fa-solid fa-calculator"></i> 4. Sổ Thu Chi & Hạch Toán</button>
         <hr class="border-secondary my-2">
         <button class="nav-btn text-warning" onclick="openCartonModal()"><i class="fa-solid fa-box-open"></i> 5. In Phụ Lục Dán Thùng</button>
-        <button class="nav-btn" onclick="window.location.href='dd-ceo.html'"><i class="fa-solid fa-gauge-high"></i> 6. Trung Tâm Điều Hành AI OS</button>
+        <button class="nav-btn" onclick="window.location.href='dd-ceo.html'"><i class="fa-solid fa-gauge-high"></i> 6. Dashboard 12 AI Agent (CEO)</button>
+        <button class="nav-btn" onclick="window.location.href='dd-pricing.html'"><i class="fa-solid fa-tags"></i> 7. DD-03 Giá & Lợi Nhuận</button>
         <hr class="border-secondary my-2">
         <button class="nav-btn text-danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất</button>
     </div>
@@ -536,6 +537,16 @@
         $('#sidebar, #main-content').removeClass('d-none');
         $('#current-user-label').text(session.user.email || 'Đã xác thực');
         renderAllModules();
+        // Dashboard AI OS is the default landing for CEO; ?view=erp explicitly opens legacy ERP.
+        if (!new URLSearchParams(location.search).has('view') && !window.ddCEOCheckPending) {
+            window.ddCEOCheckPending = true;
+            ddAuth.from('dd_user_roles').select('role_code')
+              .eq('user_id',session.user.id)
+              .eq('company_id','a7e8d079-e48f-48b1-866d-6febaa65e379')
+              .eq('role_code','ceo').then(({data,error})=>{
+                if (!error && data?.length && !ddIsSettingPassword) location.replace('dd-ceo.html');
+              }).finally(()=>{window.ddCEOCheckPending=false});
+        }
     }
     async function handleLogin(e) {
         e.preventDefault();
