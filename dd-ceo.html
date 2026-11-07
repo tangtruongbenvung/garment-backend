@@ -14,6 +14,9 @@
 .hero{background:linear-gradient(115deg,#122e54,#1764bd);border-radius:15px;padding:22px;color:white;margin:18px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}.hero h2{font-size:23px;margin:0 0 8px}.hero p{margin:0;color:#d5e7ff;max-width:780px}.hero .btn{background:#fff;color:#124b9a}.agent-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.agent{min-height:154px;display:flex;flex-direction:column;gap:7px}.agent .name{min-height:unset;margin:4px 0;font-size:17px}.agent a{color:#1764e8;font-weight:800;text-decoration:none;font-size:12px}.agent .tag{align-self:flex-start;margin-top:auto}.nav.ai{background:#1b3558;border:1px solid #40628d}#app .stats{margin:15px 0 25px}.section-description{color:#6680a1;font-size:12px;margin-top:4px}@media(max-width:1050px){.agent-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.agent-grid{grid-template-columns:1fr}}
 
 .dd03-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.dd03-kpi{border:1px solid #dce6f3;background:#f7faff;border-radius:10px;padding:12px;color:#596b85;font-size:12px}.dd03-kpi strong{display:block;font-size:25px;color:#142d53;margin-top:8px}.dd03-alert-table{min-width:1050px}.dd03-alert-table th,.dd03-alert-table td{white-space:nowrap}.dd03-row-loss{background:#fff0f0}.dd03-row-warning{background:#fffaf0}.dd03-row-good{background:#edf9f1}.dd03-row-na{background:#f7f9fc}.dd03-level{font-size:11px;padding:5px 8px;border-radius:13px;font-weight:800;white-space:nowrap}.dd03-level-loss{color:#ad2530;background:#ffdce0}.dd03-level-warning{color:#805008;background:#ffe8b8}.dd03-level-good{color:#12633e;background:#d5f1de}.dd03-level-na{color:#53647a;background:#e8edf3}.dd03-proposal-chip{display:inline-block;border-radius:8px;background:#eff5ff;padding:5px 8px;color:#204b89;font-weight:650;margin:3px 0}.dd03-alert-table .btn{font-size:11px;padding:6px 9px}@media(max-width:950px){.dd03-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.dd03-kpis{grid-template-columns:1fr}}
+
+.dd06-toolbar{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:12px 0}.dd06-toolbar .field{width:210px;max-width:100%}
+.dd06-table{min-width:1020px}.dd06-table th,.dd06-table td{min-width:100px}.dd06-table .reason{min-width:180px}.dd06-state{display:inline-block;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:750;background:#eaf2fc;color:#234974}.dd06-state.applied{background:#dbf5e4;color:#115c3a}.dd06-state.scheduled{background:#fff0cf;color:#80540a}.dd06-state.pending{background:#f2f3f7;color:#4d5b70}.dd06-date{min-width:152px!important;max-width:180px}.dd06-history{font-size:12px;margin-top:10px;color:#627591}.dd06-warning{padding:10px;background:#fff8e9;border:1px solid #f2d69a;border-radius:9px;margin-top:12px;color:#785008}
 </style>
 </head>
 <body>
@@ -29,6 +32,10 @@
 <div class="small muted" style="margin-top:10px">Phí kênh và biến phí lấy từ bảng SKU; chi phí cố định phân bổ theo giả định tháng và kế hoạch kênh. Giá đề xuất cần CEO duyệt, không tự áp vào bảng giá.</div></section>
 <section class="stats"><div class="stat"><div class="muted">Agent trong danh mục</div><div class="num" id="n-agents">—</div><div class="small muted">Đọc từ dd_agents</div></div><div class="stat"><div class="muted">Agent đang bật</div><div class="num" id="n-active">—</div><div class="small muted">Chưa kích hoạt bằng dashboard</div></div><div class="stat"><div class="muted">Đang chờ CEO duyệt</div><div class="num" id="n-pending">—</div><div class="small muted">Hàng đợi thực tế</div></div><div class="stat"><div class="muted">Đã ra quyết định</div><div class="num" id="n-decided">—</div><div class="small muted">Yêu cầu đã duyệt/từ chối</div></div></section>
 <section class="panel"><div class="heading"><div><h2>Trung tâm phê duyệt CEO</h2><div class="muted small">Chỉ CEO được quyết định qua hàm RPC `dd_decide_approval`. Duyệt yêu cầu chưa tự động thực thi nghiệp vụ.</div></div><div class="field"><label for="status">Hiển thị</label><select id="status"><option value="pending">Đang chờ duyệt</option><option value="all">Tất cả trạng thái</option></select></div></div><div class="tablewrap"><table class="tbl"><thead><tr><th>Ngày gửi</th><th>Loại yêu cầu</th><th>Nội dung đề xuất</th><th>Trạng thái</th><th>Người gửi</th><th>Thao tác CEO</th></tr></thead><tbody id="approvals"><tr><td colspan="6" class="empty">Đang tải...</td></tr></tbody></table></div></section>
+<section class="panel" id="dd06-price-applications"><div class="heading"><div><h2>DD-03 V6 · Áp dụng giá đã được CEO duyệt</h2><div class="muted small">Chỉ CEO có quyền lên lịch hoặc áp dụng. Ngày tương lai chỉ lên lịch; CEO áp dụng sau khi đến ngày hiệu lực. Mỗi quyết định chỉ được áp dụng một lần.</div></div></div>
+<div class="dd06-warning">Hệ thống đối chiếu giá cũ trong đề xuất với giá SKU hiện tại. Nếu giá đã thay đổi, thao tác sẽ bị chặn và phải tạo đề xuất mới. Giao dịch bán hàng đã lưu không bị sửa lại.</div>
+<div class="tablewrap" style="margin-top:14px"><table class="tbl dd06-table"><thead><tr><th>SKU · Kênh</th><th>Giá cũ</th><th>Giá duyệt</th><th>Ngày hiệu lực</th><th>Trạng thái áp dụng</th><th class="reason">Người thực hiện</th><th>Thao tác CEO</th></tr></thead><tbody id="dd06-application-rows"><tr><td colspan="7" class="empty">Đang tải quyết định giá...</td></tr></tbody></table></div>
+<div class="dd06-history">Lịch sử giá được lưu tại bảng dd03_price_applications và nhật ký dd_audit_logs. Không tự cập nhật theo lịch khi chưa có thao tác CEO.</div></section>
 <section class="panel"><div class="heading"><div><h2>Tạo yêu cầu thử nghiệm</h2><div class="muted small">Chỉ để kiểm tra quy trình; tạo bản ghi thật trên Supabase. Không ghi số liệu sản xuất hoặc thanh toán.</div></div></div><form id="request-form"><div class="formgrid"><label class="field"><span>Loại yêu cầu</span><select id="req-type"><option value="test_ceo_approval">test_ceo_approval</option></select></label><label class="field"><span>Mô tả thử nghiệm (không chứa dữ liệu mật)</span><input id="req-note" maxlength="200" placeholder="Ví dụ: Kiểm thử phê duyệt DD-005" required></label></div><button id="submit-test" class="btn primary" type="submit">Gửi yêu cầu thử nghiệm</button></form></section>
 <section class="panel"><div class="heading"><div><h2>Nhật ký hoạt động</h2><div class="muted small">Đọc từ `dd_audit_logs`, tối đa 30 bản ghi gần nhất.</div></div></div><div id="audit" class="audit"><div class="empty">Đang tải...</div></div></section>
 <section class="panel small muted"><strong>Phạm vi DD-005:</strong> Chỉ kết nối các bảng quản trị AI OS và RPC phê duyệt. Không thay thế các module hợp đồng/ERP, không đồng bộ doanh thu và không cho phép Agent tự thực thi lệnh kinh doanh. Để nghiệm thu bảo mật cần kiểm tra thêm một tài khoản không phải CEO bằng JWT thực.</section>
@@ -40,7 +47,7 @@
   const URL='https://ykhrtrvstymfjnzdgzna.supabase.co';
   const key=window.DD_CONFIG?.supabasePublishableKey||'';
   const el=id=>document.getElementById(id);
-  let client=null,locked=false,authed=false,rows=[],personNames=new Map();
+  let client=null,locked=false,authed=false,rows=[],personNames=new Map(),priceApplications=[];
   const shownName=id=>personNames.get(id)||(id?'Chưa đặt tên nhân viên':'—');
   async function getPersonNames(){const {data,error}=await client.from('dd03_person_names').select('user_id,display_name').eq('company_id',COMPANY_ID);if(error)throw error;personNames=new Map((data||[]).map(x=>[x.user_id,x.display_name]));const {data:profiles}=await client.from('dd_profiles').select('user_id,display_name');for(const p of profiles||[])if(!personNames.has(p.user_id)&&p.display_name)personNames.set(p.user_id,p.display_name)}
   function text(id,value){el(id).textContent=String(value);}
@@ -73,15 +80,56 @@
     await getPersonNames();const agentData=await readTable('dd_agents',client.from('dd_agents').select('agent_code,agent_name,enabled').order('agent_code'));
     const reqData=await readTable('dd_approval_requests',client.from('dd_approval_requests').select('id,request_type,request_payload,status,requested_by,requested_at,reviewed_at').eq('company_id',COMPANY_ID).order('requested_at',{ascending:false}).limit(200));
     const auditData=await readTable('dd_audit_logs',client.from('dd_audit_logs').select('action,actor_user_id,entity_id,created_at,changes').eq('company_id',COMPANY_ID).order('created_at',{ascending:false}).limit(30));
+    priceApplications=await readTable('dd03_price_applications',client.from('dd03_price_applications').select('request_id,company_id,sku,channel,old_price,new_price,effective_date,status,scheduled_by,scheduled_at,applied_by,applied_at').eq('company_id',COMPANY_ID).order('scheduled_at',{ascending:false}).limit(200));
     await dd03LoadAlerts();
     text('n-agents',agentData.length);text('n-active',agentData.filter(a=>a.enabled===true).length);text('n-pending',reqData.filter(r=>r.status==='pending').length);text('n-decided',reqData.filter(r=>['approved','rejected'].includes(r.status)).length);
     const container=el('agents');container.replaceChildren();if(!agentData.length)addEmpty(container,0,'Chưa có Agent trong database.');
     for(const a of agentData){const div=document.createElement('div');div.className='agent';const code=document.createElement('div');code.className='code';code.textContent=a.agent_code;const name=document.createElement('div');name.className='name';name.textContent=a.agent_name;div.append(code,name);if(a.agent_code==='DD-03'){const open=document.createElement('a');open.href='dd-pricing.html';open.textContent='MỞ CHỨC NĂNG PRICING & PROFIT →';div.appendChild(open)}else{const d=document.createElement('div');d.className='section-description';d.textContent='Chưa có giao diện nghiệp vụ.';div.appendChild(d)}div.appendChild(tag(a.enabled?'Đã bật trong DB':'Chưa kích hoạt',a.enabled));container.appendChild(div)}
-    rows=reqData;drawApprovals();const audit=el('audit');audit.replaceChildren();if(!auditData.length)addEmpty(audit,0,'Chưa có sự kiện nhật ký.');
+    rows=reqData;drawApprovals();drawPriceApplications();const audit=el('audit');audit.replaceChildren();if(!auditData.length)addEmpty(audit,0,'Chưa có sự kiện nhật ký.');
     for(const a of auditData){const div=document.createElement('div');div.className='audit-item';const head=document.createElement('div');head.className='head';const label=document.createElement('span');label.textContent=a.action;const date=document.createElement('span');date.textContent=formatDate(a.created_at);head.append(label,date);const meta=document.createElement('div');meta.className='meta';meta.textContent='Đối tượng: '+(a.entity_id||'—')+' · Người thực hiện: '+shownName(a.actor_user_id);div.append(head,meta);audit.appendChild(div)}
   }catch(e){displayError('Không tải được dữ liệu: '+e.message)}finally{locked=false;el('refresh').disabled=false}}
   function drawApprovals(){const tbody=el('approvals');tbody.replaceChildren();const filtered=rows.filter(r=>el('status').value==='all'||r.status==='pending');if(!filtered.length){addEmpty(tbody,6,'Không có yêu cầu trong nhóm đã chọn.');return}
     for(const r of filtered){const tr=document.createElement('tr');cell(tr,formatDate(r.requested_at));cell(tr,r.request_type);const payload=r.request_payload||{};let note=typeof payload.note==='string'?payload.note:'(Không có ghi chú)';if(r.request_type==='dd03_price_change'){const original=Number(payload.current_price),proposed=Number(payload.proposed_price);note='ĐỀ XUẤT ĐỔI GIÁ · '+String(payload.sku||'—')+' / '+String(payload.channel||'—').toUpperCase()+' · '+(Number.isFinite(original)?dd03Money(original):'—')+' → '+(Number.isFinite(proposed)?dd03Money(proposed):'—')+' · Lý do: '+String(payload.reason||'—')+' · Giá mục tiêu KH: '+(Number.isFinite(Number(payload.target_price))?dd03Money(Number(payload.target_price)):'—');}cell(tr,note.slice(0,400));const status=cell(tr,'');status.appendChild(tag(({pending:'Chờ duyệt',approved:'Đã duyệt',rejected:'Từ chối',cancelled:'Đã hủy'})[r.status]||r.status,r.status==='approved'));cell(tr,shownName(r.requested_by));const action=cell(tr,'');if(r.status==='pending'){const controls=document.createElement('div');controls.className='controls';for(const [decision,label] of [['approved','Duyệt'],['rejected','Từ chối']]){const b=document.createElement('button');b.className='btn '+(decision==='approved'?'primary':'danger');b.type='button';b.textContent=label;b.addEventListener('click',()=>decide(r,decision));controls.appendChild(b)}action.appendChild(controls)}else{action.textContent=r.reviewed_at?formatDate(r.reviewed_at):'—'}tbody.appendChild(tr)}
+  }
+  function vnToday(){return new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Ho_Chi_Minh'});}
+  function drawPriceApplications(){
+    const tbody=el('dd06-application-rows');tbody.replaceChildren();
+    const list=rows.filter(r=>r.request_type==='dd03_price_change'&&r.status==='approved');
+    const histories=new Map(priceApplications.map(h=>[h.request_id,h]));
+    if(!list.length){addEmpty(tbody,7,'Chưa có quyết định giá DD-03 được CEO phê duyệt.');return;}
+    for(const req of list){
+      const h=histories.get(req.id),payload=req.request_payload||{},tr=document.createElement('tr');
+      cell(tr,String(payload.sku||'—')+' · '+String(payload.channel||'—').toUpperCase());
+      cell(tr,dd03Money(Number(payload.current_price)));cell(tr,dd03Money(Number(payload.proposed_price)));
+      const dayCell=cell(tr,'');const actionCell=cell(tr,'');
+      if(h){const date=document.createElement('span');date.textContent=h.effective_date;dayCell.append(date)}
+      else {const date=document.createElement('input');date.type='date';date.className='dd06-date';date.min=vnToday();date.value=vnToday();date.setAttribute('aria-label','Ngày hiệu lực cho '+String(payload.sku||'SKU'));dayCell.append(date)}
+      const state=cell(tr,'');const badge=document.createElement('span');badge.className='dd06-state '+(h?.status||'pending');badge.textContent=h?.status==='applied'?'Đã áp dụng':h?.status==='scheduled'?'Đã lên lịch':'Đã duyệt · chưa áp dụng';state.append(badge);
+      cell(tr,h?.status==='applied'?shownName(h.applied_by)+' · '+formatDate(h.applied_at):h?.status==='scheduled'?shownName(h.scheduled_by)+' · '+formatDate(h.scheduled_at):'—');
+      const b=document.createElement('button');b.type='button';b.className='btn primary';
+      if(h?.status==='applied'){b.textContent='Đã hoàn tất';b.disabled=true}
+      else if(h?.status==='scheduled'){
+        b.textContent='Áp dụng khi đến hạn';b.disabled=h.effective_date>vnToday();
+        b.onclick=()=>applyApprovedPrice(req,null);
+      }else{
+        b.textContent='Lên lịch / Áp dụng';
+        b.onclick=()=>applyApprovedPrice(req,dayCell.querySelector('input')?.value);
+      }
+      actionCell.append(b);tbody.append(tr);
+    }
+  }
+  async function applyApprovedPrice(req,date){
+    if(locked)return;
+    const p=req.request_payload||{},day=date||priceApplications.find(h=>h.request_id===req.id)?.effective_date||vnToday();
+    const verb=day>vnToday()?'LÊN LỊCH':'ÁP DỤNG';
+    const summary=String(p.sku||'')+' / '+String(p.channel||'').toUpperCase()+' · '+dd03Money(Number(p.current_price))+' → '+dd03Money(Number(p.proposed_price));
+    if(!window.confirm(verb+' GIÁ ĐÃ DUYỆT?\n'+summary+'\nHiệu lực: '+day+'\nChỉ CEO được thao tác. Ngày tương lai không thay giá ngay.'))return;
+    try{
+      if(!(await guarded()))return;locked=true;
+      const {data,error}=await client.rpc('dd03_apply_approved_price',{p_request_id:req.id,p_effective_date:date||null});
+      if(error)throw error;
+      displaySuccess(data?.status==='applied'?'Đã áp dụng giá thành công vào danh mục SKU và ghi lịch sử.':'Đã lên lịch; giá SKU vẫn giữ nguyên đến khi CEO áp dụng vào ngày hiệu lực.');
+    }catch(e){displayError('Không áp dụng được giá: '+e.message)}finally{locked=false;await load()}
   }
   async function decide(req,decision){if(locked)return;const note=window.prompt('Ghi chú cho quyết định '+(decision==='approved'?'DUYỆT':'TỪ CHỐI')+' (có thể bỏ trống):','');if(note===null)return;if(note.length>1000){displayError('Ghi chú tối đa 1000 ký tự.');return}if(!window.confirm('Xác nhận '+(decision==='approved'?'DUYỆT':'TỪ CHỐI')+' yêu cầu '+req.id+'? Quyết định sẽ lưu vào database.'))return;
     try{if(!(await guarded()))return;locked=true;const {error}=await client.rpc('dd_decide_approval',{p_request_id:req.id,p_decision:decision,p_note:note});if(error)throw error;displaySuccess('Đã lưu quyết định của CEO. Lưu ý: chưa tự động thực thi nghiệp vụ.')}catch(e){displayError('Không thể phê duyệt: '+e.message)}finally{locked=false;load()}}
