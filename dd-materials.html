@@ -192,14 +192,26 @@ function updateMeterCalculator(){const v=metersEstimate($('calcKg').value,$('cal
 function nkey(s){return String(s??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9]/g,'')}
 const hdr={order:['donhang','order','madonhang','sohopdong'],code:['mavattu','mahang','mahanghoa','masanpham','maso','mavt','sku','itemcode','materialcode'],name:['tenvattu','tenhang','tennguyenlieu','tenphulieu','materialname','tennhanhieuquycachphamchatvattudungcusanphamhanghoa','tennhanhieuquycachphamchat'],color:['mausac','mau','color'],size:['size','coso','sizecode','kichco','cosize'],unit:['dvt','donvitinh','unit','baseunit'],qty:['soluong','soluongthucxuat','slthucxuat','soluongxuat','slthucnhap','soluongthucnhap','slyeucau','khoiluong','thucnhan','qty','quantity','weightkg'],pkg:['macuon','macay','makien','macuonvai','macaycuonkien','mapackage','package','cuon','cay','roll'],lot:['malo','lo','lot'],gsm:['gsm','dinhluong'],width:['khocm','khovai','kho','widthcm'],owner:['chusohuu','doitac','owner'],source:['sophieunguon','sophieu','chungtu'],category:['nhomvattu','nhom','loai']};
 function headerField(s){const k=nkey(s);if(!k)return '';const exact=Object.keys(hdr).find(field=>hdr[field].some(t=>k===t));if(exact)return exact;if(k.startsWith('tennhanhieuquycachphamchat'))return 'name';return ''}
-function excelHeader(matrix){let best=null;for(let i=0;i<Math.min(matrix.length,45);i++){const r=matrix[i]||[];const fields=r.map(headerField);const has=key=>fields.includes(key);if(!has('qty')||(!has('code')&&!has('name')))continue;const codeIdx=fields.indexOf('code'),qtyIdx=fields.indexOf('qty');let usable=0;for(let j=i+1;j<Math.min(matrix.length,i+35);j++){const d=matrix[j]||[], c=String(d[codeIdx]||'').trim(),q=String(d[qtyIdx]||'').trim();if(c&&q&&/\d/.test(q)&&!['cong','tong','mahang','maso'].includes(nkey(c)))usable++}
-const sc=(has('code')?4:0)+(has('name')?2:0)+(has('unit')?3:0)+(has('qty')?4:0)+Math.min(usable,10);
-if(!best||sc>best.score)best={i,fields,score:sc,usable}}
-return best}
+// DD-10 V2.6: distinguish requested quantity from ACTUAL released/received quantity.
+// Documents may contain both 'SL Yêu cầu' and 'SL Thực xuất'. Never read the former in preference to the latter.
+function excelQtyPriority(value){const k=nkey(value);if(/(thucxuat|thucnhap|thucnhan|thucgiao|actual)/.test(k))return 100;if(/(yeucau|denghi|dukien|kehoach|ordered)/.test(k))return 10;if(/(soluongxuat|soluongnhap|soluong|qty|quantity|khoiluong)/.test(k))return 70;return 30}
+function excelHeader(matrix){let best=null;for(let i=0;i<Math.min(matrix.length,45);i++){
+const r=matrix[i]||[];let fields=r.map(headerField);const has=key=>fields.includes(key);
+if(!has('qty')||(!has('code')&&!has('name')))continue;
+const qtyCandidates=fields.map((f,index)=>f==='qty'?index:-1).filter(index=>index>=0);
+// Select one quantity column after looking at real data, so empty actual-quantity cells do not silently become requested quantities.
+const ranked=qtyCandidates.map(index=>{let numeric=0;for(let j=i+1;j<Math.min(matrix.length,i+35);j++){const row=matrix[j]||[];if(num(row[index])>0)numeric++}return {index,priority:excelQtyPriority(r[index]),numeric}}).sort((a,b)=>b.priority-a.priority||b.numeric-a.numeric);
+const qtyIdx=ranked[0].index;fields=fields.map((f,index)=>f==='qty'&&index!==qtyIdx?'':f);
+const codeIdx=fields.indexOf('code'),nameIdx=fields.indexOf('name');let usable=0;
+for(let j=i+1;j<Math.min(matrix.length,i+35);j++){const d=matrix[j]||[],c=String(d[codeIdx]||d[nameIdx]||'').trim(),q=d[qtyIdx];if(c&&num(q)>0&&!['cong','tong','tongcong','mahang','maso'].includes(nkey(c)))usable++}
+const sc=(has('code')?4:0)+(has('name')?2:0)+(has('unit')?3:0)+4+Math.min(usable,10)+(ranked[0].priority/100);
+if(!best||sc>best.score)best={i,fields,score:sc,usable,quantityHeading:String(r[qtyIdx]||'')};
+}return best}
+
 function matrixRows(matrix){const rows=matrix.filter(r=>Array.isArray(r)&&r.some(x=>String(x??'').trim()));if(!rows.length)throw Error('Sheet không có dữ liệu bảng');const found=excelHeader(rows);if(!found)throw Error('Không tìm thấy bảng vật tư có cột Số lượng và Mã hàng/Mã số. Hãy chọn sheet chứng từ khác.');let out=[],fields=found.fields;
 for(const r of rows.slice(found.i+1)){let x={};fields.forEach((k,i)=>{if(k&&x[k]===undefined)x[k]=String(r[i]??'').trim()});const marker=nkey(x.code||x.name);if(['cong','tong','tongcong','sott','a','b','c'].includes(marker))continue;
 // Some official warehouse forms put a stock code in the description cell and leave 'Mã số' blank.
-if(!x.code&&/^([a-z]{0,5}\d{2,}[\w#*\-. ]{1,})$/i.test((x.name||'').trim()))x.code=x.name.trim().replace(/\s+/g,'');
+if(!x.code&&/^([a-z]{1,8}\d{2,}[\w#*\-. \/]{0,})$/i.test((x.name||'').trim()))x.code=x.name.trim().replace(/\s+/g,'');
 if(!x.code||!String(x.qty||'').trim()||!(num(x.qty)>0))continue;
 out.push({code:x.code||'',name:x.name||'',color:x.color||'',size:x.size||'',unit:x.unit||'',qtyRaw:x.qty||'',qty:num(x.qty),pkg:x.pkg||'',lot:x.lot||'',gsm:x.gsm||'',width:x.width||'',order:x.order||'',owner:x.owner||'',source:x.source||'',category:x.category||'',selected:true})}
 if(!out.length)throw Error('Đã tìm thấy tiêu đề nhưng không có dòng mã hàng + số lượng hợp lệ. Hãy chọn sheet khác hoặc đối chiếu file.');if(out.length>200)throw Error('Một phiếu tối đa 200 dòng; hãy chia chứng từ.');return out}
@@ -212,7 +224,7 @@ function clearExcelHeader(){for(const id of ['uploadOrder','uploadSource','uploa
 function applySheetMeta(matrix,sheetName){const m=parseSheetMeta(matrix,sheetName);clearExcelHeader();if(m.order)$('uploadOrder').value=m.order;if(m.source)$('uploadSource').value=m.source;if(m.partner)$('uploadPartner').value=m.partner;if(m.date)$('uploadSourceDate').value=m.date;
 // Never copy an external warehouse's source/destination into Đức Duy's internal location field.
 return m}
-function loadExcelSheet(name){const sheet=uploadBook?.Sheets[name];if(!sheet)throw Error('Không có sheet được chọn');const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,raw:false,defval:''});const parsed=matrixRows(matrix);$('uploadReviewed').checked=false;applySheetMeta(matrix,name);uploadSetRows(parsed);uploadStatus('Đã đọc '+parsed.length+' dòng từ sheet “'+name+'”. ĐÂY LÀ MỘT CHỨNG TỪ NGUỒN RIÊNG. Đối chiếu số phiếu nguồn, đối tác; nếu trống phải nhập trước khi lưu. Không nhập gộp các sheet.');return parsed}
+function loadExcelSheet(name){const sheet=uploadBook?.Sheets[name];if(!sheet)throw Error('Không có sheet được chọn');const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,raw:false,defval:''});const parsed=matrixRows(matrix);$('uploadReviewed').checked=false;applySheetMeta(matrix,name);uploadSetRows(parsed);uploadStatus('Đã đọc '+parsed.length+' dòng từ sheet “'+name+'”, cột số lượng: '+(excelHeader(matrix)?.quantityHeading||'Số lượng')+'. Mỗi sheet/phiếu nguồn tạo một phiếu Đức Duy. '+(!$('uploadSource').value?'CHƯA CÓ SỐ PHIẾU NGUỒN: phải nhập và kiểm chứng, không lấy tên file làm số phiếu. ':'')+'Đối chiếu dòng trùng và ĐVT trước khi lưu.',!$('uploadSource').value);return parsed}
 function csvMatrix(text){const header=(text.split(/\r?\n/).find(x=>x.trim())||'');const counts=[';',',','\t'].map(d=>[d,(header.match(new RegExp(d==='\t'?'\\t':d===';'?';':',','g'))||[]).length]);const delim=counts.sort((a,b)=>b[1]-a[1])[0][0];let rows=[],row=[],field='',q=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(q&&text[i+1]==='"'){field+='"';i++}else q=!q}else if(!q&&c===delim){row.push(field);field=''}else if(!q&&(c==='\n'||c==='\r')){if(c==='\r'&&text[i+1]==='\n')i++;row.push(field);if(row.some(v=>v.trim()))rows.push(row);row=[];field=''}else field+=c}row.push(field);if(row.some(v=>v.trim()))rows.push(row);return rows}
 function parseTextTable(s){const lines=s.split(/\r?\n/).filter(x=>x.trim());return lines.map(l=>l.split(/\t|\|/).map(x=>x.trim()))}
 function uploadStatus(s,error=false){$('uploadStatus').textContent=s;$('uploadStatus').className=error?'section-note bad':'section-note'}
@@ -252,10 +264,10 @@ async function uploadRead(){
     $('uploadSheet').innerHTML=uploadBook.SheetNames.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
     // Prefer the first sheet that has a complete code/quantity/unit table (not an empty accounting form).
     let target='',best=-1;
-    for(const name of uploadBook.SheetNames){const mat=XLSX.utils.sheet_to_json(uploadBook.Sheets[name],{header:1,raw:false,defval:''});const h=excelHeader(mat);if(!h)continue;const sc=h.score+(h.fields.includes('code')?5:0);if(sc>best){target=name;best=sc}if(h.fields.includes('code')&&h.fields.includes('unit')&&h.usable>0){target=name;break}}
+    for(const name of uploadBook.SheetNames){const mat=XLSX.utils.sheet_to_json(uploadBook.Sheets[name],{header:1,raw:false,defval:''});const h=excelHeader(mat);if(!h)continue;const hasSource=!!parseSheetMeta(mat,name).source;const sc=h.score+(h.fields.includes('code')?5:0)+(h.usable>0?10:0)+(hasSource?25:0);if(sc>best){target=name;best=sc}}
     if(!target)throw Error('Workbook không có sheet nào chứa bảng mã vật tư và số lượng.');
     $('uploadSheet').value=target;loadExcelSheet(target);
-    if(uploadBook.SheetNames.length>1)uploadStatus('File có '+uploadBook.SheetNames.length+' sheet. Đang đọc riêng sheet “'+target+'”. CHỈ LƯU 1 SHEET/1 PHIẾU NGUỒN/1 PHIẾU ĐỨC DUY. Chọn sheet khác để lập phiếu khác; nếu không tìm thấy số phiếu nguồn, hãy nhập tay chính xác.');
+    if(uploadBook.SheetNames.length>1)uploadStatus('Excel có '+uploadBook.SheetNames.length+' sheet. Đang đọc riêng “'+target+'”. 1 SHEET CHỨNG TỪ = 1 PHIẾU NGUỒN = 1 PHIẾU ĐỨC DUY. Nếu đổi sheet, dữ liệu được đọc lại riêng; KHÔNG cộng gộp các sheet.');
   }
  }catch(e){uploadRows=[];uploadRender();uploadStatus('Lỗi đọc Excel/CSV: '+e.message,true)}
 }
