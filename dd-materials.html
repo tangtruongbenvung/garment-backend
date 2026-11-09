@@ -650,6 +650,23 @@ async function syncExistingBatchDocs(){
 // V3.6: mã đề nghị tạm và bảng chênh lệch sinh tự động; chỉ tồn tại dưới dạng phiếu ADJUST_* chờ CEO sau khi RPC tạo thành công.
 let supplementState=null,supplementBusy=false;
 function proposalSourceCode(st,kind){return 'BS-'+st.linked.doc_no+(kind==='ADJUST_IN'?'-T':'-G')}
+
+// V3.7.1: đồng bộ trạng thái đề nghị từ Supabase; không cho gửi lại sau duyệt/chốt.
+function proposalExisting(st,kind){
+ const ref=proposalSourceCode(st,kind),key=nkey(ref);
+ const request=supplementalRequests.find(r=>nkey(r.reference_code)===key);
+ const doc=docs.find(d=>nkey(d.source_doc_no)===key&&nkey(d.partner)===nkey(st.partner));
+ return {ref,request,doc,exists:!!(request||doc)};
+}
+function proposalExistingLabel(found){
+ if(found.doc?.status==='posted')return 'Đã chốt – xem Mục 06';
+ if(found.doc)return 'Đã có phiếu '+found.doc.doc_no+' – xem Mục 06';
+ if(found.request?.status==='approved')return 'CEO đã duyệt – xem Mục 06';
+ if(found.request?.status==='pending')return 'Đã gửi – chờ CEO duyệt';
+ if(found.request?.status==='rejected')return 'Đề nghị đã bị từ chối – cần xử lý riêng';
+ return '';
+}
+
 function supplementMaterial(item,st){const code=nkey(item.code);const arr=mats.filter(m=>nkey(m.material_code)===code&&(!st.partner||nkey(m.owner_name||'')===nkey(st.partner)));return arr.length===1?arr[0]:null}
 function proposalPackages(item,materialId,kind,location){
  const ms=packs.filter(p=>p.material_id===materialId&&nkey(packageColor(p))===nkey(item.color||'-')&&nkey(packageSize(p))===nkey(item.size||'-'));
@@ -666,12 +683,12 @@ function renderSupplementProposal(){
  $('proposalRef').textContent='Phiếu nguồn '+st.source+' · Phiếu đã chốt '+st.linked.doc_no+' · '+st.partner+' · '+st.order+' · '+st.sheetNames.join(' + ');
  $('proposalTables').innerHTML=['ADJUST_IN','ADJUST_OUT'].map(kind=>{
   const group=rows.filter(r=>r.kind===kind);if(!group.length)return '';
-  const ref=proposalSourceCode(st,kind),hasSaved=!!saved[kind];
+  const found=proposalExisting(st,kind),ref=found.ref,hasSaved=!!saved[kind]||found.exists;
   return `<div class="box" style="margin:13px 0;padding:9px;background:#fff"><div class="row"><b>${kind==='ADJUST_IN'?'ĐỀ NGHỊ BỔ SUNG TĂNG':'ĐỀ NGHỊ ĐIỀU CHỈNH GIẢM'}</b><span class="tag">${esc(ref)}</span></div><div class="tablewrap"><table class="tbl proposal-table"><thead><tr><th>Mã vật tư dự kiến</th><th>Tên vật tư</th><th>Sheet nguồn</th><th>ĐVT</th><th>SL nguồn</th><th>Đã lưu</th><th>SL đề nghị</th><th>Mã/kiện CEO sẽ duyệt</th></tr></thead><tbody>${group.map(r=>{
     const idx=rows.indexOf(r),m=supplementMaterial(r,st),pk=m?proposalPackages(r,m.id,kind,location):[];
     if(!m&&kind==='ADJUST_IN'&&!r.pkgId)r.pkgId='__NEW__';
     const options='<option value="">-- Chọn kiện --</option>'+pk.map(p=>`<option value="${esc(p.id)}" ${r.pkgId===p.id?'selected':''}>${esc(p.label)}</option>`).join('')+(kind==='ADJUST_IN'?`<option value="__NEW__" ${r.pkgId==='__NEW__'?'selected':''}>+ Tạo kiện sau CEO duyệt</option>`:'');
-    return `<tr><td><b>${esc(r.code)}</b><div class="muted-cell">${esc(r.color)} · ${esc(r.size)}</div></td><td class="long-name">${esc(r.name||m?.material_name||'-')}</td><td>${esc(r.sheet||'-')}</td><td>${esc(r.unit)}</td><td class="num">${nf(r.sourceQty)}</td><td class="num">${nf(r.storedQty)}</td><td><input inputmode="decimal" data-proposal-qty="${idx}" value="${esc(String(r.qty))}" ${hasSaved?'disabled':''}></td><td>${m?`<select data-proposal-package="${idx}" ${hasSaved?'disabled':''}>${options}</select>`:kind==='ADJUST_IN'?'<div class="good">MÃ MỚI DỰ KIẾN · Chờ CEO duyệt</div><div class="muted-cell">Sẽ tạo mã theo Excel, ĐVT '+esc(r.unit)+'; kiện tự cấp sau duyệt.</div>':'<div class="warn">Không thể giảm hàng chưa có mã trong kho</div>'}${r.error?`<div class="warn">${esc(r.error)}</div>`:''}</td></tr>`}).join('')}</tbody></table></div><div class="tools" style="margin-top:9px"><button type="button" class="btn primary" data-proposal-save="${kind}" ${hasSaved||supplementBusy?'disabled':''}>${hasSaved?'Đã gửi CEO: '+esc(saved[kind]):'Gửi đề nghị (có mã mới) chờ CEO duyệt'}</button><span class="sub">${group.length} dòng · Chưa tạo vật tư mới hoặc ghi tồn trước duyệt</span></div></div>`;
+    return `<tr><td><b>${esc(r.code)}</b><div class="muted-cell">${esc(r.color)} · ${esc(r.size)}</div></td><td class="long-name">${esc(r.name||m?.material_name||'-')}</td><td>${esc(r.sheet||'-')}</td><td>${esc(r.unit)}</td><td class="num">${nf(r.sourceQty)}</td><td class="num">${nf(r.storedQty)}</td><td><input inputmode="decimal" data-proposal-qty="${idx}" value="${esc(String(r.qty))}" ${hasSaved?'disabled':''}></td><td>${m?`<select data-proposal-package="${idx}" ${hasSaved?'disabled':''}>${options}</select>`:kind==='ADJUST_IN'?'<div class="good">MÃ MỚI DỰ KIẾN · Chờ CEO duyệt</div><div class="muted-cell">Sẽ tạo mã theo Excel, ĐVT '+esc(r.unit)+'; kiện tự cấp sau duyệt.</div>':'<div class="warn">Không thể giảm hàng chưa có mã trong kho</div>'}${r.error?`<div class="warn">${esc(r.error)}</div>`:''}</td></tr>`}).join('')}</tbody></table></div><div class="tools" style="margin-top:9px"><button type="button" class="btn primary" data-proposal-save="${kind}" ${hasSaved||supplementBusy?'disabled':''}>${hasSaved?esc(proposalExistingLabel(found)||('Đã gửi CEO: '+(saved[kind]||ref))):'Gửi đề nghị (có mã mới) chờ CEO duyệt'}</button><span class="sub">${group.length} dòng · Chưa tạo vật tư mới hoặc ghi tồn trước duyệt</span></div></div>`;
  }).join('');
  $('proposalTables').querySelectorAll('[data-proposal-package]').forEach(el=>el.onchange=()=>{rows[Number(el.dataset.proposalPackage)].pkgId=el.value;renderSupplementProposal()});
  $('proposalTables').querySelectorAll('[data-proposal-qty]').forEach(el=>el.onchange=()=>{const r=rows[Number(el.dataset.proposalQty)];const v=num(el.value);r.qty=Number.isFinite(v)?v:NaN});
@@ -679,7 +696,7 @@ function renderSupplementProposal(){
 }
 async function saveSupplementProposal(kind){
  if(!supplementState||supplementBusy||!canDoc)throw Error('Không có quyền hoặc đề nghị đang xử lý');
- const {st,rows,saved}=supplementState,group=rows.filter(r=>r.kind===kind);if(!group.length||saved[kind])return;
+ const {st,rows,saved}=supplementState,group=rows.filter(r=>r.kind===kind);if(!group.length||saved[kind])return;const already=proposalExisting(st,kind);if(already.exists){$('proposalStatus').textContent='Đề nghị '+already.ref+': '+proposalExistingLabel(already)+'. Không gửi lại.';renderSupplementProposal();return;}
  const loc=$('proposalLocation').value.trim(),ref=proposalSourceCode(st,kind);if(!loc)throw Error('Thiếu vị trí kho');
  const payload=[];
  for(const r of group){
@@ -708,7 +725,15 @@ async function saveSupplementProposal(kind){
   saved[kind]=ref;
   $('proposalStatus').textContent='ĐÃ GỬI '+ref+' (ID '+result+') chờ CEO duyệt. Chưa tạo mã mới, phiếu điều chỉnh hoặc tồn kho.';
   await loadSupplementRequests();
- }catch(e){$('proposalStatus').textContent='Lỗi: '+e.message+'. Nếu mất kết nối sau khi gửi, xem danh sách đề nghị trước khi thử lại.';throw e}
+ }catch(e){
+  // Trường hợp lưu thành công ở phiên trước nhưng nút cũ còn hiển thị: đối chiếu lại thay vì thông báo lỗi giả.
+  if(/Reference already has a warehouse document|duplicate key|already exists/i.test(e.message||'')){
+   await Promise.allSettled([reload(),loadSupplementRequests()]);
+   const found=proposalExisting(st,kind);
+   if(found.exists){saved[kind]=ref;$('proposalStatus').textContent='Đề nghị '+ref+' đã có: '+proposalExistingLabel(found)+'. Không tạo thêm phiếu.';return;}
+  }
+  $('proposalStatus').textContent='Lỗi: '+e.message+'. Nếu mất kết nối sau khi gửi, xem danh sách đề nghị trước khi thử lại.';throw e;
+ }
  finally{supplementBusy=false;renderSupplementProposal()}
 }
 let supplementalRequests=[];
@@ -716,7 +741,7 @@ async function loadSupplementRequests(){
  if(!client)return;
  const result=await client.from('dd10m_supplement_requests').select('id,reference_code,source_doc_no,partner,doc_type,proposed_lines,status,created_at,created_document_id').eq('company_id',COMPANY).order('created_at',{ascending:false}).limit(150);
  if(result.error){$('supplementReviewStatus').textContent='Chưa tải được đề nghị: '+result.error.message+' · Cần chạy SQL V3.7 trước khi sử dụng.';return}
- supplementalRequests=result.data||[];renderSupplementRequests();
+ supplementalRequests=result.data||[];renderSupplementRequests();if(supplementState)renderSupplementProposal();
 }
 function renderSupplementRequests(){
  const body=$('supplementReviewBody');if(!body)return;
