@@ -75,11 +75,14 @@
 .batch-comparison{margin:8px 0 12px;padding:10px 12px;background:#fff9ec;border:1px solid #f3d5a6;border-radius:9px;white-space:pre-wrap;font-size:12px;color:#714d13}
 .batch-safe{color:#08733d;font-size:12px}
 .batch-warning{background:#fff7e8!important}
+
+/* V3.6: nhập mã bằng bàn phím và bảng đề nghị bổ sung kiểm toán */
+.mat-search-wrap{position:relative;min-width:0}.mat-search-input{width:100%;font-size:12px;padding:8px 7px;border:1px solid #c8d7ea;border-radius:7px}.mat-search-list{position:absolute;z-index:90;left:0;right:0;top:100%;background:white;border:1px solid #8fb4e1;border-radius:6px;box-shadow:0 8px 17px #17385f30;max-height:230px;overflow-y:auto}.mat-search-option{display:block;width:100%;padding:9px 8px;text-align:left;border:0;background:#fff;cursor:pointer;font-size:12px;border-bottom:1px solid #ecf1f9;white-space:normal;overflow-wrap:anywhere}.mat-search-option:hover,.mat-search-option:focus{background:#e9f2ff}.mat-search-code{font-weight:750;color:#173f76}.mat-search-name{font-size:11px;color:#5e7086}.mat-search-err{font-size:11px;color:#a82222}.proposal-panel{border:2px solid #7aa2d5;border-radius:11px;background:#f5f9ff;padding:15px;margin:13px 0}.proposal-table{min-width:1040px;width:100%}.proposal-table th,.proposal-table td{font-size:12px;padding:7px;vertical-align:middle}.proposal-table .long-name{max-width:220px;overflow-wrap:anywhere;line-height:1.3}.proposal-table select,.proposal-table input{font-size:12px;padding:7px;width:100%;min-width:0}.proposal-table .warn{color:#9b3022;font-weight:700}.proposal-note{font-size:12px;color:#4f6986;padding:7px 0}.proposal-heading{font-size:16px;font-weight:800;color:#174479}
 </style></head><body>
 <div id="gate"><div><h2 id="gateTitle">Đang xác thực Supabase…</h2><p id="gateDesc">Đang kiểm tra vai trò người dùng.</p><a href="index.html">Về ERP</a></div></div>
 <div class="layout"><aside><h2>ĐỨC DUY · AI OS</h2><a href="dd-ceo.html">◈ Dashboard 12 Agent</a><a href="dd-warehouse.html">▣ DD-10 · Thành phẩm/BTP</a><a class="active" href="dd-materials.html">▣ DD-10 · Toàn bộ vật tư</a><a href="dd-pricing.html">▣ DD-03 · Giá & lợi nhuận</a><a href="index.html?view=erp">↩ GARMENT ERP</a></aside>
 <main>
-<div class="top"><div><h1>DD-10 V3.5 · Gom sheet cùng phiếu nguồn · Đối chiếu trước lưu</h1><div class="sub">Vải · Chỉ · Cúc · Khóa · Nhãn · Thun · Bao bì · Vật tư khác · Theo lô/cây/cuộn/kiện và đơn hàng</div></div><div class="tools"><span class="tag" id="who">Đang kiểm tra</span><button type="button" id="goManual" class="btn primary" style="white-space:nowrap">+ Lập phiếu thủ công</button><button class="btn" id="refresh">↻ Tải lại</button><span class="tag">Giao nhận A4 dọc · Nội bộ A4 ngang</span></div></div>
+<div class="top"><div><h1>DD-10 V3.6 · Đề nghị bổ sung tự động & tìm nhanh mã vật tư</h1><div class="sub">Vải · Chỉ · Cúc · Khóa · Nhãn · Thun · Bao bì · Vật tư khác · Theo lô/cây/cuộn/kiện và đơn hàng</div></div><div class="tools"><span class="tag" id="who">Đang kiểm tra</span><button type="button" id="goManual" class="btn primary" style="white-space:nowrap">+ Lập phiếu thủ công</button><button class="btn" id="refresh">↻ Tải lại</button><span class="tag">Giao nhận A4 dọc · Nội bộ A4 ngang</span></div></div>
 <div id="feedback" class="alert hide" role="status" aria-live="polite"></div>
 <div class="stats"><div class="stat"><div class="sub">Mã vật tư</div><strong id="sMaterials">—</strong></div><div class="stat"><div class="sub">Cây/cuộn/kiện/bó</div><strong id="sPackages">—</strong></div><div class="stat"><div class="sub">Phiếu chờ CEO chốt</div><strong id="sPending">—</strong></div><div class="stat"><div class="sub">Đơn hàng có định mức</div><strong id="sOrders">—</strong></div></div>
 <div class="panel no-print" id="importPanel">
@@ -103,6 +106,13 @@
  <div class="tablewrap"><table class="tbl" style="min-width:1000px"><thead><tr><th>Chọn</th><th>Sheet thuộc nhóm chứng từ</th><th>Số phiếu nguồn *</th><th>Ngày nguồn *</th><th>Đơn hàng</th><th>Đối tác *</th><th>Số dòng / sheet</th><th>Phiếu Đức Duy / Trạng thái</th><th>Xem</th></tr></thead><tbody id="batchBody"></tbody></table></div>
  <div class="tools" style="margin-top:12px"><button class="btn primary" type="button" id="batchSave">Kiểm tra & xác nhận lưu các phiếu đã chọn</button><span id="batchInfo" class="section-note"></span></div>
  </div>
+<div id="proposalPanel" class="proposal-panel hide no-print" aria-label="Bảng đề nghị bổ sung vật tư">
+ <div class="row"><div><div class="proposal-heading">Đề nghị bổ sung / điều chỉnh vật tư – trình CEO phê duyệt</div><p class="proposal-note" id="proposalRef"></p></div><button class="btn sm" id="proposalClose" type="button">Đóng bản soạn</button></div>
+ <p class="proposal-note">Hệ thống tự so sánh Excel với phiếu đã chốt, tạo từng dòng chênh lệch và mã tham chiếu đề nghị. <b>Đề nghị tăng và giảm được lập thành hai phiếu nháp riêng khi có cả hai chiều.</b> Chọn đúng kiện/vị trí, kiểm tra số lượng trước khi gửi CEO. Không thay đổi phiếu nguồn đã chốt.</p>
+ <div class="f" style="max-width:320px"><label>Vị trí kho điều chỉnh</label><input id="proposalLocation" value="NVL" placeholder="NVL / PL / TP" aria-label="Vị trí kho điều chỉnh"></div>
+ <div id="proposalTables"></div>
+ <div id="proposalStatus" role="status" aria-live="polite" class="proposal-note"></div>
+</div>
 <div class="tools" style="margin:13px 0"><button class="btn primary" id="uploadRead">Đọc Excel gốc & xem trước</button><button class="btn" id="uploadDemo">Nạp dữ liệu mẫu</button><button class="btn" id="uploadTemplate">Tải mẫu Excel</button><button class="btn" id="uploadAddLine">+ Thêm dòng</button><button class="btn" id="uploadMergeDuplicate" type="button">Gộp dòng trùng an toàn</button><button class="btn sm hide" id="uploadCancelError" type="button">Xóa / Hủy cập nhật lỗi</button><button class="btn primary" id="uploadSave" disabled>Lưu phiếu nháp vào Supabase</button></div>
 <div class="tools" style="margin-bottom:8px"><label style="display:flex;align-items:center;gap:8px;max-width:100%;font-weight:600"><input type="checkbox" id="uploadReviewed" style="width:auto"> Tôi đã kiểm tra mã vật tư, ĐVT, số lượng, đơn hàng và chứng từ nguồn</label></div>
 <div id="duplicateSummary" class="duplicate-alert hide" role="alert"></div><div id="uploadStatus" class="section-note" style="margin:11px 0" role="status" aria-live="polite">Chọn Excel/CSV rồi chọn đúng sheet chứng từ. Mỗi phiếu nguồn đối tác chỉ tạo một phiếu Đức Duy; bắt buộc có số phiếu nguồn và đối tác.</div>
@@ -385,7 +395,7 @@ function refreshManualChoices(line,level='material'){
  const matSel=line.querySelector('.lineMaterial'),colSel=line.querySelector('.lineColor'),sizeSel=line.querySelector('.lineSize'),pkgSel=line.querySelector('.linePkg');
  const isReceipt=['RECEIPT','RETURN_PROD','ADJUST_IN'].includes($('docType').value);
  let matPrev=matSel.value;
- if(level==='all'){matSel.innerHTML=manualMaterialOptions();if(mats.some(m=>m.id===matPrev))matSel.value=matPrev;}
+ if(level==='all'){matSel.innerHTML=manualMaterialOptions();if(mats.some(m=>m.id===matPrev))matSel.value=matPrev;const search=line.querySelector('.mat-search-input');if(search&&matSel.value){const m=material(matSel.value);search.value=m?m.material_code+' — '+m.material_name:''}}
  const group=packs.filter(p=>p.material_id===matSel.value);
  const colors=[...new Set(group.map(packageColor))].sort();if(isReceipt&&!colors.includes('-'))colors.unshift('-');
  setOptions(colSel,colors,null,level==='material'?'':colSel.value);
@@ -400,11 +410,25 @@ function refreshManualChoices(line,level='material'){
  updateUnits(line);
 }
 function updateUnits(line){if(!line)return;const pk=pack(line.querySelector('.linePkg')?.value);const m=material(pk?.material_id||line.querySelector('.lineMaterial')?.value);const sel=line.querySelector('.lineUnit');if(!sel)return;const prev=sel.value;const opts=m?[{unit:m.base_unit,factor:1},...units.filter(u=>u.material_id===m.id).map(u=>({unit:u.unit_code,factor:Number(u.factor_to_base)}))]:[];sel.innerHTML=opts.map(x=>`<option value="${esc(x.unit)}">${esc(x.unit)}</option>`).join('');if(opts.some(x=>x.unit===prev))sel.value=prev}
+function manualSearchNorm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLocaleLowerCase('vi-VN')}
+function initManualTypeahead(div){
+ const input=div.querySelector('.mat-search-input'),sel=div.querySelector('.lineMaterial'),list=div.querySelector('.mat-search-list');
+ function options(){const v=manualSearchNorm(input.value.trim());const found=mats.filter(m=>manualSearchNorm(m.material_code+' '+m.material_name).includes(v)).slice(0,18);
+  list.innerHTML=found.map(m=>`<button type="button" class="mat-search-option" data-id="${esc(m.id)}"><span class="mat-search-code">${esc(m.material_code)}</span><div class="mat-search-name">${esc(m.material_name)} · ${esc(m.base_unit)}</div></button>`).join('')||'<div class="mat-search-err" style="padding:8px">Không tìm thấy vật tư. CEO có thể tạo mã tại Mục 07.</div>';
+  list.classList.remove('hide');list.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>choose(b.dataset.id));}
+ function choose(id){const m=material(id);if(!m)return;sel.value=m.id;input.value=m.material_code+' — '+m.material_name;list.classList.add('hide');delete div.dataset.createdPkgId;refreshManualChoices(div,'material');showManualDuplicates();}
+ input.addEventListener('focus',options);
+ input.addEventListener('input',()=>{sel.value='';refreshManualChoices(div,'material');options();showManualDuplicates()});
+ input.addEventListener('keydown',e=>{if(e.key==='Escape'){list.classList.add('hide')}else if(e.key==='Enter'&& !list.classList.contains('hide')){e.preventDefault();const first=list.querySelector('[data-id]');if(first)choose(first.dataset.id)}});
+ input.addEventListener('blur',()=>{setTimeout(()=>{list.classList.add('hide')},160)});
+ // Để trống vẫn cho nhân viên tìm từng ký tự. ID thật chỉ được xác lập sau khi chọn gợi ý.
+}
 function addLine(){
  const div=document.createElement('div');div.className='newLine';
- div.innerHTML=`<div class="linegrid"><select class="lineMaterial" aria-label="Mã vật tư hoặc thành phẩm">${manualMaterialOptions()}</select><select class="lineColor" aria-label="Màu"></select><select class="lineSize" aria-label="Size"></select><select class="linePkg" aria-label="Cây/cuộn/kiện"></select><select class="lineUnit" aria-label="ĐVT"></select><input class="lineQty" inputmode="decimal" placeholder="Số lượng" aria-label="Số lượng"><input class="lineNote" placeholder="Ghi chú dòng" aria-label="Ghi chú"><button class="btn sm" type="button">×</button></div><div class="manual-new-meta" hidden style="padding:8px 10px;background:#edf5ff;border-radius:8px;margin:5px 0 9px"><span style="font-size:12px;color:#315d83">Tạo kiện mới cho lần nhập này (không phải mã kiện đối tác nếu chưa có): </span><input class="manual-new-color" placeholder="Màu (nếu có)" style="width:125px;margin-right:5px"><input class="manual-new-size" placeholder="Size (nếu có)" style="width:105px;margin-right:5px"><input class="manual-new-lot" placeholder="Lô (nếu có)" style="width:115px;margin-right:5px"><input class="manual-new-code" placeholder="Mã kiện (tự sinh nếu trống)" style="width:200px"></div>`;
+ div.innerHTML=`<div class="linegrid"><div class="mat-search-wrap"><input class="mat-search-input" type="text" autocomplete="off" placeholder="Gõ mã hoặc tên vật tư..." aria-label="Tìm mã hoặc tên vật tư"><select class="lineMaterial" aria-label="Mã vật tư đã chọn" style="display:none">${manualMaterialOptions()}</select><div class="mat-search-list hide" role="listbox"></div></div><select class="lineColor" aria-label="Màu"></select><select class="lineSize" aria-label="Size"></select><select class="linePkg" aria-label="Cây/cuộn/kiện"></select><select class="lineUnit" aria-label="ĐVT"></select><input class="lineQty" inputmode="decimal" placeholder="Số lượng" aria-label="Số lượng"><input class="lineNote" placeholder="Ghi chú dòng" aria-label="Ghi chú"><button class="btn sm" type="button">×</button></div><div class="manual-new-meta" hidden style="padding:8px 10px;background:#edf5ff;border-radius:8px;margin:5px 0 9px"><span style="font-size:12px;color:#315d83">Tạo kiện mới cho lần nhập này (không phải mã kiện đối tác nếu chưa có): </span><input class="manual-new-color" placeholder="Màu (nếu có)" style="width:125px;margin-right:5px"><input class="manual-new-size" placeholder="Size (nếu có)" style="width:105px;margin-right:5px"><input class="manual-new-lot" placeholder="Lô (nếu có)" style="width:115px;margin-right:5px"><input class="manual-new-code" placeholder="Mã kiện (tự sinh nếu trống)" style="width:200px"></div>`;
  div.querySelector('button').onclick=()=>{div.remove();showManualDuplicates()};
  div.querySelector('.lineMaterial').onchange=()=>{delete div.dataset.createdPkgId;refreshManualChoices(div,'material');showManualDuplicates()};
+ initManualTypeahead(div);
  div.querySelector('.lineColor').onchange=()=>refreshManualChoices(div,'color');
  div.querySelector('.lineSize').onchange=()=>refreshManualChoices(div,'size');
  div.querySelector('.linePkg').onchange=()=>{delete div.dataset.createdPkgId;refreshManualChoices(div,'package');showManualDuplicates()};
@@ -606,7 +630,9 @@ async function compareLinkedGroup(st){
  for(const [key,p] of planned){const stored=posted.get(key);if(!stored)diffs.push('CHƯA CÓ '+p.code+' / '+p.unit+': '+auditNumber(p.qty)+' ('+p.lines+' dòng nguồn; sheet '+(p.sheets?.join(' + ')||'chưa rõ')+')');else if(Math.abs(p.qty-stored.qty)>0.000001)diffs.push('LỆCH '+p.code+' / '+p.unit+': nguồn '+auditNumber(p.qty)+' · đã lưu '+auditNumber(stored.qty)+' · chênh '+auditNumber(p.qty-stored.qty));}
  for(const [key,p] of posted){if(!planned.has(key))diffs.push('CÓ TRÊN PHIẾU DD NHƯNG KHÔNG CÓ TRONG FILE: '+p.code+' / '+p.unit+' = '+auditNumber(p.qty))}
  const lines=groupRows(st).length;
- st.audit={sourceLines:lines,postedLines:ds.length,diffs,checkedAt:new Date().toLocaleString('vi-VN')};
+ const items=[];for(const [key,p] of planned){const before=posted.get(key)?.qty||0;const delta=auditNumber(p.qty-before);if(Math.abs(delta)>0.000001){const original=groupRows(st).find(r=>auditQuantityKey(r.code,r.unit,r.color,r.size)===key);items.push({key,code:p.code,unit:p.unit,color:original?.color||'-',size:original?.size||'-',name:original?.name||'',sheet:p.sheets?.join(' + ')||'',sourceQty:auditNumber(p.qty),storedQty:auditNumber(before),delta})}}
+ for(const [key,p] of posted){if(!planned.has(key))items.push({key,code:p.code,unit:p.unit,color:p.color||'-',size:p.size||'-',name:p.name||'Chỉ có trên phiếu Đức Duy',sheet:'—',sourceQty:0,storedQty:auditNumber(p.qty),delta:-auditNumber(p.qty)})}
+ st.audit={sourceLines:lines,postedLines:ds.length,diffs,items,checkedAt:new Date().toLocaleString('vi-VN')};
  batchRender();
  return st.audit;
 }
@@ -618,6 +644,70 @@ async function syncExistingBatchDocs(){
  batchRender();
  // Tự đối chiếu mọi nhóm đã có phiếu; lỗi truy vấn không được mở khóa nhập trùng.
  await Promise.all(batchSheets.filter(st=>st.linked&&!st.audit).map(async st=>{try{await compareLinkedGroup(st);st.auditError=''}catch(e){st.auditError=e.message;batchRender()}}));
+}
+
+// V3.6: mã đề nghị tạm và bảng chênh lệch sinh tự động; chỉ tồn tại dưới dạng phiếu ADJUST_* chờ CEO sau khi RPC tạo thành công.
+let supplementState=null,supplementBusy=false;
+function proposalSourceCode(st,kind){return 'BS-'+st.linked.doc_no+(kind==='ADJUST_IN'?'-T':'-G')}
+function supplementMaterial(item,st){const code=nkey(item.code);const arr=mats.filter(m=>nkey(m.material_code)===code&&(!st.partner||nkey(m.owner_name||'')===nkey(st.partner)));return arr.length===1?arr[0]:null}
+function proposalPackages(item,materialId,kind,location){
+ const ms=packs.filter(p=>p.material_id===materialId&&nkey(packageColor(p))===nkey(item.color||'-')&&nkey(packageSize(p))===nkey(item.size||'-'));
+ const rows=[];for(const p of ms){const available=ledger.filter(l=>l.package_id===p.id&&(!location||nkey(l.location_code)===nkey(location))).reduce((t,l)=>t+Number(l.qty_delta||0),0);if(kind==='ADJUST_IN'||available>0)rows.push({id:p.id,label:p.package_code+' · '+(p.lot_code||'-')+' · tồn '+nf(available),stock:available})}
+ return rows;
+}
+function openSupplementProposal(st){
+ if(!st?.linked||st.linked.status!=='posted'||!st.audit?.items?.length)return;
+ supplementState={st,rows:st.audit.items.filter(x=>Math.abs(x.delta)>0.000001).map(x=>{const kind=x.delta>0?'ADJUST_IN':'ADJUST_OUT',m=supplementMaterial(x,st);const available=m?proposalPackages(x,m.id,kind,$('proposalLocation').value.trim()):[];return {...x,kind,qty:Math.abs(x.delta),pkgId:available.length===1?available[0].id:(kind==='ADJUST_IN'?'__NEW__':''),newPackageCode:'',error:''}}),saved:{}};
+ const p=$('proposalPanel');p.classList.remove('hide');$('proposalStatus').textContent='';renderSupplementProposal();p.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderSupplementProposal(){
+ if(!supplementState)return;const {st,rows,saved}=supplementState;const location=$('proposalLocation').value.trim();
+ $('proposalRef').textContent='Phiếu nguồn '+st.source+' · Phiếu đã chốt '+st.linked.doc_no+' · '+st.partner+' · '+st.order+' · '+st.sheetNames.join(' + ');
+ const kinds=['ADJUST_IN','ADJUST_OUT'];$('proposalTables').innerHTML=kinds.map(kind=>{
+  const group=rows.filter(r=>r.kind===kind);if(!group.length)return '';
+  const ref=proposalSourceCode(st,kind),hasSaved=!!saved[kind];
+  return `<div class="box" style="margin:13px 0;padding:9px;background:#fff"><div class="row"><b>${kind==='ADJUST_IN'?'ĐỀ NGHỊ ĐIỀU CHỈNH TĂNG':'ĐỀ NGHỊ ĐIỀU CHỈNH GIẢM'}</b><span class="tag">Mã tham chiếu ${esc(ref)}</span></div><div class="tablewrap"><table class="tbl proposal-table"><thead><tr><th>Mã vật tư</th><th>Tên vật tư</th><th>Sheet nguồn</th><th>ĐVT</th><th>SL nguồn</th><th>Đã lưu</th><th>Chênh cần xử lý</th><th>Kiện/vị trí áp dụng</th></tr></thead><tbody>${group.map(r=>{
+    const idx=rows.indexOf(r),m=supplementMaterial(r,st),pk=m?proposalPackages(r,m.id,kind,location):[];
+    const options='<option value="">-- Chọn kiện --</option>'+pk.map(p=>`<option value="${esc(p.id)}" ${r.pkgId===p.id?'selected':''}>${esc(p.label)}</option>`).join('')+(kind==='ADJUST_IN'?`<option value="__NEW__" ${r.pkgId==='__NEW__'?'selected':''}>+ Tạo kiện mới cho phần thiếu</option>`:'');
+    return `<tr><td><b>${esc(r.code)}</b><div class="muted-cell">${esc(r.color)} · ${esc(r.size)}</div></td><td class="long-name">${esc(r.name||m?.material_name||'-')}</td><td>${esc(r.sheet||'-')}</td><td>${esc(r.unit)}</td><td class="num">${nf(r.sourceQty)}</td><td class="num">${nf(r.storedQty)}</td><td><input inputmode="decimal" data-proposal-qty="${idx}" value="${esc(String(r.qty))}" ${hasSaved?'disabled':''}></td><td>${m?`<select data-proposal-package="${idx}" ${hasSaved?'disabled':''}>${options}</select>${kind==='ADJUST_IN'?`<input data-newpackage="${idx}" placeholder="Mã kiện mới (tự sinh nếu trống)" value="${esc(r.newPackageCode||'')}" style="margin-top:4px;${r.pkgId==='__NEW__'?'':'display:none'}" ${hasSaved?'disabled':''}>`:''}`:'<span class="warn">Mã vật tư chưa có trong danh mục/chủ sở hữu. Tạo mã tại Mục 07 trước.</span>'}${r.error?`<div class="warn">${esc(r.error)}</div>`:''}</td></tr>`}).join('')}</tbody></table></div><div class="tools" style="margin-top:9px"><button type="button" class="btn primary" data-proposal-save="${kind}" ${hasSaved||supplementBusy?'disabled':''}>${hasSaved?'Đã lập phiếu '+esc(saved[kind]):'Xác nhận & lưu phiếu đề nghị chờ CEO'}</button><span class="sub">${group.length} dòng · chưa tác động tồn trước khi CEO chốt</span></div></div>`}).join('');
+ $('proposalTables').querySelectorAll('[data-proposal-package]').forEach(el=>el.onchange=()=>{const r=rows[Number(el.dataset.proposalPackage)];r.pkgId=el.value;renderSupplementProposal()});
+ $('proposalTables').querySelectorAll('[data-proposal-qty]').forEach(el=>el.onchange=()=>{const r=rows[Number(el.dataset.proposalQty)];const v=num(el.value);r.qty=Number.isFinite(v)?v:NaN});
+ $('proposalTables').querySelectorAll('[data-newpackage]').forEach(el=>el.oninput=()=>{rows[Number(el.dataset.newpackage)].newPackageCode=el.value});
+ $('proposalTables').querySelectorAll('[data-proposal-save]').forEach(b=>b.onclick=()=>run(()=>saveSupplementProposal(b.dataset.proposalSave)));
+}
+async function saveSupplementProposal(kind){
+ if(!supplementState||supplementBusy)throw Error('Không có đề nghị hợp lệ hoặc đang lưu');if(!canDoc)throw Error('Không có quyền lập phiếu');
+ const {st,rows,saved}=supplementState,group=rows.filter(r=>r.kind===kind);if(!group.length||saved[kind])return;
+ const location=$('proposalLocation').value.trim();if(!location)throw Error('Vui lòng nhập vị trí kho điều chỉnh');
+ const ref=proposalSourceCode(st,kind);
+ for(const r of group){r.error='';const m=supplementMaterial(r,st);if(!m){r.error='Chưa có mã vật tư đúng chủ sở hữu';continue}if(nkey(r.unit)!==nkey(m.base_unit)){r.error='ĐVT không khớp ĐVT gốc; cần lập quy đổi được kiểm soát';continue}if(!Number.isFinite(r.qty)||r.qty<=0||r.qty>Math.abs(r.delta)+0.000001){r.error='SL cần điều chỉnh >0 và không vượt chênh lệch';continue}if(!r.pkgId){r.error='Chưa chọn kiện';continue}
+ if(r.pkgId==='__NEW__'&&kind!=='ADJUST_IN')r.error='Chỉ điều chỉnh tăng được tạo kiện mới';
+ if(r.pkgId!=='__NEW__'){const p=pack(r.pkgId);if(!p||p.material_id!==m.id||nkey(packageColor(p))!==nkey(r.color)||nkey(packageSize(p))!==nkey(r.size))r.error='Kiện không khớp mã/màu/size';else if(kind==='ADJUST_OUT'){const stock=ledger.filter(l=>l.package_id===p.id&&nkey(l.location_code)===nkey(location)).reduce((t,l)=>t+Number(l.qty_delta||0),0);if(stock+0.000001<r.qty)r.error='Kiện này không đủ tồn để điều chỉnh giảm'}}
+ }
+ if(group.some(r=>r.error)){renderSupplementProposal();throw Error('Có dòng chưa hợp lệ trong bảng đề nghị, vui lòng xem chữ đỏ')}
+ const existing=req(await client.from('dd10m_documents').select('doc_no,source_doc_no,partner').eq('company_id',COMPANY).ilike('source_doc_no',ref).limit(1000),'Kiểm tra mã đề nghị');
+ if(existing.some(d=>nkey(d.partner)===nkey(st.partner)&&nkey(d.source_doc_no)===nkey(ref)))throw Error('Mã '+ref+' đã có phiếu Đức Duy. Mở Lịch sử chứng từ; không lưu lại');
+ const lines=group.map(r=>r.code+' — '+nf(r.qty)+' '+r.unit+' ('+r.sheet+')');
+ if(!window.confirm('XÁC NHẬN LẬP ĐỀ NGHỊ CHỜ CEO\nMã tham chiếu: '+ref+'\nPhiếu gốc: '+st.linked.doc_no+' / '+st.source+'\nVị trí: '+location+'\n'+lines.join('\n')+'\n\nPhiếu này CHƯA thay đổi tồn kho; CEO chốt mới ghi sổ.'))return;
+ supplementBusy=true;$('proposalStatus').textContent='Đang tạo phiếu đề nghị '+ref+'...';renderSupplementProposal();
+ try{
+  const payload=[];
+  for(let i=0;i<group.length;i++){const r=group[i],m=supplementMaterial(r,st);let packageId=r.pkgId;
+   if(packageId==='__NEW__'){
+    if(!r.createdPkgId){const idCode=r.newPackageCode.trim()||'BS-'+st.linked.doc_no.replaceAll('-','')+'-'+String(i+1).padStart(3,'0');const result=req(await client.rpc('dd10m_create_package_variant',{p_material_id:m.id,p_package_code:idCode,p_lot_code:'BS-'+st.source,p_order_code:st.order||'',p_note:'Kiện mới của đề nghị '+ref,p_color:r.color||'-',p_size_code:r.size||'-'}),'Tạo kiện bổ sung');r.createdPkgId=typeof result==='string'?result:result?.id||result;if(!r.createdPkgId)throw Error('Không nhận được ID kiện bổ sung');packs.push({id:r.createdPkgId,material_id:m.id,package_code:idCode,lot_code:'BS-'+st.source,color:r.color,size_code:r.size});}
+    packageId=r.createdPkgId;
+   }
+   payload.push({package_id:packageId,unit:m.base_unit,qty:r.qty,note:'Đề nghị '+ref+' · Nguồn '+st.source+' · Sheet '+(r.sheet||'-')+' · nguồn '+r.sourceQty+' / đã lưu '+r.storedQty});
+  }
+  const date=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'});
+  const result=req(await client.rpc('dd10m_create_document',{p_company_id:COMPANY,p_doc_no:'',p_doc_type:kind,p_doc_date:date,p_order_code:st.order||'',p_partner:st.partner,p_stage:'OTHER',p_from:kind==='ADJUST_OUT'?location:'',p_to:kind==='ADJUST_IN'?location:'',p_source_doc_no:ref,p_note:'ĐỀ NGHỊ '+(kind==='ADJUST_IN'?'BỔ SUNG TĂNG':'ĐIỀU CHỈNH GIẢM')+' cho '+st.source+', phiếu đã chốt '+st.linked.doc_no+'. CEO kiểm tra trước khi duyệt.',p_lines:payload}),'Lưu đề nghị bổ sung');
+  // RPC thành công: phải đánh dấu đã lưu ngay, không cho gửi lại nếu bước tra cứu phía sau lỗi.
+  saved[kind]='ID '+result;
+  try{const d=req(await client.from('dd10m_documents').select('doc_no').eq('id',result).single(),'Tra số phiếu');saved[kind]=d.doc_no}catch(e){}
+  $('proposalStatus').textContent='ĐÃ TẠO '+saved[kind]+' chờ CEO chốt. Mã tham chiếu '+ref+'. Không thay đổi tồn kho.';
+  try{await reload()}catch(e){$('proposalStatus').textContent+=' Tải lại thất bại; kiểm tra lịch sử, KHÔNG gửi lại.'}
+ }catch(e){$('proposalStatus').textContent='LỖI: '+e.message+'. Nếu lỗi xảy ra sau khi gửi RPC, tra Lịch sử trước khi thử lại.';throw e}
+ finally{supplementBusy=false;renderSupplementProposal()}
 }
 function batchRender(){
  const panel=$('batchPanel');panel.classList.toggle('hide',!batchSheets.length);if(!batchSheets.length)return;
@@ -632,7 +722,7 @@ ${audit.diffs.map(y=>'• '+esc(y)).join('\n')||''}</div></td></tr>`:''}`
  $('batchBody').querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>{const st=batchSheets[+b.dataset.cancel];if(!window.confirm('Hủy dữ liệu nhập nhóm '+st.source+'? Không xóa dữ liệu Supabase.'))return;st.selected=false;st.cancelled=true;st.error='';st.rows=[];st.editedRows=[];if(activeSheetName===st.name){uploadRows=[];uploadRender()}batchRender()});
  $('batchBody').querySelectorAll('[data-existing]').forEach(b=>b.onclick=()=>{const st=batchSheets[+b.dataset.existing];if(st.linked)run(()=>printDocument(st.linked.id,'internal'))});
  $('batchBody').querySelectorAll('[data-audit]').forEach(b=>b.onclick=()=>run(async()=>{const st=batchSheets[+b.dataset.audit];const r=await compareLinkedGroup(st);uploadStatus('Đối chiếu '+st.source+': '+r.postedLines+'/'+r.sourceLines+' dòng · '+r.diffs.length+' mã/số lượng lệch. '+(r.diffs.length?'Cần kiểm tra chứng từ bổ sung có CEO duyệt.':'Đủ theo mã/ĐVT/số lượng hiện có.'),!!r.diffs.length)}));
- $('batchBody').querySelectorAll('[data-adjust]').forEach(b=>b.onclick=()=>{const st=batchSheets[+b.dataset.adjust];if(!st.linked||!st.audit?.diffs?.length)return;if(!window.confirm('MỞ BẢN SOẠN ĐIỀU CHỈNH cho '+st.source+'? Chưa tạo phiếu, chưa ghi sổ. Phải kiểm tra từng mã và số lượng chênh lệch, chọn ĐIỀU CHỈNH TĂNG/GIẢM phù hợp rồi trình CEO chốt.'))return;$('docType').value='ADJUST_IN';$('docDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'});$('docOrder').value=st.order||'';$('docPartner').value=st.partner;$('docSource').value='BS-'+st.linked.doc_no;$('docFrom').value='';$('docTo').value='';$('docStage').value='OTHER';$('docNote').value='ĐỀ XUẤT BỔ SUNG/ĐIỀU CHỈNH, tham chiếu phiếu nguồn '+st.source+' và phiếu đã chốt '+st.linked.doc_no+'; cần xác nhận các dòng chênh trước khi CEO phê duyệt.';const target=$('manual-entry');target.querySelector('details').open=true;target.scrollIntoView({behavior:'smooth',block:'start'});$('manualStatus').textContent='CHƯA LƯU. Chọn đúng các mã/kiện bị thiếu theo kết quả đối chiếu; nếu cần giảm tồn hãy đổi loại phiếu sang Điều chỉnh giảm. Mã BS-... chỉ là tham chiếu nội bộ, KHÔNG phải số phiếu đối tác.';$('manualStatus').style.color='#a26a00'});
+ $('batchBody').querySelectorAll('[data-adjust]').forEach(b=>b.onclick=()=>openSupplementProposal(batchSheets[+b.dataset.adjust]));
  $('batchBody').querySelectorAll('[data-preview]').forEach(b=>b.onclick=()=>{captureActiveSheet();const st=batchSheets[+b.dataset.preview];$('uploadSheet').value=st.name;loadExcelSheet(st.name);document.getElementById('uploadBody').scrollIntoView({block:'nearest',behavior:'smooth'})});
  $('batchInfo').textContent=batchSheets.filter(x=>x.error&&!x.linked&&!x.saved&&!x.cancelled).length+' nhóm lỗi · '+batchSheets.filter(x=>x.selected&&!x.saved&&!x.linked&&!x.cancelled).length+' nhóm chưa nhập chọn để lưu · '+batchSheets.filter(x=>x.saved).length+' phiếu vừa tạo · '+batchSheets.filter(x=>x.linked).length+' phiếu đã có (khóa nhập trùng).';
  $('batchSave').disabled=batchSaving||!canDoc||!batchSheets.some(x=>x.selected&&!x.saved&&!x.linked&&!x.cancelled);
@@ -810,6 +900,6 @@ async function saveLaterFactor(){if(!isCEO)throw Error('Chỉ CEO được cập
 function uploadInit(){$('batchSave').onclick=()=>run(batchSaveAll);$('uploadAddLine').onclick=uploadAddBlank;$('uploadMergeDuplicate').onclick=safeMergeUploads; $('laterGSM').oninput=updateLaterFactor; $('laterWidth').oninput=updateLaterFactor; $('laterSave').onclick=()=>run(saveLaterFactor);for(const id of ['calcKg','calcGsm','calcWidth'])$(id).oninput=updateMeterCalculator;$('uploadRead').onclick=()=>uploadRead();$('uploadReviewed').onchange=uploadRender;$('uploadCancelError').onclick=()=>{if(!window.confirm('Hủy các dòng lỗi đang hiển thị? Chỉ xóa dữ liệu chưa lưu trên màn hình.'))return;const st=batchSheets.find(x=>x.name===activeSheetName);if(st&&!st.saved&&!st.linked){st.selected=false;st.cancelled=true;st.rows=[];st.editedRows=[];st.error='';batchRender()}uploadRows=[];uploadRender();uploadStatus('Đã hủy dòng lỗi trên màn hình. Phiếu đã lưu trong Supabase được giữ nguyên.');};$('uploadDemo').onclick=uploadDemo;$('uploadTemplate').onclick=uploadTemplate;$('uploadSave').onclick=()=>run((uploadBook&&uploadBook.SheetNames.length>1)?batchSaveAll:uploadSaveDraft);$('uploadSheet').onchange=()=>{if(!uploadBook)return;try{captureActiveSheet();loadExcelSheet($('uploadSheet').value)}catch(e){uploadRows=[];uploadRender();uploadStatus(e.message,true)}};$('uploadDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'});$('uploadType').onchange=()=>{const t=$('uploadType').value;$('transferDestWrap').style.display=t==='TRANSFER'?'':'none';if(t==='ISSUE_PROD')$('uploadStage').value='CUT'}}
 
 async function init(){try{const key=window.DD_CONFIG?.supabasePublishableKey;if(!key||!window.supabase)throw Error('Thiếu cấu hình công khai Supabase');client=window.supabase.createClient(URL,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const u=req(await client.auth.getUser(),'Auth');user=u.user;if(!user)throw Error('Bạn chưa đăng nhập ERP');const roles=req(await client.from('dd_user_roles').select('role_code').eq('company_id',COMPANY).eq('user_id',user.id),'Vai trò').map(x=>x.role_code);if(!roles.length)throw Error('Tài khoản chưa thuộc Đức Duy');isCEO=roles.includes('ceo');canDoc=isCEO||roles.includes('warehouse')||roles.includes('production');$('who').textContent=isCEO?'CEO · Quản lý vật tư':roles.join(', ');['saveMat','saveUnit','savePlan'].forEach(x=>$(x).disabled=!isCEO);['savePack','saveDoc'].forEach(x=>$(x).disabled=!canDoc);$('gate').classList.add('hide');await reload();fillLaterFabric();addLine()}catch(e){$('gateTitle').textContent='Không thể mở DD-10 vật tư';$('gateDesc').textContent=e.message}}
-$('refresh').onclick=()=>run(async()=>{await reload();fillLaterFabric()});$('saveMat').onclick=()=>run(saveMaterial);$('saveUnit').onclick=()=>run(saveUnit);$('savePack').onclick=()=>run(savePack);$('savePlan').onclick=()=>run(savePlan);$('saveDoc').onclick=()=>run(saveDoc);$('addLine').onclick=addLine;$('docType').onchange=()=>document.querySelectorAll('.newLine').forEach(l=>refreshManualChoices(l,'package'));const go=$('goManual');if(go)go.onclick=()=>{const sec=$('manual-entry');sec.querySelector('details').open=true;sec.scrollIntoView({behavior:'smooth',block:'start'});};$('docDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'});uploadInit();initDetailLedger();initIssueCart();init();
+$('refresh').onclick=()=>run(async()=>{await reload();fillLaterFabric()});$('proposalClose').onclick=()=>{$('proposalPanel').classList.add('hide')};$('proposalLocation').addEventListener('change',()=>{if(supplementState)renderSupplementProposal()});$('saveMat').onclick=()=>run(saveMaterial);$('saveUnit').onclick=()=>run(saveUnit);$('savePack').onclick=()=>run(savePack);$('savePlan').onclick=()=>run(savePlan);$('saveDoc').onclick=()=>run(saveDoc);$('addLine').onclick=addLine;$('docType').onchange=()=>document.querySelectorAll('.newLine').forEach(l=>refreshManualChoices(l,'package'));const go=$('goManual');if(go)go.onclick=()=>{const sec=$('manual-entry');sec.querySelector('details').open=true;sec.scrollIntoView({behavior:'smooth',block:'start'});};$('docDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'});uploadInit();initDetailLedger();initIssueCart();init();
 })();
 </script></body></html>
