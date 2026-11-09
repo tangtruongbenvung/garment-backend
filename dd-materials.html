@@ -76,13 +76,13 @@
 .batch-safe{color:#08733d;font-size:12px}
 .batch-warning{background:#fff7e8!important}
 
-/* V3.6: nhập mã bằng bàn phím và bảng đề nghị bổ sung kiểm toán */
+/* V3.7: mã vật tư mới ở dạng đề nghị chờ CEO, không có tồn kho trước phê duyệt */
 .mat-search-wrap{position:relative;min-width:0}.mat-search-input{width:100%;font-size:12px;padding:8px 7px;border:1px solid #c8d7ea;border-radius:7px}.mat-search-list{position:absolute;z-index:90;left:0;right:0;top:100%;background:white;border:1px solid #8fb4e1;border-radius:6px;box-shadow:0 8px 17px #17385f30;max-height:230px;overflow-y:auto}.mat-search-option{display:block;width:100%;padding:9px 8px;text-align:left;border:0;background:#fff;cursor:pointer;font-size:12px;border-bottom:1px solid #ecf1f9;white-space:normal;overflow-wrap:anywhere}.mat-search-option:hover,.mat-search-option:focus{background:#e9f2ff}.mat-search-code{font-weight:750;color:#173f76}.mat-search-name{font-size:11px;color:#5e7086}.mat-search-err{font-size:11px;color:#a82222}.proposal-panel{border:2px solid #7aa2d5;border-radius:11px;background:#f5f9ff;padding:15px;margin:13px 0}.proposal-table{min-width:1040px;width:100%}.proposal-table th,.proposal-table td{font-size:12px;padding:7px;vertical-align:middle}.proposal-table .long-name{max-width:220px;overflow-wrap:anywhere;line-height:1.3}.proposal-table select,.proposal-table input{font-size:12px;padding:7px;width:100%;min-width:0}.proposal-table .warn{color:#9b3022;font-weight:700}.proposal-note{font-size:12px;color:#4f6986;padding:7px 0}.proposal-heading{font-size:16px;font-weight:800;color:#174479}
 </style></head><body>
 <div id="gate"><div><h2 id="gateTitle">Đang xác thực Supabase…</h2><p id="gateDesc">Đang kiểm tra vai trò người dùng.</p><a href="index.html">Về ERP</a></div></div>
 <div class="layout"><aside><h2>ĐỨC DUY · AI OS</h2><a href="dd-ceo.html">◈ Dashboard 12 Agent</a><a href="dd-warehouse.html">▣ DD-10 · Thành phẩm/BTP</a><a class="active" href="dd-materials.html">▣ DD-10 · Toàn bộ vật tư</a><a href="dd-pricing.html">▣ DD-03 · Giá & lợi nhuận</a><a href="index.html?view=erp">↩ GARMENT ERP</a></aside>
 <main>
-<div class="top"><div><h1>DD-10 V3.6 · Đề nghị bổ sung tự động & tìm nhanh mã vật tư</h1><div class="sub">Vải · Chỉ · Cúc · Khóa · Nhãn · Thun · Bao bì · Vật tư khác · Theo lô/cây/cuộn/kiện và đơn hàng</div></div><div class="tools"><span class="tag" id="who">Đang kiểm tra</span><button type="button" id="goManual" class="btn primary" style="white-space:nowrap">+ Lập phiếu thủ công</button><button class="btn" id="refresh">↻ Tải lại</button><span class="tag">Giao nhận A4 dọc · Nội bộ A4 ngang</span></div></div>
+<div class="top"><div><h1>DD-10 V3.7 · Đề nghị mã vật tư mới chờ CEO duyệt</h1><div class="sub">Vải · Chỉ · Cúc · Khóa · Nhãn · Thun · Bao bì · Vật tư khác · Theo lô/cây/cuộn/kiện và đơn hàng</div></div><div class="tools"><span class="tag" id="who">Đang kiểm tra</span><button type="button" id="goManual" class="btn primary" style="white-space:nowrap">+ Lập phiếu thủ công</button><button class="btn" id="refresh">↻ Tải lại</button><span class="tag">Giao nhận A4 dọc · Nội bộ A4 ngang</span></div></div>
 <div id="feedback" class="alert hide" role="status" aria-live="polite"></div>
 <div class="stats"><div class="stat"><div class="sub">Mã vật tư</div><strong id="sMaterials">—</strong></div><div class="stat"><div class="sub">Cây/cuộn/kiện/bó</div><strong id="sPackages">—</strong></div><div class="stat"><div class="sub">Phiếu chờ CEO chốt</div><strong id="sPending">—</strong></div><div class="stat"><div class="sub">Đơn hàng có định mức</div><strong id="sOrders">—</strong></div></div>
 <div class="panel no-print" id="importPanel">
@@ -108,11 +108,12 @@
  </div>
 <div id="proposalPanel" class="proposal-panel hide no-print" aria-label="Bảng đề nghị bổ sung vật tư">
  <div class="row"><div><div class="proposal-heading">Đề nghị bổ sung / điều chỉnh vật tư – trình CEO phê duyệt</div><p class="proposal-note" id="proposalRef"></p></div><button class="btn sm" id="proposalClose" type="button">Đóng bản soạn</button></div>
- <p class="proposal-note">Hệ thống tự so sánh Excel với phiếu đã chốt, tạo từng dòng chênh lệch và mã tham chiếu đề nghị. <b>Đề nghị tăng và giảm được lập thành hai phiếu nháp riêng khi có cả hai chiều.</b> Chọn đúng kiện/vị trí, kiểm tra số lượng trước khi gửi CEO. Không thay đổi phiếu nguồn đã chốt.</p>
+ <p class="proposal-note">Hệ thống tự tạo đề nghị cho cả vật tư <b>chưa có trong danh mục</b>. Nhân viên được lưu đề nghị kèm mã/tên/ĐVT dự kiến; <b>chỉ CEO duyệt mới tạo mã vật tư chính thức và phiếu điều chỉnh nháp</b>. CEO chốt phiếu lần nữa mới thay đổi tồn kho. Không sửa phiếu gốc đã chốt.</p>
  <div class="f" style="max-width:320px"><label>Vị trí kho điều chỉnh</label><input id="proposalLocation" value="NVL" placeholder="NVL / PL / TP" aria-label="Vị trí kho điều chỉnh"></div>
  <div id="proposalTables"></div>
  <div id="proposalStatus" role="status" aria-live="polite" class="proposal-note"></div>
 </div>
+<div class="panel no-print" id="supplementReviewPanel"><div class="row"><h2>01C · Đề nghị bổ sung / mã vật tư mới chờ CEO</h2><button type="button" class="btn sm" id="supplementRefresh">↻ Tải đề nghị</button></div><p class="section-note">Nhân viên gửi đề nghị chưa tạo mã chính thức. CEO kiểm tra từng vật tư, nhấn Duyệt để tạo mã và chứng từ điều chỉnh <b>nháp</b>; sau đó CEO chốt chứng từ mới cập nhật tồn. Đề nghị bị từ chối không ghi kho.</p><div id="supplementReviewStatus" role="status" class="section-note"></div><div class="tablewrap"><table class="tbl" style="min-width:1020px"><thead><tr><th>Mã đề nghị</th><th>Phiếu nguồn / Đối tác</th><th>SL mã</th><th>Mã mới dự kiến</th><th>Trạng thái</th><th>CEO xử lý</th></tr></thead><tbody id="supplementReviewBody"><tr><td colspan="6">Đang tải...</td></tr></tbody></table></div></div>
 <div class="tools" style="margin:13px 0"><button class="btn primary" id="uploadRead">Đọc Excel gốc & xem trước</button><button class="btn" id="uploadDemo">Nạp dữ liệu mẫu</button><button class="btn" id="uploadTemplate">Tải mẫu Excel</button><button class="btn" id="uploadAddLine">+ Thêm dòng</button><button class="btn" id="uploadMergeDuplicate" type="button">Gộp dòng trùng an toàn</button><button class="btn sm hide" id="uploadCancelError" type="button">Xóa / Hủy cập nhật lỗi</button><button class="btn primary" id="uploadSave" disabled>Lưu phiếu nháp vào Supabase</button></div>
 <div class="tools" style="margin-bottom:8px"><label style="display:flex;align-items:center;gap:8px;max-width:100%;font-weight:600"><input type="checkbox" id="uploadReviewed" style="width:auto"> Tôi đã kiểm tra mã vật tư, ĐVT, số lượng, đơn hàng và chứng từ nguồn</label></div>
 <div id="duplicateSummary" class="duplicate-alert hide" role="alert"></div><div id="uploadStatus" class="section-note" style="margin:11px 0" role="status" aria-live="polite">Chọn Excel/CSV rồi chọn đúng sheet chứng từ. Mỗi phiếu nguồn đối tác chỉ tạo một phiếu Đức Duy; bắt buộc có số phiếu nguồn và đối tác.</div>
@@ -657,57 +658,84 @@ function proposalPackages(item,materialId,kind,location){
 }
 function openSupplementProposal(st){
  if(!st?.linked||st.linked.status!=='posted'||!st.audit?.items?.length)return;
- supplementState={st,rows:st.audit.items.filter(x=>Math.abs(x.delta)>0.000001).map(x=>{const kind=x.delta>0?'ADJUST_IN':'ADJUST_OUT',m=supplementMaterial(x,st);const available=m?proposalPackages(x,m.id,kind,$('proposalLocation').value.trim()):[];return {...x,kind,qty:Math.abs(x.delta),pkgId:available.length===1?available[0].id:(kind==='ADJUST_IN'?'__NEW__':''),newPackageCode:'',error:''}}),saved:{}};
+ supplementState={st,rows:st.audit.items.filter(x=>Math.abs(x.delta)>0.000001).map(x=>{const kind=x.delta>0?'ADJUST_IN':'ADJUST_OUT',m=supplementMaterial(x,st);const available=m?proposalPackages(x,m.id,kind,$('proposalLocation').value.trim()):[];return {...x,kind,qty:Math.abs(x.delta),pkgId:!m&&kind==='ADJUST_IN'?'__NEW__':available.length===1?available[0].id:(kind==='ADJUST_IN'?'__NEW__':''),newPackageCode:'',error:''}}),saved:{}};
  const p=$('proposalPanel');p.classList.remove('hide');$('proposalStatus').textContent='';renderSupplementProposal();p.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function renderSupplementProposal(){
  if(!supplementState)return;const {st,rows,saved}=supplementState;const location=$('proposalLocation').value.trim();
  $('proposalRef').textContent='Phiếu nguồn '+st.source+' · Phiếu đã chốt '+st.linked.doc_no+' · '+st.partner+' · '+st.order+' · '+st.sheetNames.join(' + ');
- const kinds=['ADJUST_IN','ADJUST_OUT'];$('proposalTables').innerHTML=kinds.map(kind=>{
+ $('proposalTables').innerHTML=['ADJUST_IN','ADJUST_OUT'].map(kind=>{
   const group=rows.filter(r=>r.kind===kind);if(!group.length)return '';
   const ref=proposalSourceCode(st,kind),hasSaved=!!saved[kind];
-  return `<div class="box" style="margin:13px 0;padding:9px;background:#fff"><div class="row"><b>${kind==='ADJUST_IN'?'ĐỀ NGHỊ ĐIỀU CHỈNH TĂNG':'ĐỀ NGHỊ ĐIỀU CHỈNH GIẢM'}</b><span class="tag">Mã tham chiếu ${esc(ref)}</span></div><div class="tablewrap"><table class="tbl proposal-table"><thead><tr><th>Mã vật tư</th><th>Tên vật tư</th><th>Sheet nguồn</th><th>ĐVT</th><th>SL nguồn</th><th>Đã lưu</th><th>Chênh cần xử lý</th><th>Kiện/vị trí áp dụng</th></tr></thead><tbody>${group.map(r=>{
+  return `<div class="box" style="margin:13px 0;padding:9px;background:#fff"><div class="row"><b>${kind==='ADJUST_IN'?'ĐỀ NGHỊ BỔ SUNG TĂNG':'ĐỀ NGHỊ ĐIỀU CHỈNH GIẢM'}</b><span class="tag">${esc(ref)}</span></div><div class="tablewrap"><table class="tbl proposal-table"><thead><tr><th>Mã vật tư dự kiến</th><th>Tên vật tư</th><th>Sheet nguồn</th><th>ĐVT</th><th>SL nguồn</th><th>Đã lưu</th><th>SL đề nghị</th><th>Mã/kiện CEO sẽ duyệt</th></tr></thead><tbody>${group.map(r=>{
     const idx=rows.indexOf(r),m=supplementMaterial(r,st),pk=m?proposalPackages(r,m.id,kind,location):[];
-    const options='<option value="">-- Chọn kiện --</option>'+pk.map(p=>`<option value="${esc(p.id)}" ${r.pkgId===p.id?'selected':''}>${esc(p.label)}</option>`).join('')+(kind==='ADJUST_IN'?`<option value="__NEW__" ${r.pkgId==='__NEW__'?'selected':''}>+ Tạo kiện mới cho phần thiếu</option>`:'');
-    return `<tr><td><b>${esc(r.code)}</b><div class="muted-cell">${esc(r.color)} · ${esc(r.size)}</div></td><td class="long-name">${esc(r.name||m?.material_name||'-')}</td><td>${esc(r.sheet||'-')}</td><td>${esc(r.unit)}</td><td class="num">${nf(r.sourceQty)}</td><td class="num">${nf(r.storedQty)}</td><td><input inputmode="decimal" data-proposal-qty="${idx}" value="${esc(String(r.qty))}" ${hasSaved?'disabled':''}></td><td>${m?`<select data-proposal-package="${idx}" ${hasSaved?'disabled':''}>${options}</select>${kind==='ADJUST_IN'?`<input data-newpackage="${idx}" placeholder="Mã kiện mới (tự sinh nếu trống)" value="${esc(r.newPackageCode||'')}" style="margin-top:4px;${r.pkgId==='__NEW__'?'':'display:none'}" ${hasSaved?'disabled':''}>`:''}`:'<span class="warn">Mã vật tư chưa có trong danh mục/chủ sở hữu. Tạo mã tại Mục 07 trước.</span>'}${r.error?`<div class="warn">${esc(r.error)}</div>`:''}</td></tr>`}).join('')}</tbody></table></div><div class="tools" style="margin-top:9px"><button type="button" class="btn primary" data-proposal-save="${kind}" ${hasSaved||supplementBusy?'disabled':''}>${hasSaved?'Đã lập phiếu '+esc(saved[kind]):'Xác nhận & lưu phiếu đề nghị chờ CEO'}</button><span class="sub">${group.length} dòng · chưa tác động tồn trước khi CEO chốt</span></div></div>`}).join('');
- $('proposalTables').querySelectorAll('[data-proposal-package]').forEach(el=>el.onchange=()=>{const r=rows[Number(el.dataset.proposalPackage)];r.pkgId=el.value;renderSupplementProposal()});
+    if(!m&&kind==='ADJUST_IN'&&!r.pkgId)r.pkgId='__NEW__';
+    const options='<option value="">-- Chọn kiện --</option>'+pk.map(p=>`<option value="${esc(p.id)}" ${r.pkgId===p.id?'selected':''}>${esc(p.label)}</option>`).join('')+(kind==='ADJUST_IN'?`<option value="__NEW__" ${r.pkgId==='__NEW__'?'selected':''}>+ Tạo kiện sau CEO duyệt</option>`:'');
+    return `<tr><td><b>${esc(r.code)}</b><div class="muted-cell">${esc(r.color)} · ${esc(r.size)}</div></td><td class="long-name">${esc(r.name||m?.material_name||'-')}</td><td>${esc(r.sheet||'-')}</td><td>${esc(r.unit)}</td><td class="num">${nf(r.sourceQty)}</td><td class="num">${nf(r.storedQty)}</td><td><input inputmode="decimal" data-proposal-qty="${idx}" value="${esc(String(r.qty))}" ${hasSaved?'disabled':''}></td><td>${m?`<select data-proposal-package="${idx}" ${hasSaved?'disabled':''}>${options}</select>`:kind==='ADJUST_IN'?'<div class="good">MÃ MỚI DỰ KIẾN · Chờ CEO duyệt</div><div class="muted-cell">Sẽ tạo mã theo Excel, ĐVT '+esc(r.unit)+'; kiện tự cấp sau duyệt.</div>':'<div class="warn">Không thể giảm hàng chưa có mã trong kho</div>'}${r.error?`<div class="warn">${esc(r.error)}</div>`:''}</td></tr>`}).join('')}</tbody></table></div><div class="tools" style="margin-top:9px"><button type="button" class="btn primary" data-proposal-save="${kind}" ${hasSaved||supplementBusy?'disabled':''}>${hasSaved?'Đã gửi CEO: '+esc(saved[kind]):'Gửi đề nghị (có mã mới) chờ CEO duyệt'}</button><span class="sub">${group.length} dòng · Chưa tạo vật tư mới hoặc ghi tồn trước duyệt</span></div></div>`;
+ }).join('');
+ $('proposalTables').querySelectorAll('[data-proposal-package]').forEach(el=>el.onchange=()=>{rows[Number(el.dataset.proposalPackage)].pkgId=el.value;renderSupplementProposal()});
  $('proposalTables').querySelectorAll('[data-proposal-qty]').forEach(el=>el.onchange=()=>{const r=rows[Number(el.dataset.proposalQty)];const v=num(el.value);r.qty=Number.isFinite(v)?v:NaN});
- $('proposalTables').querySelectorAll('[data-newpackage]').forEach(el=>el.oninput=()=>{rows[Number(el.dataset.newpackage)].newPackageCode=el.value});
  $('proposalTables').querySelectorAll('[data-proposal-save]').forEach(b=>b.onclick=()=>run(()=>saveSupplementProposal(b.dataset.proposalSave)));
 }
 async function saveSupplementProposal(kind){
- if(!supplementState||supplementBusy)throw Error('Không có đề nghị hợp lệ hoặc đang lưu');if(!canDoc)throw Error('Không có quyền lập phiếu');
+ if(!supplementState||supplementBusy||!canDoc)throw Error('Không có quyền hoặc đề nghị đang xử lý');
  const {st,rows,saved}=supplementState,group=rows.filter(r=>r.kind===kind);if(!group.length||saved[kind])return;
- const location=$('proposalLocation').value.trim();if(!location)throw Error('Vui lòng nhập vị trí kho điều chỉnh');
- const ref=proposalSourceCode(st,kind);
- for(const r of group){r.error='';const m=supplementMaterial(r,st);if(!m){r.error='Chưa có mã vật tư đúng chủ sở hữu';continue}if(nkey(r.unit)!==nkey(m.base_unit)){r.error='ĐVT không khớp ĐVT gốc; cần lập quy đổi được kiểm soát';continue}if(!Number.isFinite(r.qty)||r.qty<=0||r.qty>Math.abs(r.delta)+0.000001){r.error='SL cần điều chỉnh >0 và không vượt chênh lệch';continue}if(!r.pkgId){r.error='Chưa chọn kiện';continue}
- if(r.pkgId==='__NEW__'&&kind!=='ADJUST_IN')r.error='Chỉ điều chỉnh tăng được tạo kiện mới';
- if(r.pkgId!=='__NEW__'){const p=pack(r.pkgId);if(!p||p.material_id!==m.id||nkey(packageColor(p))!==nkey(r.color)||nkey(packageSize(p))!==nkey(r.size))r.error='Kiện không khớp mã/màu/size';else if(kind==='ADJUST_OUT'){const stock=ledger.filter(l=>l.package_id===p.id&&nkey(l.location_code)===nkey(location)).reduce((t,l)=>t+Number(l.qty_delta||0),0);if(stock+0.000001<r.qty)r.error='Kiện này không đủ tồn để điều chỉnh giảm'}}
- }
- if(group.some(r=>r.error)){renderSupplementProposal();throw Error('Có dòng chưa hợp lệ trong bảng đề nghị, vui lòng xem chữ đỏ')}
- const existing=req(await client.from('dd10m_documents').select('doc_no,source_doc_no,partner').eq('company_id',COMPANY).ilike('source_doc_no',ref).limit(1000),'Kiểm tra mã đề nghị');
- if(existing.some(d=>nkey(d.partner)===nkey(st.partner)&&nkey(d.source_doc_no)===nkey(ref)))throw Error('Mã '+ref+' đã có phiếu Đức Duy. Mở Lịch sử chứng từ; không lưu lại');
- const lines=group.map(r=>r.code+' — '+nf(r.qty)+' '+r.unit+' ('+r.sheet+')');
- if(!window.confirm('XÁC NHẬN LẬP ĐỀ NGHỊ CHỜ CEO\nMã tham chiếu: '+ref+'\nPhiếu gốc: '+st.linked.doc_no+' / '+st.source+'\nVị trí: '+location+'\n'+lines.join('\n')+'\n\nPhiếu này CHƯA thay đổi tồn kho; CEO chốt mới ghi sổ.'))return;
- supplementBusy=true;$('proposalStatus').textContent='Đang tạo phiếu đề nghị '+ref+'...';renderSupplementProposal();
- try{
-  const payload=[];
-  for(let i=0;i<group.length;i++){const r=group[i],m=supplementMaterial(r,st);let packageId=r.pkgId;
-   if(packageId==='__NEW__'){
-    if(!r.createdPkgId){const idCode=r.newPackageCode.trim()||'BS-'+st.linked.doc_no.replaceAll('-','')+'-'+String(i+1).padStart(3,'0');const result=req(await client.rpc('dd10m_create_package_variant',{p_material_id:m.id,p_package_code:idCode,p_lot_code:'BS-'+st.source,p_order_code:st.order||'',p_note:'Kiện mới của đề nghị '+ref,p_color:r.color||'-',p_size_code:r.size||'-'}),'Tạo kiện bổ sung');r.createdPkgId=typeof result==='string'?result:result?.id||result;if(!r.createdPkgId)throw Error('Không nhận được ID kiện bổ sung');packs.push({id:r.createdPkgId,material_id:m.id,package_code:idCode,lot_code:'BS-'+st.source,color:r.color,size_code:r.size});}
-    packageId=r.createdPkgId;
-   }
-   payload.push({package_id:packageId,unit:m.base_unit,qty:r.qty,note:'Đề nghị '+ref+' · Nguồn '+st.source+' · Sheet '+(r.sheet||'-')+' · nguồn '+r.sourceQty+' / đã lưu '+r.storedQty});
+ const loc=$('proposalLocation').value.trim(),ref=proposalSourceCode(st,kind);if(!loc)throw Error('Thiếu vị trí kho');
+ const payload=[];
+ for(const r of group){
+  r.error='';const m=supplementMaterial(r,st);
+  if(!r.code?.trim()||!r.name?.trim()||!r.unit?.trim()||!st.partner?.trim())r.error='Thiếu mã, tên, ĐVT hoặc chủ sở hữu';
+  else if(m&&nkey(r.unit)!==nkey(m.base_unit))r.error='ĐVT không khớp mã hiện có';
+  else if(kind==='ADJUST_OUT'&&!m)r.error='Không cho điều chỉnh giảm mã chưa có';
+  else if(!Number.isFinite(r.qty)||r.qty<=0||r.qty>Math.abs(r.delta)+.000001)r.error='Số lượng không hợp lệ hoặc vượt chênh lệch';
+  else if(m&&!r.pkgId)r.error='Cần chọn kiện hoặc kiện mới';
+  else if(kind==='ADJUST_OUT'&&r.pkgId==='__NEW__')r.error='Không thể tạo kiện mới để điều chỉnh giảm';
+  if(!r.error&&m&&r.pkgId!=='__NEW__'){
+    const p=pack(r.pkgId);if(!p||p.material_id!==m.id||nkey(packageColor(p))!==nkey(r.color||'-')||nkey(packageSize(p))!==nkey(r.size||'-'))r.error='Kiện không khớp mã/màu/size';
+    else if(kind==='ADJUST_OUT'){
+     const balance=ledger.filter(l=>l.package_id===p.id&&nkey(l.location_code)===nkey(loc)).reduce((a,l)=>a+Number(l.qty_delta||0),0);
+     if(balance+.000001<r.qty)r.error='Không đủ tồn kiện để giảm';
+    }
   }
-  const date=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'});
-  const result=req(await client.rpc('dd10m_create_document',{p_company_id:COMPANY,p_doc_no:'',p_doc_type:kind,p_doc_date:date,p_order_code:st.order||'',p_partner:st.partner,p_stage:'OTHER',p_from:kind==='ADJUST_OUT'?location:'',p_to:kind==='ADJUST_IN'?location:'',p_source_doc_no:ref,p_note:'ĐỀ NGHỊ '+(kind==='ADJUST_IN'?'BỔ SUNG TĂNG':'ĐIỀU CHỈNH GIẢM')+' cho '+st.source+', phiếu đã chốt '+st.linked.doc_no+'. CEO kiểm tra trước khi duyệt.',p_lines:payload}),'Lưu đề nghị bổ sung');
-  // RPC thành công: phải đánh dấu đã lưu ngay, không cho gửi lại nếu bước tra cứu phía sau lỗi.
-  saved[kind]='ID '+result;
-  try{const d=req(await client.from('dd10m_documents').select('doc_no').eq('id',result).single(),'Tra số phiếu');saved[kind]=d.doc_no}catch(e){}
-  $('proposalStatus').textContent='ĐÃ TẠO '+saved[kind]+' chờ CEO chốt. Mã tham chiếu '+ref+'. Không thay đổi tồn kho.';
-  try{await reload()}catch(e){$('proposalStatus').textContent+=' Tải lại thất bại; kiểm tra lịch sử, KHÔNG gửi lại.'}
- }catch(e){$('proposalStatus').textContent='LỖI: '+e.message+'. Nếu lỗi xảy ra sau khi gửi RPC, tra Lịch sử trước khi thử lại.';throw e}
+  if(!r.error)payload.push({material_code:r.code.trim(),material_name:r.name.trim(),owner_name:st.partner.trim(),unit_code:r.unit.trim(),quantity:Number(r.qty).toFixed(4),color:r.color||'-',size_code:r.size||'-',package_id:!m||r.pkgId==='__NEW__'?null:r.pkgId,sheet:r.sheet||'-'});
+ }
+ if(group.some(r=>r.error)){renderSupplementProposal();throw Error('Có dòng cần sửa; vui lòng xem cảnh báo đỏ')}
+ const checklist=group.map(r=>r.code+' · '+nf(r.qty)+' '+r.unit+(supplementMaterial(r,st)?'':' · MÃ MỚI')).join('\n');
+ if(!window.confirm('XÁC NHẬN GỬI ĐỀ NGHỊ CHO CEO\n'+ref+'\nPhiếu gốc '+st.source+' · '+st.linked.doc_no+'\n'+checklist+'\n\nChưa tạo mã vật tư, chưa ghi sổ. CEO duyệt sẽ tạo mã và phiếu điều chỉnh nháp.'))return;
+ supplementBusy=true;renderSupplementProposal();
+ try{
+  const result=req(await client.rpc('dd10m_submit_supplement',{p_company_id:COMPANY,p_reference_code:ref,p_original_document_id:st.linked.id,p_doc_type:kind,p_source_doc_no:st.source,p_partner:st.partner,p_order_code:st.order||'',p_location_code:loc,p_lines:payload}),'Gửi đề nghị cho CEO');
+  saved[kind]=ref;
+  $('proposalStatus').textContent='ĐÃ GỬI '+ref+' (ID '+result+') chờ CEO duyệt. Chưa tạo mã mới, phiếu điều chỉnh hoặc tồn kho.';
+  await loadSupplementRequests();
+ }catch(e){$('proposalStatus').textContent='Lỗi: '+e.message+'. Nếu mất kết nối sau khi gửi, xem danh sách đề nghị trước khi thử lại.';throw e}
  finally{supplementBusy=false;renderSupplementProposal()}
+}
+let supplementalRequests=[];
+async function loadSupplementRequests(){
+ if(!client)return;
+ const result=await client.from('dd10m_supplement_requests').select('id,reference_code,source_doc_no,partner,doc_type,proposed_lines,status,created_at,created_document_id').eq('company_id',COMPANY).order('created_at',{ascending:false}).limit(150);
+ if(result.error){$('supplementReviewStatus').textContent='Chưa tải được đề nghị: '+result.error.message+' · Cần chạy SQL V3.7 trước khi sử dụng.';return}
+ supplementalRequests=result.data||[];renderSupplementRequests();
+}
+function renderSupplementRequests(){
+ const body=$('supplementReviewBody');if(!body)return;
+ body.innerHTML=supplementalRequests.length?supplementalRequests.map(r=>{
+  const lines=r.proposed_lines||[],newCodes=lines.filter(x=>!mats.some(m=>nkey(m.material_code)===nkey(x.material_code)&&nkey(m.owner_name)===nkey(x.owner_name))).map(x=>x.material_code);
+  const state=r.status==='pending'?'Chờ CEO duyệt':r.status==='approved'?'Đã duyệt – phiếu điều chỉnh nháp':'Từ chối';
+  return `<tr><td><b>${esc(r.reference_code)}</b><div class="muted-cell">${esc(r.doc_type)}</div></td><td>${esc(r.source_doc_no)}<div class="muted-cell">${esc(r.partner)}</div></td><td>${lines.length}<details><summary style="cursor:pointer">Xem các dòng</summary>${lines.map(x=>`<div class="muted-cell">${esc(x.material_code)} · ${esc(x.material_name)} · ${esc(x.quantity)} ${esc(x.unit_code)}</div>`).join('')}</details></td><td>${newCodes.length?`<span class="warn">${esc(newCodes.join(', '))}</span>`:'—'}</td><td><b>${state}</b>${r.created_document_id?'<div class="muted-cell">Đã tạo phiếu, xem Mục 06</div>':''}</td><td>${isCEO&&r.status==='pending'?`<button class="btn sm primary" data-supp-approve="${esc(r.id)}">CEO duyệt</button> <button class="btn sm" data-supp-reject="${esc(r.id)}">Từ chối</button>`:'—'}</td></tr>`;
+ }).join(''):'<tr><td colspan="6">Chưa có đề nghị bổ sung</td></tr>';
+ body.querySelectorAll('[data-supp-approve]').forEach(b=>b.onclick=()=>run(()=>reviewSupplement(b.dataset.suppApprove,true)));
+ body.querySelectorAll('[data-supp-reject]').forEach(b=>b.onclick=()=>run(()=>reviewSupplement(b.dataset.suppReject,false)));
+}
+async function reviewSupplement(id,approve){
+ if(!isCEO)throw Error('Chỉ CEO được duyệt');
+ const target=supplementalRequests.find(x=>x.id===id);if(!target||target.status!=='pending')throw Error('Đề nghị không còn chờ duyệt');
+ if(!window.confirm((approve?'DUYỆT':'TỪ CHỐI')+' đề nghị '+target.reference_code+'?\n'+(approve?'Khi duyệt: tạo mã vật tư còn thiếu và phiếu điều chỉnh nháp, CHƯA ghi tồn; CEO còn phải chốt phiếu trong Mục 06.':'Đề nghị bị từ chối, không tạo mã hoặc phiếu.')))return;
+ const note=approve?'CEO đã kiểm tra đề nghị':'CEO từ chối đề nghị';
+ const result=req(await client.rpc('dd10m_review_supplement',{p_request_id:id,p_approve:approve,p_review_note:note}),'CEO xử lý đề nghị');
+ $('supplementReviewStatus').textContent=approve?'Đã duyệt '+target.reference_code+' · Tạo phiếu điều chỉnh nháp '+result+'. Chỉ CEO chốt phiếu ở Mục 06 mới tác động tồn.':'Đã từ chối '+target.reference_code+'.';
+ await reload();await loadSupplementRequests();
 }
 function batchRender(){
  const panel=$('batchPanel');panel.classList.toggle('hide',!batchSheets.length);if(!batchSheets.length)return;
@@ -899,7 +927,7 @@ function updateLaterFactor(){const gsm=num($('laterGSM').value),w=num($('laterWi
 async function saveLaterFactor(){if(!isCEO)throw Error('Chỉ CEO được cập nhật hệ số quy đổi');const material_id=$('laterFabric').value,factor_to_base=num($('laterFactor').value);if(!material_id||!(factor_to_base>0))throw Error('Chọn mã vải, nhập GSM và khổ >0');const r=await client.from('dd10m_units').upsert({company_id:COMPANY,material_id,unit_code:'m',factor_to_base},{onConflict:'material_id,unit_code'}).select('id');if(req(r,'Lưu quy đổi mét').length!==1)throw Error('Không xác nhận được bản ghi quy đổi');msg('Đã lưu hệ số kg/m cho mã vải. Tồn kho kg và chứng từ cũ không thay đổi.');}
 function uploadInit(){$('batchSave').onclick=()=>run(batchSaveAll);$('uploadAddLine').onclick=uploadAddBlank;$('uploadMergeDuplicate').onclick=safeMergeUploads; $('laterGSM').oninput=updateLaterFactor; $('laterWidth').oninput=updateLaterFactor; $('laterSave').onclick=()=>run(saveLaterFactor);for(const id of ['calcKg','calcGsm','calcWidth'])$(id).oninput=updateMeterCalculator;$('uploadRead').onclick=()=>uploadRead();$('uploadReviewed').onchange=uploadRender;$('uploadCancelError').onclick=()=>{if(!window.confirm('Hủy các dòng lỗi đang hiển thị? Chỉ xóa dữ liệu chưa lưu trên màn hình.'))return;const st=batchSheets.find(x=>x.name===activeSheetName);if(st&&!st.saved&&!st.linked){st.selected=false;st.cancelled=true;st.rows=[];st.editedRows=[];st.error='';batchRender()}uploadRows=[];uploadRender();uploadStatus('Đã hủy dòng lỗi trên màn hình. Phiếu đã lưu trong Supabase được giữ nguyên.');};$('uploadDemo').onclick=uploadDemo;$('uploadTemplate').onclick=uploadTemplate;$('uploadSave').onclick=()=>run((uploadBook&&uploadBook.SheetNames.length>1)?batchSaveAll:uploadSaveDraft);$('uploadSheet').onchange=()=>{if(!uploadBook)return;try{captureActiveSheet();loadExcelSheet($('uploadSheet').value)}catch(e){uploadRows=[];uploadRender();uploadStatus(e.message,true)}};$('uploadDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'});$('uploadType').onchange=()=>{const t=$('uploadType').value;$('transferDestWrap').style.display=t==='TRANSFER'?'':'none';if(t==='ISSUE_PROD')$('uploadStage').value='CUT'}}
 
-async function init(){try{const key=window.DD_CONFIG?.supabasePublishableKey;if(!key||!window.supabase)throw Error('Thiếu cấu hình công khai Supabase');client=window.supabase.createClient(URL,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const u=req(await client.auth.getUser(),'Auth');user=u.user;if(!user)throw Error('Bạn chưa đăng nhập ERP');const roles=req(await client.from('dd_user_roles').select('role_code').eq('company_id',COMPANY).eq('user_id',user.id),'Vai trò').map(x=>x.role_code);if(!roles.length)throw Error('Tài khoản chưa thuộc Đức Duy');isCEO=roles.includes('ceo');canDoc=isCEO||roles.includes('warehouse')||roles.includes('production');$('who').textContent=isCEO?'CEO · Quản lý vật tư':roles.join(', ');['saveMat','saveUnit','savePlan'].forEach(x=>$(x).disabled=!isCEO);['savePack','saveDoc'].forEach(x=>$(x).disabled=!canDoc);$('gate').classList.add('hide');await reload();fillLaterFabric();addLine()}catch(e){$('gateTitle').textContent='Không thể mở DD-10 vật tư';$('gateDesc').textContent=e.message}}
-$('refresh').onclick=()=>run(async()=>{await reload();fillLaterFabric()});$('proposalClose').onclick=()=>{$('proposalPanel').classList.add('hide')};$('proposalLocation').addEventListener('change',()=>{if(supplementState)renderSupplementProposal()});$('saveMat').onclick=()=>run(saveMaterial);$('saveUnit').onclick=()=>run(saveUnit);$('savePack').onclick=()=>run(savePack);$('savePlan').onclick=()=>run(savePlan);$('saveDoc').onclick=()=>run(saveDoc);$('addLine').onclick=addLine;$('docType').onchange=()=>document.querySelectorAll('.newLine').forEach(l=>refreshManualChoices(l,'package'));const go=$('goManual');if(go)go.onclick=()=>{const sec=$('manual-entry');sec.querySelector('details').open=true;sec.scrollIntoView({behavior:'smooth',block:'start'});};$('docDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'});uploadInit();initDetailLedger();initIssueCart();init();
+async function init(){try{const key=window.DD_CONFIG?.supabasePublishableKey;if(!key||!window.supabase)throw Error('Thiếu cấu hình công khai Supabase');client=window.supabase.createClient(URL,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const u=req(await client.auth.getUser(),'Auth');user=u.user;if(!user)throw Error('Bạn chưa đăng nhập ERP');const roles=req(await client.from('dd_user_roles').select('role_code').eq('company_id',COMPANY).eq('user_id',user.id),'Vai trò').map(x=>x.role_code);if(!roles.length)throw Error('Tài khoản chưa thuộc Đức Duy');isCEO=roles.includes('ceo');canDoc=isCEO||roles.includes('warehouse')||roles.includes('production');$('who').textContent=isCEO?'CEO · Quản lý vật tư':roles.join(', ');['saveMat','saveUnit','savePlan'].forEach(x=>$(x).disabled=!isCEO);['savePack','saveDoc'].forEach(x=>$(x).disabled=!canDoc);$('gate').classList.add('hide');await reload();fillLaterFabric();addLine();await loadSupplementRequests()}catch(e){$('gateTitle').textContent='Không thể mở DD-10 vật tư';$('gateDesc').textContent=e.message}}
+$('refresh').onclick=()=>run(async()=>{await reload();fillLaterFabric();await loadSupplementRequests()});$('supplementRefresh').onclick=()=>run(loadSupplementRequests);$('proposalClose').onclick=()=>{$('proposalPanel').classList.add('hide')};$('proposalLocation').addEventListener('change',()=>{if(supplementState)renderSupplementProposal()});$('saveMat').onclick=()=>run(saveMaterial);$('saveUnit').onclick=()=>run(saveUnit);$('savePack').onclick=()=>run(savePack);$('savePlan').onclick=()=>run(savePlan);$('saveDoc').onclick=()=>run(saveDoc);$('addLine').onclick=addLine;$('docType').onchange=()=>document.querySelectorAll('.newLine').forEach(l=>refreshManualChoices(l,'package'));const go=$('goManual');if(go)go.onclick=()=>{const sec=$('manual-entry');sec.querySelector('details').open=true;sec.scrollIntoView({behavior:'smooth',block:'start'});};$('docDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'});uploadInit();initDetailLedger();initIssueCart();init();
 })();
 </script></body></html>
