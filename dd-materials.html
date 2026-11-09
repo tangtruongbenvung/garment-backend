@@ -53,11 +53,26 @@
 @media(max-width:650px){.stock-overview-bar>.f{min-width:170px}}
 .batch-error{background:#fff0f0!important;color:#b52631}.batch-error input{border-color:#e1a4a4;color:#9a2525}.batch-error .batch-state{font-weight:750;color:#b52631}.batch-cancel{border-color:#e4a9a9;color:#aa2929}.batch-error [data-preview]{color:#a92222}
 .material-detail-box .tablewrap{max-height:370px}
+
+/* DD-10 V3.2: xuất kho trực tiếp từ danh sách tồn */
+.issue-cart{background:#f8fbff;border:1px solid #bdd5f6;border-radius:12px;padding:15px;margin-top:15px}
+.issue-cart .issue-heading{font-size:17px;font-weight:800;color:#154276;margin-bottom:7px}
+.issue-cart .issue-row{display:grid;grid-template-columns:minmax(125px,1.25fr) minmax(170px,1.8fr) minmax(175px,2fr) 120px minmax(130px,1.2fr) 42px;gap:7px;align-items:center;margin:7px 0;background:#fff;padding:8px;border:1px solid #d9e4f4;border-radius:9px}
+.issue-cart .issue-row input,.issue-cart .issue-row select{padding:7px;font-size:12px}
+.issue-cart .issue-row .issue-code{font-size:12px;line-height:1.4;overflow-wrap:anywhere;align-self:start;padding-top:7px}
+.issue-cart .issue-row .issue-name{font-size:12px;line-height:1.4;overflow-wrap:anywhere;white-space:normal;align-self:start;padding-top:7px}
+.issue-row-head{display:grid;grid-template-columns:minmax(125px,1.25fr) minmax(170px,1.8fr) minmax(175px,2fr) 120px minmax(130px,1.2fr) 42px;gap:7px;padding:5px 8px;color:#335575;font-size:11px;font-weight:700}
+@media(max-width:1000px){.issue-row-head{display:none}}
+.issue-cart .issue-row .issue-stock{color:#526a84;font-size:11px}
+.issue-cart .issue-error{font-size:12px;color:#ac2432;font-weight:700;margin:6px 0}
+.issue-cart .issue-empty{font-size:12px;color:#617995;padding:10px 0}
+.material-summary-table .issue-from-stock{display:block;margin-top:4px;padding:5px 7px;font-size:11px;line-height:1.25;white-space:normal}
+@media(max-width:1000px){.issue-cart .issue-row{grid-template-columns:minmax(170px,1fr) minmax(180px,1fr)}.issue-cart .issue-row button{width:auto}}
 </style></head><body>
 <div id="gate"><div><h2 id="gateTitle">Đang xác thực Supabase…</h2><p id="gateDesc">Đang kiểm tra vai trò người dùng.</p><a href="index.html">Về ERP</a></div></div>
 <div class="layout"><aside><h2>ĐỨC DUY · AI OS</h2><a href="dd-ceo.html">◈ Dashboard 12 Agent</a><a href="dd-warehouse.html">▣ DD-10 · Thành phẩm/BTP</a><a class="active" href="dd-materials.html">▣ DD-10 · Toàn bộ vật tư</a><a href="dd-pricing.html">▣ DD-03 · Giá & lợi nhuận</a><a href="index.html?view=erp">↩ GARMENT ERP</a></aside>
 <main>
-<div class="top"><div><h1>DD-10 V3.1 · Excel nhiều sheet · Tổng hợp tồn kho</h1><div class="sub">Vải · Chỉ · Cúc · Khóa · Nhãn · Thun · Bao bì · Vật tư khác · Theo lô/cây/cuộn/kiện và đơn hàng</div></div><div class="tools"><span class="tag" id="who">Đang kiểm tra</span><button class="btn" id="refresh">↻ Tải lại</button><span class="tag">Giao nhận A4 dọc · Nội bộ A4 ngang</span></div></div>
+<div class="top"><div><h1>DD-10 V3.3 · Kiểm soát số liệu xuất/nhập</h1><div class="sub">Vải · Chỉ · Cúc · Khóa · Nhãn · Thun · Bao bì · Vật tư khác · Theo lô/cây/cuộn/kiện và đơn hàng</div></div><div class="tools"><span class="tag" id="who">Đang kiểm tra</span><button class="btn" id="refresh">↻ Tải lại</button><span class="tag">Giao nhận A4 dọc · Nội bộ A4 ngang</span></div></div>
 <div id="feedback" class="alert hide" role="status" aria-live="polite"></div>
 <div class="stats"><div class="stat"><div class="sub">Mã vật tư</div><strong id="sMaterials">—</strong></div><div class="stat"><div class="sub">Cây/cuộn/kiện/bó</div><strong id="sPackages">—</strong></div><div class="stat"><div class="sub">Phiếu chờ CEO chốt</div><strong id="sPending">—</strong></div><div class="stat"><div class="sub">Đơn hàng có định mức</div><strong id="sOrders">—</strong></div></div>
 <div class="panel no-print" id="importPanel">
@@ -81,7 +96,7 @@
  <div class="tablewrap"><table class="tbl" style="min-width:1000px"><thead><tr><th>Chọn</th><th>Sheet Excel</th><th>Số phiếu nguồn *</th><th>Ngày nguồn *</th><th>Đơn hàng</th><th>Đối tác *</th><th>Số mã</th><th>Phiếu Đức Duy / Trạng thái</th><th>Xem</th></tr></thead><tbody id="batchBody"></tbody></table></div>
  <div class="tools" style="margin-top:12px"><button class="btn primary" type="button" id="batchSave">Kiểm tra & xác nhận lưu các phiếu đã chọn</button><span id="batchInfo" class="section-note"></span></div>
  </div>
-<div class="tools" style="margin:13px 0"><button class="btn primary" id="uploadRead">Đọc Excel & xem trước</button><button class="btn" id="uploadDemo">Nạp dữ liệu mẫu</button><button class="btn" id="uploadTemplate">Tải mẫu Excel</button><button class="btn" id="uploadAddLine">+ Thêm dòng</button><button class="btn" id="uploadMergeDuplicate" type="button">Gộp dòng trùng an toàn</button><button class="btn sm hide" id="uploadCancelError" type="button">Xóa / Hủy cập nhật lỗi</button><button class="btn primary" id="uploadSave" disabled>Lưu phiếu nháp vào Supabase</button></div>
+<div class="tools" style="margin:13px 0"><button class="btn primary" id="uploadRead">Đọc Excel gốc & xem trước</button><button class="btn" id="uploadDemo">Nạp dữ liệu mẫu</button><button class="btn" id="uploadTemplate">Tải mẫu Excel</button><button class="btn" id="uploadAddLine">+ Thêm dòng</button><button class="btn" id="uploadMergeDuplicate" type="button">Gộp dòng trùng an toàn</button><button class="btn sm hide" id="uploadCancelError" type="button">Xóa / Hủy cập nhật lỗi</button><button class="btn primary" id="uploadSave" disabled>Lưu phiếu nháp vào Supabase</button></div>
 <div class="tools" style="margin-bottom:8px"><label style="display:flex;align-items:center;gap:8px;max-width:100%;font-weight:600"><input type="checkbox" id="uploadReviewed" style="width:auto"> Tôi đã kiểm tra mã vật tư, ĐVT, số lượng, đơn hàng và chứng từ nguồn</label></div>
 <div id="duplicateSummary" class="duplicate-alert hide" role="alert"></div><div id="uploadStatus" class="section-note" style="margin:11px 0" role="status" aria-live="polite">Chọn Excel/CSV rồi chọn đúng sheet chứng từ. Mỗi phiếu nguồn đối tác chỉ tạo một phiếu Đức Duy; bắt buộc có số phiếu nguồn và đối tác.</div>
 <div class="tools"><strong>Bảng chi tiết vật tư · mỗi mã một dòng</strong><span class="sub">Cuộn/kiện để trống nếu chưa phân loại; quy đổi kg–m bổ sung sau. Số phiếu dùng chung cho tất cả dòng. Đơn vị tính mỗi dòng được giữ nguyên.</span></div>
@@ -93,6 +108,23 @@
  <div class="row"><div><h2>02 · Tổng hợp nhập – xuất – tồn & chi tiết vị trí kho</h2><p class="section-note" style="margin:3px 0 0">Mỗi mã vật tư một dòng, theo <b>đơn vị tính gốc</b>. Nhấn <b>Chi tiết</b> để xem từng lần phát sinh của vật tư đó. Chỉ tính phiếu đã chốt.</p></div><span class="tag">Chuyển kho nội bộ không tính vào tổng nhập / tổng xuất toàn công ty</span></div>
  <div class="stock-overview-bar no-print"><div class="f"><label>Lọc theo mã vật tư</label><input id="summaryCodeSearch" placeholder="Nhập mã vật tư…" autocomplete="off" aria-label="Lọc riêng theo mã vật tư"></div><div class="f"><label>Lọc theo tên vật tư</label><input id="summaryNameSearch" placeholder="Nhập tên vật tư…" autocomplete="off" aria-label="Lọc riêng theo tên vật tư"></div><div class="f"><label>Lọc theo chủ sở hữu</label><input id="summaryOwnerSearch" placeholder="Đức Duy / NU Việt Nam…" autocomplete="off" aria-label="Lọc riêng theo chủ sở hữu"></div><label class="summary-check"><input id="summaryWithActivity" type="checkbox" checked> Chỉ mã đã phát sinh</label><button class="btn sm" type="button" id="summaryClear">Xóa lọc</button></div>
  <div id="summaryInfo" class="detail-summary"></div>
+ <div class="issue-cart no-print" id="issueCart" aria-label="Phiếu xuất kho nháp từ danh sách tồn">
+  <div class="row"><div><div class="issue-heading">Phiếu xuất kho từ danh sách vật tư</div><div class="section-note">Nhấn <b>+ Xuất</b> tại cột Tổng xuất để thêm mã hàng. Chọn đúng cây/kiện và vị trí có tồn; nhập số lượng rồi lập phiếu <b>chờ CEO chốt</b>.</div></div><span class="tag" id="issueCartCount">0 vật tư</span></div>
+  <div class="grid" style="margin-top:12px">
+   <div class="f"><label>Loại xuất kho</label><select id="issueKind"><option value="ISSUE_NVL">Xuất NVL/phụ liệu</option><option value="ISSUE_FG">Xuất thành phẩm</option><option value="ISSUE_PROD">Xuất cho sản xuất/cắt</option></select></div>
+   <div class="f"><label>Người/đối tượng nhận *</label><input id="issueReceiver" placeholder="Tên người nhận hoặc đơn vị nhận"></div>
+   <div class="f"><label>Bộ phận / địa điểm nhận *</label><input id="issueDepartment" placeholder="Tổ cắt / xưởng may / đối tác..."></div>
+   <div class="f"><label>Thời gian giao nhận *</label><input id="issueWhen" type="datetime-local"></div>
+   <div class="f"><label>Mục đích / nội dung xuất *</label><input id="issuePurpose" placeholder="Xuất cắt, cấp phát sản xuất, trả hàng..."></div>
+   <div class="f"><label>Đơn hàng / mã hàng liên quan</label><input id="issueOrder" placeholder="AW26-D14-DD03"></div>
+   <div class="f"><label>Công đoạn</label><select id="issueStage"><option value="OTHER">Chung/Khác</option><option value="CUT">Cắt</option><option value="SEW">May</option><option value="FINISH">Hoàn thiện</option><option value="PACK">Đóng gói</option></select></div>
+   <div class="f"><label>Diễn giải bổ sung</label><input id="issueGeneralNote" placeholder="Số đề nghị, phương tiện, lý do..."></div>
+  </div>
+  <div class="issue-row-head"><span>Mã vật tư</span><span>Tên vật tư</span><span>Kiện / vị trí</span><span>Số lượng</span><span>Nội dung dòng</span><span>Xóa</span></div>
+  <div id="issueCartRows" style="margin-top:6px"><div class="issue-empty">Chưa chọn vật tư xuất kho.</div></div>
+  <div id="issueCartError" class="issue-error" role="alert" aria-live="polite"></div>
+  <div class="row" style="margin-top:12px"><div class="tools"><button class="btn primary" type="button" id="issueCartSave">Kiểm tra & lưu phiếu xuất chờ CEO</button><button class="btn sm" type="button" id="issueCartClear">Hủy phiếu đang soạn</button></div><span class="sub">Số lượng và diễn giải được lưu để theo dõi xuất kho; chưa hạch toán giá trị kế toán. CEO chốt mới trừ tồn.</span></div>
+ </div>
  <div class="tablewrap"><table class="tbl material-summary-table"><colgroup><col style="width:15%"><col style="width:31%"><col style="width:15%"><col style="width:8%"><col style="width:10%"><col style="width:10%"><col style="width:11%"></colgroup><thead><tr><th>Mã vật tư</th><th>Tên vật tư</th><th class="num">Tổng nhập</th><th class="num">Tổng xuất</th><th class="num">Còn tồn</th><th>ĐVT</th><th>Tra cứu</th></tr></thead><tbody id="summaryBody"><tr><td colspan="7">Đang tải tổng hợp…</td></tr></tbody></table></div>
  <p class="section-note" style="margin:12px 0 0">Tổng nhập/xuất là phát sinh vào/ra toàn doanh nghiệp, đã loại trừ chuyển kho giữa các vị trí Đức Duy. <b>Tồn kho</b> là số dư các bút toán đã chốt tại tất cả vị trí. Phiếu chưa chốt không được cộng. Mở rộng từng vật tư để xem <b>tồn theo kho/lô/kiện</b> và sổ phát sinh theo phiếu. Không cần mở thêm một bảng sổ tồn riêng.</p>
 </div>
@@ -113,7 +145,19 @@
 const COMPANY='a7e8d079-e48f-48b1-866d-6febaa65e379', URL='https://ykhrtrvstymfjnzdgzna.supabase.co';
 const $=id=>document.getElementById(id);const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nf=(v,d=4)=>Number(v||0).toLocaleString('vi-VN',{minimumFractionDigits:0,maximumFractionDigits:d});
-const num=s=>{if(typeof s==='number')return s;let x=String(s??'').trim().replace(/\s/g,'');if(!x)return NaN;if(x.includes(',')&&x.includes('.'))x=x.replace(/\./g,'').replace(',','.');else if(x.includes(','))x=x.replace(',','.');return Number(x)};
+const nfFixed=(v,d=4)=>Number(v||0).toLocaleString('vi-VN',{minimumFractionDigits:d,maximumFractionDigits:d});
+const num=s=>{
+ if(typeof s==='number')return Number.isFinite(s)?s:NaN;
+ let x=String(s??'').trim().replace(/[\s\u00A0\u202F]/g,'');
+ if(!x||!/^[+-]?[0-9.,]+$/.test(x))return NaN;
+ const commas=(x.match(/,/g)||[]).length,dots=(x.match(/\./g)||[]).length;
+ if(commas&&dots){const dec=x.lastIndexOf(',')>x.lastIndexOf('.')?',':'.';x=x.split(dec===','?'.':',').join('').replace(dec,'.')}
+ else if(commas>1){if(!/^[+-]?\d{1,3}(,\d{3})+$/.test(x))return NaN;x=x.replace(/,/g,'')}
+ else if(dots>1){if(!/^[+-]?\d{1,3}(\.\d{3})+$/.test(x))return NaN;x=x.replace(/\./g,'')}
+ else if(dots===1&&/^[+-]?\d{1,3}\.\d{3}$/.test(x))return NaN; // Không đoán 1.234 là 1,234 hay 1234
+ else x=x.replace(',','.');
+ const n=Number(x);return Number.isFinite(n)?n:NaN;
+};
 const req=(r,name)=>{if(r.error)throw Error(name+': '+r.error.message);return r.data};
 const opt=(rows,label,val='id')=>'<option value="">-- Chọn --</option>'+rows.map(x=>`<option value="${esc(x[val])}">${esc(label(x))}</option>`).join('');
 let client,user,isCEO=false,canDoc=false,mats=[],units=[],packs=[],docs=[],linesDB=[],ledger=[],plans=[];
@@ -127,6 +171,75 @@ function drawMaterials(){$('matBody').innerHTML=mats.length?mats.map(m=>`<tr><td
 function v28Date(v){const t=String(v||'');return /^\d{4}-\d\d-\d\d/.test(t)?t.slice(0,10).split('-').reverse().join('/'):t.slice(0,10)||'—'}
 function v28SourceDate(d){const m=String(d.note||'').match(/Ngày phiếu nguồn:\s*(\d{1,2}[\/.-]\d{1,2}[\/.-]20\d{2})/i);return m?m[1]:''}
 let detailOpenMaterial=null, summaryLedgerTotal=0;
+let issueCartItems=[],issueCartBusy=false;
+function issueCurrentPackages(materialId){return stockRows().filter(x=>x.m?.id===materialId&&Number(x.qty)>0.000001&&x.p).sort((a,b)=>String(a.location).localeCompare(String(b.location))||String(a.p?.package_code).localeCompare(String(b.p?.package_code)))}
+function issueShowError(t){const el=$('issueCartError');if(el)el.textContent=String(t||'')}
+function issueAddMaterial(materialId){
+ if(!canDoc){issueShowError('Tài khoản không có quyền lập phiếu xuất.');return}
+ if(summaryLedgerTotal>ledger.length||ledger.length>=10000){issueShowError('Sổ tồn chưa tải đủ; tạm ngưng lập phiếu từ danh sách để tránh sai tồn.');return}
+ const m=material(materialId),choices=issueCurrentPackages(materialId);
+ if(!m||!choices.length){issueShowError('Mã này không còn tồn khả dụng theo cây/kiện trong sổ kho.');return}
+ issueCartItems.push({key:'issue_'+Date.now()+'_'+Math.random().toString(36).slice(2),materialId,packageId:choices[0].package_id,location:choices[0].location,quantity:'',note:''});
+ issueShowError('');issueDrawCart();
+}
+function issueStockFor(item){return stockRows().find(x=>x.package_id===item.packageId&&x.location===item.location)}
+function issueDrawCart(){
+ const host=$('issueCartRows');if(!host)return;
+ $('issueCartCount').textContent=issueCartItems.length+' dòng xuất';
+ host.innerHTML=issueCartItems.length?issueCartItems.map((item,i)=>{
+  const m=material(item.materialId),choices=issueCurrentPackages(item.materialId),st=issueStockFor(item);
+  return `<div class="issue-row" data-issue-key="${esc(item.key)}"><div class="issue-code"><b>${esc(m?.material_code||'?')}</b></div><div class="issue-name">${esc(m?.material_name||'')}<div class="issue-stock">${esc(m?.owner_name||'—')} · ${esc(m?.base_unit||'')}</div></div><select class="issue-location" aria-label="Chọn vị trí, màu, size, kiện của dòng ${i+1}">${choices.map(x=>`<option value="${esc(x.package_id+'|'+x.location)}" ${x.package_id===item.packageId&&x.location===item.location?'selected':''}>${esc(x.location)} · ${esc(packageColor(x.p))}/${esc(packageSize(x.p))} · ${esc(x.p.package_code)} · Còn ${nfFixed(x.qty,4)}</option>`).join('')}</select><div><input class="issue-qty" inputmode="decimal" placeholder="SL xuất" value="${esc(item.quantity)}" aria-label="Số lượng xuất của dòng ${i+1}"><div class="issue-stock">Còn ${nfFixed(st?.qty||0,4)} ${esc(m?.base_unit)}</div></div><input class="issue-note" value="${esc(item.note)}" placeholder="Nội dung dòng" aria-label="Ghi chú dòng ${i+1}"><button type="button" class="btn sm issue-remove" aria-label="Xóa dòng ${i+1}">×</button></div>`
+ }).join(''):'<div class="issue-empty">Chưa chọn vật tư xuất kho. Nhấn “+ Xuất” tại một vật tư còn tồn trong bảng phía dưới.</div>';
+ host.querySelectorAll('.issue-row').forEach(row=>{const item=issueCartItems.find(x=>x.key===row.dataset.issueKey);if(!item)return;
+ row.querySelector('.issue-location').onchange=e=>{const selected=e.target.value;const found=issueCurrentPackages(item.materialId).find(x=>x.package_id+'|'+x.location===selected);if(found){item.packageId=found.package_id;item.location=found.location}issueDrawCart()};
+ row.querySelector('.issue-qty').oninput=e=>{item.quantity=e.target.value;issueShowError('')};
+ row.querySelector('.issue-note').oninput=e=>{item.note=e.target.value};
+ row.querySelector('.issue-remove').onclick=()=>{issueCartItems=issueCartItems.filter(x=>x!==item);issueDrawCart()};
+ });
+ $('issueCartSave').disabled=!canDoc||issueCartBusy||!issueCartItems.length;
+}
+async function issueSaveCart(){
+ if(issueCartBusy)return;
+ if(!canDoc)throw Error('Không có quyền lập phiếu');
+ if(summaryLedgerTotal>ledger.length||ledger.length>=10000)throw Error('Chưa tải đủ số dư tồn kho, không thể tạo phiếu xuất an toàn');
+ if(!issueCartItems.length)throw Error('Chưa chọn dòng vật tư để xuất');
+ const receiver=$('issueReceiver').value.trim(),dept=$('issueDepartment').value.trim(),purpose=$('issuePurpose').value.trim(),when=$('issueWhen').value,order=$('issueOrder').value.trim(),kind=$('issueKind').value;
+ if(!receiver||!dept||!purpose||!when)throw Error('Hãy nhập đầy đủ đối tượng nhận, bộ phận/địa điểm nhận, mục đích và thời gian giao nhận');
+ if(['ISSUE_PROD','ISSUE_NVL'].includes(kind)&&!order)throw Error('Xuất NVL hoặc xuất cho sản xuất phải có mã đơn hàng theo quy tắc kho hiện tại');
+ const locations=new Set(issueCartItems.map(x=>x.location));
+ if(locations.size!==1)throw Error('Một phiếu xuất chỉ được dùng một vị trí xuất. Tách phiếu theo từng kho/vị trí: '+[...locations].join(', '));
+ const totals=new Map(),rows=[];
+ for(const item of issueCartItems){const m=material(item.materialId),st=issueStockFor(item),q=num(item.quantity);if(!m||!st||!st.p||!(st.qty>0))throw Error('Không còn tồn khả dụng cho '+(m?.material_code||'?'));if(!(q>0)||!Number.isFinite(q))throw Error('Số lượng xuất phải lớn hơn 0: '+m.material_code);const key=item.packageId+'|'+item.location;totals.set(key,(totals.get(key)||0)+q);if(totals.get(key)>st.qty+0.0000001)throw Error('Xuất vượt tồn kiện '+st.p.package_code+' tại '+st.location+': yêu cầu '+nf(totals.get(key),4)+' / tồn '+nf(st.qty,4)+' '+m.base_unit);rows.push({package_id:item.packageId,unit:m.base_unit,qty:q,note:item.note.trim()||purpose});}
+ if(issueCartItems.some(x=>{const m=material(x.materialId);return m?.owner_name&& !/^(đức duy|duc duy)$/i.test(m.owner_name.trim())})&&!order)throw Error('Có vật tư thuộc sở hữu đối tác: bắt buộc điền đơn hàng để truy xuất trước khi xuất');
+ const variants=new Set();for(const item of issueCartItems){const p=pack(item.packageId),m=material(item.materialId),key=[item.materialId,packageColor(p),packageSize(p),m?.base_unit].join('|').toLocaleLowerCase('vi');if(variants.has(key))throw Error('Một phiếu không thể có hai dòng cùng mã/màu/size/ĐVT vì CEO sẽ không thể chốt. Hãy chọn một lô/kiện cho mỗi biến thể hoặc lập phiếu riêng.');variants.add(key)}
+ const detail=issueCartItems.map(x=>{const m=material(x.materialId);return `${m?.material_code}: ${nf(num(x.quantity),4)} ${m?.base_unit} (${x.location})`}).join('\n');
+ const sure=window.confirm('XÁC NHẬN LẬP PHIẾU XUẤT CHỜ CEO\nĐối tượng nhận: '+receiver+'\nBộ phận: '+dept+'\nThời gian: '+when.replace('T',' ')+'\nMục đích: '+purpose+'\nKho xuất: '+[...locations][0]+'\n'+detail+'\n\nLưu phiếu nháp, chưa trừ tồn kho?');if(!sure)return;
+ issueCartBusy=true;issueDrawCart();issueShowError('Đang kiểm tra lại tồn trước khi tạo phiếu...');
+ try{
+  // Nạp sổ tồn gần nhất ngay trước lúc tạo phiếu, không tin hoàn toàn số dư khi trang vừa mở.
+  const recent=req(await client.from('dd10m_ledger').select('package_id,location_code,qty_delta').eq('company_id',COMPANY).limit(10000),'Kiểm tra tồn cập nhật');
+  const total=req(await client.from('dd10m_ledger').select('id',{count:'exact',head:true}).eq('company_id',COMPANY),'Đếm phát sinh kho');
+  if(total.count>recent.length||recent.length>=10000)throw Error('Sổ tồn vượt giới hạn tải; chưa thể xác minh tồn kho đầy đủ');
+  const live=new Map();for(const l of recent){const k=l.package_id+'|'+l.location_code;live.set(k,(live.get(k)||0)+Number(l.qty_delta||0))}
+  for(const [k,q] of totals){if(q>(live.get(k)||0)+0.0000001)throw Error('Số tồn đã thay đổi, kiện '+k.split('|')[0]+' chỉ còn '+nf(live.get(k)||0,4)+'. Hãy tải lại và kiểm tra.');}
+  const note=`Xuất kho: ${purpose}; Người/đối tượng nhận: ${receiver}; Bộ phận/địa điểm nhận: ${dept}; Thời gian giao nhận dự kiến: ${when.replace('T',' ')}; ${$('issueGeneralNote').value.trim()}`;
+  const created=req(await client.rpc('dd10m_create_document',{p_company_id:COMPANY,p_doc_no:'',p_doc_type:kind,p_doc_date:when.slice(0,10),p_order_code:order,p_partner:'',p_stage:$('issueStage').value,p_from:[...locations][0],p_to:'',p_source_doc_no:'',p_note:note,p_lines:rows}),'Lập phiếu xuất nháp');
+  // Có thể tạo thành công nhưng lỗi đọc số: không gửi lại RPC. Xóa giỏ chỉ sau khi RPC thành công.
+  issueCartItems=[];issueDrawCart();
+  let docNumber='';try{const d=req(await client.from('dd10m_documents').select('doc_no').eq('id',created).single(),'Tra cứu số phiếu');docNumber=d.doc_no}catch(e){docNumber='ID '+created}
+  issueShowError('Đã lưu '+docNumber+' chờ CEO chốt. Tồn kho chưa trừ. Mở Lịch sử chứng từ để xem và in.');
+  await reload();issueDrawCart();
+ }catch(e){issueShowError('Chưa xác nhận lưu thành công: '+e.message+'. Giữ nguyên phiếu đang soạn để kiểm tra. Nếu mất kết nối sau khi gửi, tra Lịch sử chứng từ trước khi lưu lại.');throw e}
+ finally{issueCartBusy=false;issueDrawCart()}
+}
+function initIssueCart(){
+ const now=new Date(),local=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+ $('issueWhen').value=local;
+ $('issueCartClear').onclick=()=>{if(issueCartItems.length&&!confirm('Hủy dữ liệu phiếu xuất đang soạn trên trang? Không tác động Supabase.'))return;issueCartItems=[];issueDrawCart();issueShowError('Đã hủy phiếu đang soạn, không thay đổi chứng từ đã lưu.');};
+ $('issueCartSave').onclick=async()=>{try{await issueSaveCart()}catch(e){if(!$('issueCartError').textContent.includes(e.message))issueShowError('Không thể lưu phiếu: '+e.message)}};
+ issueDrawCart();
+}
+
 function materialSummaryRows(){
  const map=new Map(mats.map(m=>[m.id,{m,received:0,issued:0,stock:0,transferDelta:0,movements:0}]));
  for(const l of ledger){
@@ -146,16 +259,18 @@ function materialDetailHtml(materialId){
  const rows=ledger.filter(l=>{const p=pack(l.package_id);return (l.material_id||p?.material_id)===materialId})
   .map(l=>{const d=docMap.get(l.document_id),p=pack(l.package_id);if(!d)missingDocs++;return {l,d,p}})
   .sort((a,b)=>String(b.d?.doc_date||'').localeCompare(String(a.d?.doc_date||''))||String(b.l.id||'').localeCompare(String(a.l.id||'')));
+ const uniqueLedgerIds=new Set(rows.map(x=>String(x.l.id)));
+ const repeatedSameId=rows.length-uniqueLedgerIds.size;
  const shown=rows.slice(0,300);
  const table=shown.map(({l,d,p})=>{
   const qty=Number(l.qty_delta||0),type=l.movement==='TRANSFER'?'Chuyển nội bộ':(docName[d?.doc_type]||l.movement||'—');
   return `<tr><td>${esc(v28Date(d?.doc_date))}${d&&v28SourceDate(d)?`<div class="muted-cell">Nguồn ${esc(v28SourceDate(d))}</div>`:''}</td><td><b>${esc(d?.doc_no||'Không tải được phiếu')}</b><div class="muted-cell">${esc(d?.source_doc_no||'—')}</div></td><td>${esc(d?.order_code||l.order_code||'—')}<div class="muted-cell">${esc(d?.partner||'')}</div></td><td>${esc(packageColor(p))} / ${esc(packageSize(p))}</td><td>${esc(p?.lot_code||'—')}<div class="muted-cell">${esc(p?.package_code||'—')}</div></td><td>${esc(l.location_code||'—')}</td><td>${esc(type)}</td><td class="num ${qty<0?'bad':'good'}">${qty>0?'+':''}${nf(qty,4)}</td></tr>`
  }).join('');
  const currentStock=stockRows().filter(x=>x.m?.id===materialId && Math.abs(x.qty)>0.0000001);
- const byPackage=currentStock.map(x=>`<tr><td>${esc(packageColor(x.p))}</td><td>${esc(packageSize(x.p))}</td><td>${esc(x.p?.lot_code||'—')}</td><td>${esc(x.p?.package_code||'—')}</td><td>${esc(x.location)}</td><td class="num ${x.qty<0?'bad':'good'}">${nf(x.qty,4)}</td></tr>`).join('');
- const stockDetail=`<div class="row" style="margin-top:8px"><strong>Tồn hiện tại theo màu / size / lô / kiện / vị trí</strong><span class="muted-cell">${currentStock.length} vị trí còn phát sinh số dư</span></div><div class="tablewrap"><table class="tbl" style="min-width:760px"><thead><tr><th>Màu</th><th>Size</th><th>Lô</th><th>Cây / kiện</th><th>Kho / vị trí</th><th class="num">Tồn theo ĐVT gốc</th></tr></thead><tbody>${byPackage||'<tr><td colspan="6">Chưa có tồn ở vị trí nào</td></tr>'}</tbody></table></div>`;
+ const byPackage=currentStock.map(x=>`<tr><td>${esc(packageColor(x.p))}</td><td>${esc(packageSize(x.p))}</td><td>${esc(x.p?.lot_code||'—')}</td><td>${esc(x.p?.package_code||'—')}</td><td>${esc(x.location)}</td><td class="num ${x.qty<0?'bad':'good'}">${nfFixed(x.qty,4)}</td></tr>`).join('');
+ const stockDetail=`<div class="row" style="margin-top:8px"><strong>Tồn theo kiện/vị trí — SỐ DƯ, không phải lần nhập thứ hai</strong><span class="muted-cell">${currentStock.length} vị trí còn phát sinh số dư</span></div><div class="tablewrap"><table class="tbl" style="min-width:760px"><thead><tr><th>Màu</th><th>Size</th><th>Lô</th><th>Cây / kiện</th><th>Kho / vị trí</th><th class="num">Tồn theo ĐVT gốc</th></tr></thead><tbody>${byPackage||'<tr><td colspan="6">Chưa có tồn ở vị trí nào</td></tr>'}</tbody></table></div>`;
  const warning=missingDocs?` · <strong class="warn">${missingDocs} dòng chưa tải được thông tin đầu phiếu (giới hạn lịch sử)</strong>`:'';
- return `<div class="material-detail-box">${stockDetail}<div class="row" style="margin-top:15px"><strong>Sổ phát sinh của mã vật tư</strong><span class="material-detail-info">${rows.length} bút toán · ĐVT gốc · ${rows.length>shown.length?'Chỉ hiện 300 dòng gần nhất · ':''}Chuyển kho được hiển thị cả hai chiều${warning}</span></div><div class="tablewrap"><table class="tbl material-detail-table"><colgroup><col style="width:10%"><col style="width:16%"><col style="width:16%"><col style="width:12%"><col style="width:11%"><col style="width:10%"><col style="width:14%"><col style="width:11%"></colgroup><thead><tr><th>Ngày</th><th>Phiếu Đức Duy / Nguồn</th><th>Đơn hàng / Đối tác</th><th>Màu / Size</th><th>Lô / kiện</th><th>Kho / Vị trí</th><th>Nghiệp vụ</th><th class="num">SL ±</th></tr></thead><tbody>${table||'<tr><td colspan="8">Chưa có phát sinh đã chốt.</td></tr>'}</tbody></table></div></div>`;
+ return `<div class="material-detail-box">${stockDetail}<div class="row" style="margin-top:15px"><strong>Bút toán đã chốt — LỊCH SỬ phát sinh, không cộng thêm lần nữa</strong><span class="material-detail-info">${rows.length} bút toán · ĐVT gốc · ${rows.length>shown.length?'Chỉ hiện 300 dòng gần nhất · ':''}Chuyển kho được hiển thị cả hai chiều · Bảng tồn ở trên là SỐ DƯ, không phải một lần nhập thêm${repeatedSameId?' · CẢNH BÁO ID bút toán lặp '+repeatedSameId:''}${warning}</span></div><div class="tablewrap"><table class="tbl material-detail-table"><colgroup><col style="width:10%"><col style="width:16%"><col style="width:16%"><col style="width:12%"><col style="width:11%"><col style="width:10%"><col style="width:14%"><col style="width:11%"></colgroup><thead><tr><th>Ngày</th><th>Phiếu Đức Duy / Nguồn</th><th>Đơn hàng / Đối tác</th><th>Màu / Size</th><th>Lô / kiện</th><th>Kho / Vị trí</th><th>Nghiệp vụ</th><th class="num">SL ±</th></tr></thead><tbody>${table||'<tr><td colspan="8">Chưa có phát sinh đã chốt.</td></tr>'}</tbody></table></div></div>`;
 }
 function drawDetailLedger(){
  const body=$('summaryBody');if(!body)return;
@@ -172,11 +287,17 @@ function drawDetailLedger(){
  const nfcol=x=>incomplete?'—':nf(x,4);
  body.innerHTML=rows.map(x=>{
    const id=x.m.id,expanded=detailOpenMaterial===id;
-   return `<tr class="material-row ${expanded?'mat-expanded':''}"><td class="mat-code">${esc(x.m.material_code)}</td><td class="material-name">${esc(x.m.material_name)}<div class="owner">${esc(x.m.owner_name||'—')} · ${esc(x.m.category||'')}</div></td><td class="num good">${nfcol(x.received)}</td><td class="num">${nfcol(x.issued)}</td><td class="num ${x.stock<0?'bad':'good'}"><b>${nfcol(x.stock)}</b></td><td>${esc(x.m.base_unit)}</td><td><button type="button" class="btn sm detail-toggle" data-material-id="${esc(id)}" aria-expanded="${expanded}" aria-label="${expanded?'Thu gọn':'Xem chi tiết'} ${esc(x.m.material_code)}">${expanded?'▾ Thu gọn':'▸ Chi tiết'}</button></td></tr>${expanded?`<tr class="details-row"><td colspan="7">${materialDetailHtml(id)}</td></tr>`:''}`;
+   return `<tr class="material-row ${expanded?'mat-expanded':''}"><td class="mat-code">${esc(x.m.material_code)}</td><td class="material-name">${esc(x.m.material_name)}<div class="owner">${esc(x.m.owner_name||'—')} · ${esc(x.m.category||'')}</div></td><td class="num good">${nfcol(x.received)}</td><td class="num">${nfcol(x.issued)}${!incomplete&&x.stock>0.000001?`<button type="button" class="btn sm issue-from-stock" data-issue-mat="${esc(id)}" aria-label="Thêm ${esc(x.m.material_code)} vào phiếu xuất">+ Xuất</button>`:''}</td><td class="num ${x.stock<0?'bad':'good'}"><b>${nfcol(x.stock)}</b></td><td>${esc(x.m.base_unit)}</td><td><button type="button" class="btn sm detail-toggle" data-material-id="${esc(id)}" aria-expanded="${expanded}" aria-label="${expanded?'Thu gọn':'Xem chi tiết'} ${esc(x.m.material_code)}">${expanded?'▾ Thu gọn':'▸ Chi tiết'}</button></td></tr>${expanded?`<tr class="details-row"><td colspan="7">${materialDetailHtml(id)}</td></tr>`:''}`;
  }).join('')||'<tr><td colspan="7">Không có mã vật tư phù hợp.</td></tr>';
  body.querySelectorAll('.detail-toggle').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.materialId;detailOpenMaterial=detailOpenMaterial===id?null:id;drawDetailLedger()}));
+ body.querySelectorAll('.issue-from-stock').forEach(b=>b.addEventListener('click',()=>issueAddMaterial(b.dataset.issueMat)));
  let msgText=`${rows.length} / ${all.length} mã vật tư · ${ledger.length} bút toán đã tải. Tổng nhập / xuất không tính chuyển kho nội bộ; tồn là tổng số dư các kho.`;
  if(incomplete)msgText+=' CẢNH BÁO: Sổ dữ liệu chưa đầy đủ, tạm ẩn số tổng để tránh sai lệch; cần tải dữ liệu phân trang.';
+ // Kiểm tra tổng số dư theo 2 đường độc lập: mã vật tư và từng kiện-vị trí.
+ const stockTotals=new Map();
+ for(const r of stockRows()){if(!r.m)continue;stockTotals.set(r.m.id,(stockTotals.get(r.m.id)||0)+r.qty)}
+ const mismatch=all.filter(x=>Math.abs((stockTotals.get(x.m.id)||0)-x.stock)>0.00001);
+ if(mismatch.length)msgText+=' CẢNH BÁO ĐỐI CHIẾU: '+mismatch.length+' mã có tổng sổ khác tổng tồn theo kiện. Tạm dừng duyệt phiếu và kiểm tra SQL audit.';
  const diff=all.filter(x=>Math.abs(x.transferDelta)>.000001);
  if(diff.length)msgText+=` Có ${diff.length} mã có chênh lệch hai chiều chuyển kho, cần rà soát số liệu đã chốt.`;
  $('summaryInfo').textContent=msgText;
@@ -268,7 +389,7 @@ async function reload(){const [a,b,c,d,e,f,g,h]=await Promise.all([
  client.from('dd10m_ledger').select('id',{count:'exact',head:true}).eq('company_id',COMPANY)]);
  mats=req(a,'Vật tư');units=req(b,'Quy đổi');packs=req(c,'Kiện');docs=req(d,'Phiếu');linesDB=req(e,'Dòng');ledger=req(f,'Sổ');plans=req(g,'Định mức');req(h,'Đếm sổ');
  $('sMaterials').textContent=mats.length;$('sPackages').textContent=packs.length;$('sPending').textContent=docs.filter(x=>x.status==='submitted').length;$('sOrders').textContent=new Set(plans.map(x=>x.order_code)).size;
- summaryLedgerTotal=h.count||0;drawMaterials();fillSelectors();drawStock();drawUsage();drawDocs();drawDetailLedger();await syncExistingBatchDocs();if((h.count||0)>ledger.length)msg('Sổ vật tư vượt '+ledger.length+' dòng đã tải: tạm ngừng dùng số tổng hợp, cần chuyển sang báo cáo phân trang/RPC.',true)
+ summaryLedgerTotal=h.count||0;drawMaterials();fillSelectors();drawStock();drawUsage();drawDocs();drawDetailLedger();issueDrawCart();await syncExistingBatchDocs();if((h.count||0)>ledger.length)msg('Sổ vật tư vượt '+ledger.length+' dòng đã tải: tạm ngừng dùng số tổng hợp, cần chuyển sang báo cáo phân trang/RPC.',true)
 }
 async function saveMaterial(){
  if(!isCEO)throw Error('Chỉ CEO được tạo mã vật tư');
@@ -326,8 +447,10 @@ function matrixRows(matrix){const rows=matrix.filter(r=>Array.isArray(r)&&r.some
 for(const r of rows.slice(found.i+1)){let x={};fields.forEach((k,i)=>{if(k&&x[k]===undefined)x[k]=String(r[i]??'').trim()});const marker=nkey(x.code||x.name);if(['cong','tong','tongcong','sott','a','b','c'].includes(marker))continue;
 // Some official warehouse forms put a stock code in the description cell and leave 'Mã số' blank.
 if(!x.code&&/^([a-z]{0,5}\d{2,}[\w#*\-. ]{1,})$/i.test((x.name||'').trim()))x.code=x.name.trim().replace(/\s+/g,'');
-if(!x.code||!String(x.qty||'').trim()||!(num(x.qty)>0))continue;
-out.push({code:x.code||'',name:x.name||'',color:x.color||'',size:x.size||'',unit:x.unit||'',qtyRaw:x.qty||'',qty:num(x.qty),pkg:x.pkg||'',lot:x.lot||'',gsm:x.gsm||'',width:x.width||'',order:x.order||'',owner:x.owner||'',source:x.source||'',category:x.category||'',selected:true})}
+if(!x.code||!String(x.qty??'').trim())continue;
+const qty=importQty(x.qty,'Dòng '+(out.length+1));
+if(!(qty>0))throw Error('Số lượng không hợp lệ ở mã '+x.code+': '+x.qty+'. Vui lòng kiểm tra ô Excel gốc.');
+out.push({code:x.code||'',name:x.name||'',color:x.color||'',size:x.size||'',unit:x.unit||'',qtyRaw:String(x.qty??''),qty:qty,pkg:x.pkg||'',lot:x.lot||'',gsm:x.gsm||'',width:x.width||'',order:x.order||'',owner:x.owner||'',source:x.source||'',category:x.category||'',selected:true})}
 if(!out.length)throw Error('Đã tìm thấy tiêu đề nhưng không có dòng mã hàng + số lượng hợp lệ. Hãy chọn sheet khác hoặc đối chiếu file.');if(out.length>200)throw Error('Một phiếu tối đa 200 dòng; hãy chia chứng từ.');return out}
 function isoSourceDate(value){
  const str=String(value||'').trim();const m=str.match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](20\d{2})/);
@@ -353,7 +476,7 @@ function applySheetMeta(matrix,sheetName){const m=parseSheetMeta(matrix,sheetNam
  return m;
 }
 function loadExcelSheet(name){const sheet=uploadBook?.Sheets[name];if(!sheet)throw Error('Không có sheet được chọn');
- const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,raw:false,defval:''});
+ const matrix=excelSheetMatrix(sheet);
  const stageBefore=batchSheets.find(x=>x.name===name);if(stageBefore?.saved||stageBefore?.linked||stageBefore?.cancelled){activeSheetName=name;uploadRows=[];$('uploadReviewed').checked=false;uploadRender();uploadStatus('Phiếu này đã lưu hoặc đã hủy nhập; xem ở danh sách phiếu nguồn, không lập lại.');return [];}const parsed=matrixRows(matrix);activeSheetName=name;$('uploadReviewed').checked=false;applySheetMeta(matrix,name);uploadSetRows(parsed);
  const stage=batchSheets.find(x=>x.name===name);if(stage){
   for(const [id,key] of [['uploadSource','source'],['uploadPartner','partner'],['uploadOrder','order']])$(id).value=stage[key]||'';
@@ -386,8 +509,38 @@ function batchRender(){const panel=$('batchPanel');panel.classList.toggle('hide'
  $('batchInfo').textContent=batchSheets.filter(x=>x.error&&!x.linked&&!x.saved&&!x.cancelled).length+' phiếu lỗi (màu đỏ) • '+batchSheets.filter(x=>x.selected&&!x.saved&&!x.linked&&!x.cancelled).length+' phiếu chọn để lưu • '+batchSheets.filter(x=>x.saved).length+' phiếu vừa tạo · '+batchSheets.filter(x=>x.linked).length+' phiếu đã có (khóa nhập trùng).';
  $('batchSave').disabled=batchSaving||!canDoc||!batchSheets.some(x=>x.selected&&!x.saved&&!x.linked&&!x.cancelled);
 }
+// Đọc ô số lượng từ giá trị SỐ GỐC (.v), không dùng chuỗi trình bày (.w).
+// Các ô còn lại giữ nguyên văn bản hiển thị để không mất số 0 đầu mã hàng.
+function excelSheetMatrix(sheet){
+ const display=XLSX.utils.sheet_to_json(sheet,{header:1,raw:false,defval:''});
+ const original=XLSX.utils.sheet_to_json(sheet,{header:1,raw:true,defval:''});
+ const heading=excelHeader(display);
+ if(heading){
+  const qtyIndices=heading.fields.map((v,i)=>v==='qty'?i:-1).filter(i=>i>=0);
+  for(let r=heading.i+1;r<display.length;r++)for(const c of qtyIndices){
+   const real=original[r]?.[c];
+   if(typeof real==='number'&&Number.isFinite(real)){if(!display[r])display[r]=[];display[r][c]=real;}
+  }
+ }
+ return display;
+}
+function importQty(value,context='Excel'){
+ if(typeof value==='number')return Number.isFinite(value)&&value>0?value:NaN;
+ const raw=String(value??'').replace(/[\s\u00A0\u202F]/g,'').trim();
+ if(!raw)return NaN;
+ if(!/^[+-]?[0-9.,]+$/.test(raw))return NaN;
+ const commas=(raw.match(/,/g)||[]).length,dots=(raw.match(/\./g)||[]).length;
+ if(commas===1&&dots===0&&/^[+-]?\d{1,3},\d{3}$/.test(raw))throw Error(context+': số "'+raw+'" mơ hồ giữa thập phân và phân cách nghìn. Hãy đổi sang ô số Excel hoặc ghi 3-4 số thập phân.');
+ if(dots===1&&commas===0&&/^[+-]?\d{1,3}\.\d{3}$/.test(raw))throw Error(context+': số "'+raw+'" mơ hồ giữa thập phân và phân cách nghìn. Hãy đổi sang ô số Excel hoặc ghi 3-4 số thập phân.');
+ let normalized=raw;
+ if(commas&&dots){const decimal=raw.lastIndexOf(',')>raw.lastIndexOf('.')?',':'.';const grouping=decimal===','?'.':',';normalized=raw.split(grouping).join('');normalized=normalized.replace(decimal,'.')}
+ else if(commas>1){if(!/^[+-]?\d{1,3}(,\d{3})+$/.test(raw))return NaN;normalized=raw.replace(/,/g,'')}
+ else if(dots>1){if(!/^[+-]?\d{1,3}(\.\d{3})+$/.test(raw))return NaN;normalized=raw.replace(/\./g,'')}
+ else normalized=raw.replace(',','.');
+ const n=Number(normalized);return Number.isFinite(n)&&n>0?n:NaN;
+}
 function buildBatchSheets(){batchSheets=[];if(!uploadBook){batchRender();return}
- for(const name of uploadBook.SheetNames){const matrix=XLSX.utils.sheet_to_json(uploadBook.Sheets[name],{header:1,raw:false,defval:''});let rows=[],error='';try{rows=matrixRows(matrix)}catch(e){error=e.message}
+ for(const name of uploadBook.SheetNames){const matrix=excelSheetMatrix(uploadBook.Sheets[name]);let rows=[],error='';try{rows=matrixRows(matrix)}catch(e){error=e.message}
  const m=parseSheetMeta(matrix,name);batchSheets.push({name,rows,source:m.source,partner:m.partner,order:m.order,date:m.date,selected:!error,error,saved:'',editedRows:null})}
  batchRender();
 }
@@ -482,7 +635,7 @@ async function uploadRead(){
     $('uploadSheet').innerHTML=uploadBook.SheetNames.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
     // Prefer the first sheet that has a complete code/quantity/unit table (not an empty accounting form).
     let target='',best=-1;
-    for(const name of uploadBook.SheetNames){const mat=XLSX.utils.sheet_to_json(uploadBook.Sheets[name],{header:1,raw:false,defval:''});const h=excelHeader(mat);if(!h)continue;const sc=h.score+(h.fields.includes('code')?5:0);if(sc>best){target=name;best=sc}if(h.fields.includes('code')&&h.fields.includes('unit')&&h.usable>0){target=name;break}}
+    for(const name of uploadBook.SheetNames){const mat=excelSheetMatrix(uploadBook.Sheets[name]);const h=excelHeader(mat);if(!h)continue;const sc=h.score+(h.fields.includes('code')?5:0);if(sc>best){target=name;best=sc}if(h.fields.includes('code')&&h.fields.includes('unit')&&h.usable>0){target=name;break}}
     if(!target)throw Error('Workbook không có sheet nào chứa bảng mã vật tư và số lượng.');
     buildBatchSheets();await syncExistingBatchDocs();$('uploadSheet').value=target;loadExcelSheet(target);
     if(uploadBook.SheetNames.length>1)uploadStatus('File có '+uploadBook.SheetNames.length+' sheet. Đang đọc riêng sheet “'+target+'”. CHỈ LƯU 1 SHEET/1 PHIẾU NGUỒN/1 PHIẾU ĐỨC DUY. Chọn sheet khác để lập phiếu khác; nếu không tìm thấy số phiếu nguồn, hãy nhập tay chính xác.');
@@ -515,6 +668,6 @@ async function saveLaterFactor(){if(!isCEO)throw Error('Chỉ CEO được cập
 function uploadInit(){$('batchSave').onclick=()=>run(batchSaveAll);$('uploadAddLine').onclick=uploadAddBlank;$('uploadMergeDuplicate').onclick=safeMergeUploads; $('laterGSM').oninput=updateLaterFactor; $('laterWidth').oninput=updateLaterFactor; $('laterSave').onclick=()=>run(saveLaterFactor);for(const id of ['calcKg','calcGsm','calcWidth'])$(id).oninput=updateMeterCalculator;$('uploadRead').onclick=()=>uploadRead();$('uploadReviewed').onchange=uploadRender;$('uploadCancelError').onclick=()=>{if(!window.confirm('Hủy các dòng lỗi đang hiển thị? Chỉ xóa dữ liệu chưa lưu trên màn hình.'))return;const st=batchSheets.find(x=>x.name===activeSheetName);if(st&&!st.saved&&!st.linked){st.selected=false;st.cancelled=true;st.rows=[];st.editedRows=[];st.error='';batchRender()}uploadRows=[];uploadRender();uploadStatus('Đã hủy dòng lỗi trên màn hình. Phiếu đã lưu trong Supabase được giữ nguyên.');};$('uploadDemo').onclick=uploadDemo;$('uploadTemplate').onclick=uploadTemplate;$('uploadSave').onclick=()=>run((uploadBook&&uploadBook.SheetNames.length>1)?batchSaveAll:uploadSaveDraft);$('uploadSheet').onchange=()=>{if(!uploadBook)return;try{captureActiveSheet();loadExcelSheet($('uploadSheet').value)}catch(e){uploadRows=[];uploadRender();uploadStatus(e.message,true)}};$('uploadDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'});$('uploadType').onchange=()=>{const t=$('uploadType').value;$('transferDestWrap').style.display=t==='TRANSFER'?'':'none';if(t==='ISSUE_PROD')$('uploadStage').value='CUT'}}
 
 async function init(){try{const key=window.DD_CONFIG?.supabasePublishableKey;if(!key||!window.supabase)throw Error('Thiếu cấu hình công khai Supabase');client=window.supabase.createClient(URL,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const u=req(await client.auth.getUser(),'Auth');user=u.user;if(!user)throw Error('Bạn chưa đăng nhập ERP');const roles=req(await client.from('dd_user_roles').select('role_code').eq('company_id',COMPANY).eq('user_id',user.id),'Vai trò').map(x=>x.role_code);if(!roles.length)throw Error('Tài khoản chưa thuộc Đức Duy');isCEO=roles.includes('ceo');canDoc=isCEO||roles.includes('warehouse')||roles.includes('production');$('who').textContent=isCEO?'CEO · Quản lý vật tư':roles.join(', ');['saveMat','saveUnit','savePlan'].forEach(x=>$(x).disabled=!isCEO);['savePack','saveDoc'].forEach(x=>$(x).disabled=!canDoc);$('gate').classList.add('hide');await reload();fillLaterFabric();addLine()}catch(e){$('gateTitle').textContent='Không thể mở DD-10 vật tư';$('gateDesc').textContent=e.message}}
-$('refresh').onclick=()=>run(async()=>{await reload();fillLaterFabric()});$('saveMat').onclick=()=>run(saveMaterial);$('saveUnit').onclick=()=>run(saveUnit);$('savePack').onclick=()=>run(savePack);$('savePlan').onclick=()=>run(savePlan);$('saveDoc').onclick=()=>run(saveDoc);$('addLine').onclick=addLine;$('docDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'});uploadInit();initDetailLedger();init();
+$('refresh').onclick=()=>run(async()=>{await reload();fillLaterFabric()});$('saveMat').onclick=()=>run(saveMaterial);$('saveUnit').onclick=()=>run(saveUnit);$('savePack').onclick=()=>run(savePack);$('savePlan').onclick=()=>run(savePlan);$('saveDoc').onclick=()=>run(saveDoc);$('addLine').onclick=addLine;$('docDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'});uploadInit();initDetailLedger();initIssueCart();init();
 })();
 </script></body></html>
