@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>Đức Duy Growth OS · DD-08 V1.1 Marketing / CRM / Sales</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="dd-config.js"></script>
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>Đức Duy Growth OS · DD-08 V1.1.2.2 Marketing / CRM / Sales</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="dd-config.js"></script>
 <style>
 :root{font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:#132a4a;background:#f2f6fc}*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{cursor:pointer}.shell{display:grid;grid-template-columns:216px minmax(0,1fr);min-height:100vh}.side{background:#11223f;color:#e9f2ff;padding:22px 13px}.side h2{font-size:17px;margin:0 7px 4px}.side small{color:#aac2df;margin:0 7px}.side a{display:block;color:#d7e8ff;text-decoration:none;padding:10px;margin:7px 0;border-radius:8px}.side a.current{background:#155ed6}.main{padding:24px;max-width:1680px;width:100%;margin:auto}.head,.section-head,.actions,.pager{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}.head h1{font-size:24px;margin:0}.small{font-size:12px;color:#637a97}.head p{margin:4px 0}.panel{background:#fff;border:1px solid #dce6f3;border-radius:12px;padding:17px;margin-top:16px}.panel h2{font-size:18px;margin:0}.btn{background:#fff;border:1px solid #c9d9f0;border-radius:8px;padding:8px 13px;font-weight:700;color:#124879}.btn.primary{background:#1965d9;color:#fff;border-color:#1965d9}.btn:disabled{opacity:.46;cursor:not-allowed}.btn.bad{color:#9e2630}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.stat{padding:14px;border:1px solid #dce6f3;border-radius:10px;background:#fff}.stat b{font-size:24px;display:block;color:#133b79}.fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.field{display:grid;gap:4px;min-width:0}.field label{font-size:12px;color:#405b7a;font-weight:650}.field input,.field select,.field textarea{border:1px solid #c9d8ec;background:white;border-radius:7px;padding:9px;min-width:0;width:100%}.full{grid-column:1/-1}textarea{min-height:66px}.tablewrap{overflow-x:auto}.tbl{width:100%;border-collapse:collapse;table-layout:fixed}.tbl th{text-align:left;background:#eef3fb;color:#3f5e80;font-size:12px}.tbl th,.tbl td{padding:10px 8px;border-bottom:1px solid #e2eaf4;vertical-align:top;overflow-wrap:anywhere}.tbl td .desc{font-size:12px;color:#607994}.tbl td button{padding:5px 8px;font-size:12px}.tbl .num{text-align:right;font-variant-numeric:tabular-nums}.note{background:#eaf3ff;border-left:3px solid #2775d5;border-radius:5px;padding:9px 11px;color:#17467c}.feedback{margin-top:10px;padding:10px 12px;border-radius:8px;background:#eff6ff;color:#194a83}.feedback.err{background:#ffedeb;color:#a02826}.feedback.ok{background:#e5f7ed;color:#11613a}.hidden{display:none!important}.pager{justify-content:flex-end;margin:6px 0 9px}.pager select{padding:5px;border-radius:7px;border:1px solid #c8d7e9}.pill{padding:3px 8px;background:#e9f2ff;color:#19518e;border-radius:40px;font-size:12px;font-weight:700}.overlay{position:fixed;inset:0;background:#f1f6ff;display:grid;place-items:center;z-index:50;padding:20px}.overlay .panel{max-width:570px}.muted{color:#647b97}.nowrap{white-space:nowrap}.quick{display:flex;gap:6px;flex-wrap:wrap}details>summary{cursor:pointer;font-weight:750}.sep{height:1px;background:#e0eaf7;margin:12px 0}.filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}@media(max-width:1020px){.grid,.fields{grid-template-columns:repeat(2,1fr)}.shell{grid-template-columns:1fr}.side{padding:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}.side small{display:none}.side a{margin:2px;padding:6px}.main{padding:15px}}@media(max-width:620px){.grid,.fields,.filters{grid-template-columns:1fr}.tbl{min-width:780px}.head h1{font-size:20px}}
 
@@ -66,7 +66,29 @@
 </main></div><script>
 'use strict';
 const COMPANY='a7e8d079-e48f-48b1-866d-6febaa65e379';
-const URL='https://ykhrtrvstymfjnzdgzna.supabase.co';
+// DD-08 V1.1.2: chuẩn hóa cấu hình Supabase theo dự án đã hoạt động ở Dashboard CEO.
+// Chỉ dùng publishable/anon key trong trình duyệt; tuyệt đối không đặt service_role ở đây.
+const DD08_PROJECT_URL='https://ykhrtrvstymfjnzdgzna.supabase.co';
+function dd08SupabaseConfig(){
+  const cfg=window.DD_CONFIG||{};
+  const configured=String(cfg.supabaseUrl||cfg.supabaseURL||cfg.SUPABASE_URL||'').trim();
+  // Ưu tiên URL của cấu hình chung nếu hợp lệ và đúng project Đức Duy.
+  let url=DD08_PROJECT_URL;
+  if(configured){
+    try{
+      const x=new window.URL(configured);
+      if(x.protocol==='https:' && x.hostname==='ykhrtrvstymfjnzdgzna.supabase.co' && (!x.pathname || x.pathname==='/')) url=x.origin;
+      else console.warn('[DD-08] URL trong dd-config.js không khớp project ERP; sử dụng URL của Dashboard CEO.');
+    }catch(_){console.warn('[DD-08] URL trong dd-config.js không hợp lệ; sử dụng URL của Dashboard CEO.');}
+  }
+  const key=String(cfg.supabasePublishableKey||'').trim();
+  if(!key || /DIEN_|YOUR_|REPLACE_|EXAMPLE/i.test(key)) throw Error('Chưa có Supabase Publishable Key hợp lệ trong dd-config.js. Kiểm tra file cấu hình giống DD-03/DD-10.');
+  if(!window.supabase?.createClient) throw Error('Không tải được thư viện Supabase. Kiểm tra kết nối internet và CDN.');
+  try{const x=new window.URL(url);if(x.protocol!=='https:'||!x.hostname.endsWith('.supabase.co'))throw Error('invalid');}
+  catch(_){throw Error('Địa chỉ Supabase không hợp lệ. Kiểm tra cấu hình và phiên bản dd08-crm.html đang được Netlify phục vụ.');}
+  return {url,key};
+}
+
 let sb,user,roles=[],ceo=false,customers=[],opps=[],activities=[],tasks=[],contacts=[],activeCustomer=null;
 const S={customers:{page:1,size:10},opps:{page:1,size:10},tasks:{page:1,size:10}};
 const $=id=>document.getElementById(id);
@@ -106,7 +128,7 @@ $('contactForm').onsubmit=e=>{e.preventDefault();handleSave(e.currentTarget,'dd0
 for(const id of ['filterCustomer','filterSegment','filterCategory'])$(id).addEventListener('input',()=>{S.customers.page=1;render()});
 document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;try{if(b.dataset.customer)openWork(b.dataset.customer);else if(b.dataset.editor){for(const k of ['opportunity','activity','task','contact'])show(k+'Editor',k===b.dataset.editor)}else if(b.dataset.page){S[b.dataset.page].page+=Number(b.dataset.shift);render();}else if(b.dataset.stageSave)await stageSave(b.dataset.stageSave);else if(b.dataset.taskDone)await taskDone(b.dataset.taskDone);}catch(err){msg(err.message,true)}});
 document.addEventListener('change',e=>{if(e.target.dataset.pageSize){const key=e.target.dataset.pageSize;S[key].size=Number(e.target.value);S[key].page=1;render()}});
-async function init(){try{const key=window.DD_CONFIG?.supabasePublishableKey;if(!key||!window.supabase?.createClient)throw Error('Thiếu dd-config.js hoặc thư viện Supabase.');sb=window.supabase.createClient(URL,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const auth=await sb.auth.getUser();if(auth.error||!auth.data?.user)throw Error('Chưa đăng nhập hệ thống ERP.');user=auth.data.user;roles=requireData(await sb.from('dd_user_roles').select('role_code').eq('company_id',COMPANY).eq('user_id',user.id),'Kiểm tra quyền').map(x=>x.role_code);ceo=roles.includes('ceo');if(!roles.some(x=>['ceo','sales','marketing','crm','customer_service'].includes(x)))throw Error('Tài khoản chưa được cấp quyền CRM. CEO cần phân vai trò trước khi sử dụng.');$('identity').textContent=(ceo?'CEO':roles.join(', '))+' · '+(user.email||'');$('gate').classList.add('hidden');$('app').style.visibility='visible';await reload();}catch(err){$('gateTitle').textContent='Chưa thể truy cập DD-08 CRM';$('gateText').textContent=err.message;}}
+async function init(){try{const {url,key}=dd08SupabaseConfig();sb=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const auth=await sb.auth.getUser();if(auth.error||!auth.data?.user)throw Error('Chưa đăng nhập hệ thống ERP.');user=auth.data.user;roles=requireData(await sb.from('dd_user_roles').select('role_code').eq('company_id',COMPANY).eq('user_id',user.id),'Kiểm tra quyền').map(x=>x.role_code);ceo=roles.includes('ceo');if(!roles.some(x=>['ceo','sales','marketing','crm','customer_service'].includes(x)))throw Error('Tài khoản chưa được cấp quyền CRM. CEO cần phân vai trò trước khi sử dụng.');$('identity').textContent=(ceo?'CEO':roles.join(', '))+' · '+(user.email||'');$('gate').classList.add('hidden');$('app').style.visibility='visible';await reload();}catch(err){$('gateTitle').textContent='Chưa thể truy cập DD-08 CRM';$('gateText').textContent=err.message+' · DD-08 V1.1.2';console.error('[DD-08 V1.1.2] Khởi tạo thất bại:',err.message);}}
 init();
 
 
