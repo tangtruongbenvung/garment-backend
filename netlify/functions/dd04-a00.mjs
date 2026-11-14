@@ -1,6 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { getDeployStore } from '@netlify/blobs';
-import { dispatch } from '../../dd04-agent-control/runtime-core.mjs';
+import { dispatch, isStagingPreviewUrl } from '../../dd04-agent-control/runtime-core.mjs';
 
 const reply=(body,status=200)=>new Response(JSON.stringify(body),{
   status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'}
@@ -12,8 +12,9 @@ const equal=(a,b)=>{
 };
 export default async (request) => {
  const pathname=new URL(request.url).pathname;
- const preview=process.env.CONTEXT==='deploy-preview';
- if(!preview)return reply({ok:false,error:'PREVIEW_ONLY'},403);
+ // CONTEXT is build-time metadata and may not exist in Netlify Functions runtime.
+ // Protect production and other deployment hosts with strict preview hostname validation.
+ if(!isStagingPreviewUrl(request.url))return reply({ok:false,error:'PREVIEW_ONLY'},403);
  if(request.method==='GET' && pathname.endsWith('/health')){
   return reply({ok:true,component:'DD04-A00',runtime:'NODE_FUNCTION',mode:process.env.DD04_A00_PREVIEW_TOKEN?'AUTH_LOCKED':'NOT_CONFIGURED',
     persistent_store:'DEPLOY_SCOPED_BLOBS',real_llm_execution:false,telegram_connected:false,ceo_approval:false,production_connected:false});
