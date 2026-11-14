@@ -52,13 +52,14 @@ try {
 
   # GET exact fixed user, then confirm email and verification state.
   $user = Invoke-RestMethod -Method Get -Uri $BaseUrl -Headers $headers -TimeoutSec 15
-  if($user.user) { $user = $user.user }
+  if($user.PSObject.Properties.Name -contains 'user') { $user = $user.user }
   if([string]$user.id -ne $ExpectedUserId) { throw "ID tài khoản không trùng. DỪNG." }
   if([string]::IsNullOrWhiteSpace([string]$user.email) -or
      -not [string]::Equals([string]$user.email,$expectedEmail,[StringComparison]::OrdinalIgnoreCase)) {
     throw "Email không trùng bản ghi Supabase. DỪNG."
   }
-  if(-not $user.email_confirmed_at -or $user.is_anonymous -eq $true) {
+  if(-not ($user.PSObject.Properties.Name -contains 'email_confirmed_at') -or -not $user.email_confirmed_at -or
+     (($user.PSObject.Properties.Name -contains 'is_anonymous') -and $user.is_anonymous -eq $true)) {
     throw "Tài khoản chưa xác minh email hoặc là tài khoản ẩn danh. DỪNG."
   }
   Write-Host "PASS - Đúng project và đúng người dùng, email đã xác minh." -ForegroundColor Green
@@ -89,7 +90,7 @@ try {
   [IO.File]::WriteAllText($MarkerFile,$stamp,[Text.Encoding]::UTF8)
   $body = @{ password = $passwordPlain } | ConvertTo-Json -Compress
   $result = Invoke-RestMethod -Method Put -Uri $BaseUrl -Headers $headers -ContentType "application/json" -Body $body -TimeoutSec 20
-  if($result.user) { $result = $result.user }
+  if($result.PSObject.Properties.Name -contains 'user') { $result = $result.user }
   if([string]$result.id -ne $ExpectedUserId) { throw "Phản hồi cập nhật không đúng ID; DỪNG và kiểm tra Auth Logs." }
   Write-Host "PASS - Supabase Auth xác nhận cập nhật mật khẩu đúng tài khoản staging." -ForegroundColor Green
   Write-Host "KHÔNG cần email. Đăng nhập qua trang CEO staging rồi kích hoạt MFA."
