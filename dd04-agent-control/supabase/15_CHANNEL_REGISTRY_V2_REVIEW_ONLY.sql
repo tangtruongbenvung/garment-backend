@@ -97,6 +97,8 @@ CREATE TABLE dd04_stage.channel_change_requests (
  created_at timestamptz NOT NULL DEFAULT now(),
  CONSTRAINT dd04_channel_changes_pk PRIMARY KEY(request_id),
  CONSTRAINT dd04_channel_changes_fk FOREIGN KEY (tenant_id,channel_id) REFERENCES dd04_stage.channels(tenant_id,channel_id),
+ CONSTRAINT dd04_channel_changes_proposed_version_fk FOREIGN KEY (tenant_id,channel_id,proposed_version)
+ REFERENCES dd04_stage.channel_profile_versions(tenant_id,channel_id,profile_version),
  CONSTRAINT dd04_channel_changes_decision_guard CHECK (
     (status='WAITING_CEO_G1' AND decided_by IS NULL AND decided_at IS NULL)
     OR (status<>'WAITING_CEO_G1' AND decided_by IS NOT NULL AND decided_at IS NOT NULL)
