@@ -41,16 +41,51 @@ function demo(n){return Array.from({length:n},(_,i)=>{
 });}
 function field(title,value,wide=false){const d=make("div",undefined,"datum"+(wide?" wide":""));d.append(make("label",title),make("p",value));return d;}
 function filtered(){const q=$("search").value.toLocaleLowerCase("vi"),p=$("platform").value;return channels.filter(c=>(!p||c.platform===p)&&(!q||(c.name+" "+c.channel_id+" "+c.pillars).toLocaleLowerCase("vi").includes(q)));}
+function syncPlatformSwitch(){
+ for(const btn of document.querySelectorAll(".platform-switch button")){
+  const on=btn.dataset.platform===$("platform").value;
+  btn.classList.toggle("active",on);btn.setAttribute("aria-pressed",String(on));
+ }
+}
+function updatePlatformCounts(){
+ const countFb=channels.filter(c=>c.platform==="FANPAGE").length;
+ const countTt=channels.filter(c=>c.platform==="TIKTOK").length;
+ $("total").textContent=channels.length;
+ $("fbcount").textContent=countFb;
+ $("ttcount").textContent=countTt;
+ $("allCount").textContent=channels.length;
+ $("fbSwitchCount").textContent=countFb;
+ $("ttSwitchCount").textContent=countTt;
+}
 function list(){
- const a=filtered(),size=Number($("pagesize").value),max=Math.max(1,Math.ceil(a.length/size));page=Math.min(page,max-1);
- $("matched").textContent=a.length+" / "+channels.length+" kênh minh họa";
+ const a=filtered(),size=Number($("pagesize").value),max=Math.max(1,Math.ceil(a.length/size));page=Math.max(0,Math.min(page,max-1));
+ $("matched").textContent=a.length+" / "+channels.length+" kênh";
  $("channelList").replaceChildren();
- for(const c of a.slice(page*size,(page+1)*size)){
-  const b=make("button",undefined,"channel-row"+(c.channel_id===selected?" selected":""));b.type="button";
-  b.append(make("strong",c.name),make("small",c.channel_id+" · "+c.platform+" · V"+c.version+" · CHỜ G1"));
-  b.addEventListener("click",()=>{selected=c.channel_id;list();detail();});$("channelList").append(b);
+ const ordered=[...a.filter(c=>c.platform==="FANPAGE"),...a.filter(c=>c.platform==="TIKTOK")];
+ const shown=ordered.slice(page*size,(page+1)*size);
+ if(shown.length===0)$("channelList").append(make("p","Không tìm thấy kênh. Hãy thử đổi bộ lọc.","muted"));
+ for(const platform of ["FANPAGE","TIKTOK"]){
+  const group=shown.filter(c=>c.platform===platform);
+  if(!group.length)continue;
+  const heading=make("div",undefined,"channel-group "+(platform==="FANPAGE"?"group-fb":"group-tt"));
+  const name=make("strong",platform==="FANPAGE"?"Fanpage Facebook":"Kênh TikTok");
+  const count=make("small",group.length+" đang hiển thị");
+  heading.append(name,count);$("channelList").append(heading);
+  for(const c of group){
+   const b=make("button",undefined,"channel-row "+(platform==="FANPAGE"?"item-fb":"item-tt")+(c.channel_id===selected?" selected":""));b.type="button";
+   b.setAttribute("aria-current",c.channel_id===selected?"true":"false");
+   const top=make("span",undefined,"channel-row-top");
+   const ident=make("span",c.channel_id,"channel-code");
+   const version=make("span","V"+c.version,"channel-version");
+   top.append(ident,version);
+   const name=make("strong",c.name,"channel-title");
+   const detail=make("span",c.pillars,"channel-description");
+   b.append(top,name,detail);
+   b.addEventListener("click",()=>{selected=c.channel_id;list();detail();});$("channelList").append(b);
+  }
  }
  $("page").textContent=(page+1)+" / "+max;$("prev").disabled=page===0;$("next").disabled=page+1>=max;
+ syncPlatformSwitch();
 }
 // Editing is local-memory-only. Every change creates a new UNAPPROVED profile revision.
 const editFields=[["positioning","Định vị xuyên suốt"],["audience","Đối tượng"],["pillars","Trụ cột nội dung"],["voice","Giọng điệu và cá tính"],["character","Nhân vật / Character Bible"],["visual","Phong cách hình ảnh"],["cta","Quy tắc CTA"],["rules","Những điều cấm"],["goal","Mục tiêu kênh"]];
@@ -153,8 +188,11 @@ function renderHistory(c){
 function detail(){
  const c=channels.find(x=>x.channel_id===selected);
  if(!c){$("details").replaceChildren(make("p","Không tìm thấy kênh.","muted"));return;}
- $("channelId").textContent=c.channel_id+" · "+c.platform;
+ $("channelId").textContent=c.channel_id;
  $("channelName").textContent=c.name;
+ $("selectedPlatform").textContent=c.platform==="FANPAGE"?"Facebook Fanpage":"TikTok";
+ $("selectedPlatform").className="platform-tag "+(c.platform==="FANPAGE"?"fanpage":"tiktok");
+ $("profileFlag").textContent="Hồ sơ V"+c.version+" · CHƯA G1";
  $("channelMeta").textContent="Định hướng: "+c.pillars+" · hồ sơ nháp v"+c.version+" · "+c.assigned_agents.length+" Agent được phân công trong mô phỏng";
  $("details").replaceChildren();
  if(tab==="strategy")renderStrategy(c);
@@ -163,7 +201,7 @@ function detail(){
  else renderHistory(c);
  for(const b of document.querySelectorAll(".tabs button"))b.classList.toggle("active",b.dataset.view===tab);
 }
-function refresh(n){channels=demo(n);selected=channels[0].channel_id;page=0;const counts=channels.reduce((a,c)=>{a[c.platform]=(a[c.platform]||0)+1;return a;},{});$("total").textContent=n;$("fbcount").textContent=counts.FANPAGE||0;$("ttcount").textContent=counts.TIKTOK||0;list();detail();}
+function refresh(n){channels=demo(n);selected=channels[0].channel_id;page=0;const counts=channels.reduce((a,c)=>{a[c.platform]=(a[c.platform]||0)+1;return a;},{});updatePlatformCounts();list();detail();}
 function validateImportedRegistry(obj){
  if(!obj||typeof obj!=="object"||Array.isArray(obj)||!Array.isArray(obj.channels)||obj.channels.length<1||obj.channels.length>300)throw Error("JSON_CANNOT_READ_CHANNELS_1_TO_300");
  if(obj.registry_version!==undefined && obj.registry_version!==2)throw Error("REGISTRY_VERSION_MISMATCH");
@@ -192,7 +230,7 @@ async function importFile(file){
   $("demoCount").value="20";$("demoCount").disabled=true;
   $("search").value="";$("platform").value="";
   const counts=channels.reduce((a,c)=>{a[c.platform]=(a[c.platform]||0)+1;return a;},{});
-  $("total").textContent=channels.length;$("fbcount").textContent=counts.FANPAGE||0;$("ttcount").textContent=counts.TIKTOK||0;
+  updatePlatformCounts();
   $("importStatus").textContent="Đã nhập "+channels.length+" hồ sơ JSON cục bộ. CHƯA xác minh danh tính kênh, trạng thái CEO hoặc Supabase; dữ liệu sẽ mất khi tải lại.";
   list();detail();
  }catch(e){$("importStatus").textContent="FAIL: "+e.message+". Dữ liệu cũ được giữ nguyên.";}
@@ -200,6 +238,7 @@ async function importFile(file){
 }
 $("registryFile").addEventListener("change",()=>void importFile($("registryFile").files[0]));
 $("restoreDemo").addEventListener("click",()=>{$("demoCount").disabled=false;$("demoCount").value="20";refresh(20);$("importStatus").textContent="Đã khôi phục dữ liệu DEMO; không có thay đổi trên Supabase.";});
+for(const b of document.querySelectorAll(".platform-switch button"))b.addEventListener("click",()=>{$("platform").value=b.dataset.platform;page=0;list();});
 for(const id of ["search","platform","pagesize"])$(id).addEventListener(id==="search"?"input":"change",()=>{page=0;list();});
 $("demoCount").addEventListener("change",()=>refresh(Number($("demoCount").value)));
 $("prev").addEventListener("click",()=>{page--;list();});
