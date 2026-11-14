@@ -34,3 +34,17 @@ test('TOTP challenge and verify must complete before MFA success feedback',()=>{
  assert.match(js,/if\(!data\?\.access_token\)throw/);
  assert.match(js,/Chưa có phân quyền CEO hoặc G1\/G2/);
 });
+
+test('first-time password uses recovery email and cannot update without verified recovery session',()=>{
+ assert.match(page,/id="passwordRecoveryPanel" hidden/);
+ assert.match(page,/id="newPassword" type="password"/);
+ assert.match(page,/id="confirmPassword" type="password"/);
+ assert.match(js,/\/recover\?redirect_to=/);
+ assert.match(js,/if\(p\.get\("type"\)==="recovery"\)recoveryMode=true/);
+ assert.match(js,/if\(!recoveryMode\|\|!accessToken\)/);
+ assert.match(js,/await auth\("\/user",\{method:"PUT",authorized:true,body:\{password\}\}\)/);
+ assert.match(js,/password!==confirm/);
+ assert.match(js,/function strongPassword\(password\)/);
+ assert.match(js,/logout\(\);\s*message\("Đã cập nhật mật khẩu/);
+ assert.doesNotMatch(js,/console\.log\(password\)|localStorage|service_role\s*=/);
+});
