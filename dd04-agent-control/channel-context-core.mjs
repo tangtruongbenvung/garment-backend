@@ -66,7 +66,17 @@ export function createDemoChannels(count=20){
  ['Siêu nhân tí hon','Anh hùng đời thường','hào hứng, tích cực'],
  ['Thế giới đồ chơi','Đồ chơi và nhân vật hư cấu','giàu tưởng tượng'],
  ['Bé đố mẹ','Câu đố và hiểu nhầm','nhanh nhẹn, gần gũi'],
- ['Ngày hội tí hon','Sân khấu và lễ hội mini','rộn ràng, lịch sự']
+ ['Ngày hội tí hon','Sân khấu và lễ hội mini','rộn ràng, lịch sự'],
+ ['Những ngày mưa vui','Hài ngày mưa trong nhà','êm dịu, tinh nghịch'],
+ ['Bé làm nhạc trưởng','Âm nhạc hoạt hình gốc','nhịp nhàng, vui tươi'],
+ ['Chuyến tàu tưởng tượng','Phiêu lưu trong nhà','hào hứng, kể chuyện'],
+ ['Mẹ làm học trò','Bé hướng dẫn trò chơi','đảo vai, hài hước'],
+ ['Cuộc sống của chiếc tất','Nhân cách hóa đồ vật','bất ngờ, nhẹ nhàng'],
+ ['Chú thỏ và hai mẹ con','Thú bông nhân vật phụ','đáng yêu, ấm áp'],
+ ['Bữa tiệc sắc màu','Màu sắc và khối hình','trong trẻo, tươi sáng'],
+ ['Nhà mình có bí mật','Bất ngờ hài trong nhà','hồi hộp vui, không đáng sợ'],
+ ['Bé làm phóng viên','Tin vui trong nhà','tếu táo, tò mò'],
+ ['Giờ kể chuyện lạ','Truyện ngắn có cú chốt hài','dịu dàng, hóm hỉnh']
  ];
  return Array.from({length:count},(_,i)=>{
   const [name,pillars,tone]=themes[i%themes.length],platform=i%2?'TIKTOK':'FANPAGE';
