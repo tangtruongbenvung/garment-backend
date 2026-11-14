@@ -48,6 +48,30 @@ create table dd04_stage.commands (
 );
 create index dd04_commands_received_idx on dd04_stage.commands(tenant_id,received_at desc);
 
+-- Until verified CEO G1 orchestration exists, commands stay WAITING_CEO_PLAN.
+create function dd04_stage.guard_command_state()
+returns trigger language plpgsql security invoker
+set search_path=pg_catalog, dd04_stage as $
+begin
+ if tg_op='INSERT' then
+  if new.status <> 'WAITING_CEO_PLAN' then raise exception 'DD04_COMMAND_G1_REQUIRED'; end if;
+ else
+  if new.status is distinct from old.status then raise exception 'DD04_COMMAND_TRANSITIONS_NOT_ENABLED'; end if;
+  if new.tenant_id is distinct from old.tenant_id
+     or new.command_id is distinct from old.command_id
+     or new.source is distinct from old.source
+     or new.external_id is distinct from old.external_id
+     or new.input_sha256 is distinct from old.input_sha256
+     or new.message_text is distinct from old.message_text then
+     raise exception 'DD04_COMMAND_INPUT_IMMUTABLE';
+  end if;
+ end if;
+ return new;
+end;
+$;
+create trigger dd04_commands_guard before insert or update on dd04_stage.commands
+for each row execute function dd04_stage.guard_command_state();
+
 -- 2/7 TASKS: dependency must belong to same command AND same tenant.
 create table dd04_stage.tasks (
  tenant_id uuid not null,
@@ -236,6 +260,56 @@ create table dd04_stage.capability_versions (
  )
 );
 create index dd04_capability_agent_status_idx on dd04_stage.capability_versions(tenant_id,agent_id,status);
+
+-- Memory and capability promotion are blocked until independent reviewer
+-- identity, benchmark and evidence workflows receive separate approval.
+create function dd04_stage.guard_memory_review()
+returns trigger language plpgsql security invoker
+set search_path=pg_catalog, dd04_stage as $
+begin
+ if tg_op='INSERT' then
+  if new.review_status <> 'PENDING' then
+   raise exception 'DD04_MEMORY_REVIEW_NOT_CONFIGURED';
+  end if;
+ else
+  if new.review_status is distinct from old.review_status
+     or new.reviewed_by is distinct from old.reviewed_by
+     or new.reviewed_at is distinct from old.reviewed_at then
+   raise exception 'DD04_MEMORY_REVIEW_NOT_CONFIGURED';
+  end if;
+  if new.tenant_id is distinct from old.tenant_id or new.agent_id is distinct from old.agent_id
+     or new.body is distinct from old.body or new.source_refs is distinct from old.source_refs then
+   raise exception 'DD04_MEMORY_SOURCE_IMMUTABLE';
+  end if;
+ end if;
+ return new;
+end;
+$;
+create trigger dd04_memories_guard before insert or update on dd04_stage.agent_memories
+for each row execute function dd04_stage.guard_memory_review();
+
+create function dd04_stage.guard_capability_review()
+returns trigger language plpgsql security invoker
+set search_path=pg_catalog, dd04_stage as $
+begin
+ if tg_op='INSERT' then
+  if new.status <> 'PROPOSED' then raise exception 'DD04_CAPABILITY_APPROVAL_NOT_CONFIGURED'; end if;
+ else
+  if new.status is distinct from old.status or new.approved_by is distinct from old.approved_by
+    or new.approved_at is distinct from old.approved_at then
+    raise exception 'DD04_CAPABILITY_APPROVAL_NOT_CONFIGURED';
+  end if;
+  if new.tenant_id is distinct from old.tenant_id
+    or new.agent_id is distinct from old.agent_id or new.skill_name is distinct from old.skill_name
+    or new.version is distinct from old.version then
+    raise exception 'DD04_CAPABILITY_IDENTITY_IMMUTABLE';
+  end if;
+ end if;
+ return new;
+end;
+$;
+create trigger dd04_capabilities_guard before insert or update on dd04_stage.capability_versions
+for each row execute function dd04_stage.guard_capability_review();
 
 -- Additional database controls: prevent alterations to historical evidence.
 -- Trigger functions are SECURITY INVOKER, live only in private schema.
