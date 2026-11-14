@@ -24,6 +24,21 @@ export default async (request) => {
  const bearer=(request.headers.get('authorization')||'').replace(/^Bearer\s+/i,'');
  if(!equal(bearer,secret))return reply({error:'UNAUTHORIZED'},401);
  const store=getDeployStore('dd04-a00-runtime-poc');
+ if(request.method==='GET' && pathname.endsWith('/commands')){
+  try{
+   const {blobs}=await store.list({prefix:'commands/'});
+   // Staging cap prevents unbounded reads. No DB aggregation or production status inference.
+   const selected=blobs.slice(0,30);
+   const records=(await Promise.all(selected.map(async item=>{
+    const r=await store.get(item.key,{type:'json'});
+    return r&&r.schema_version==='5.3'&&Array.isArray(r.task_graph)?r:null;
+   }))).filter(Boolean).sort((a,b)=>String(b.received_at).localeCompare(String(a.received_at)));
+   return reply({source:'DEPLOY_SCOPED_BLOBS_API',records,total_keys:blobs.length,truncated:blobs.length>30,live_execution_verified:false});
+  }catch(e){
+   console.error('DD04 list error type:',e.name);
+   return reply({error:'STORE_LIST_UNAVAILABLE'},503);
+  }
+ }
  if(request.method==='POST' && pathname.endsWith('/commands')){
   if(!(request.headers.get('content-type')||'').toLowerCase().includes('application/json'))return reply({error:'JSON_REQUIRED'},415);
   const raw=await request.text();
