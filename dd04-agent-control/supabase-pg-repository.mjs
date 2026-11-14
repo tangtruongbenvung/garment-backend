@@ -67,6 +67,14 @@ export function createPgRepository(pool,tenantId){
    }catch(e){try{await c.query('ROLLBACK')}catch{}throw e}
   });
  }
+ async function diagnose(){
+  return using(async c=>{
+   const db=await c.query('select current_database() as db_name, current_user as db_user');
+   const schema=await c.query("select count(*)::int as table_count from information_schema.tables where table_schema='dd04_stage'");
+   return {ok:db.rows[0]?.db_name==='postgres'&&schema.rows[0]?.table_count===7,
+     stage:'DATABASE_READ_ONLY',tables:schema.rows[0]?.table_count??null};
+  });
+ }
  async function get(id){return using(c=>read(c,id))}
  async function list(max=30){
   const limit=Math.max(1,Math.min(30,max));
@@ -76,5 +84,5 @@ export function createPgRepository(pool,tenantId){
    return {source:'SUPABASE_STAGING_POSTGRES',records:records.filter(Boolean),total_keys:ids.rows.length,truncated:ids.rows.length>limit,live_execution_verified:false};
   });
  }
- return {accept,get,list};
+ return {accept,get,list,diagnose};
 }
