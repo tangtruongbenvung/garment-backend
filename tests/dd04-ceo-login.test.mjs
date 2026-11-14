@@ -68,3 +68,11 @@ test('callback diagnostics expose only fixed labels, never secret values',()=>{
  assert.match(js,/\$\("callbackDiagnostics"\)\.textContent="Chẩn đoán callback: "\+code/);
  assert.doesNotMatch(js,/callbackDiagnostics"\)\.textContent.*(?:accessToken|refreshToken|token_hash)/);
 });
+
+test('MFA factor listing uses verified Auth user factors (not unsupported GET factors endpoint)',()=>{
+ assert.match(js,/const data=await auth\("\/user",\{authorized:true\}\)/);
+ assert.match(js,/Array\.isArray\(data\?\.factors\)\?data\.factors:\[\]/);
+ assert.doesNotMatch(js,/auth\("\/factors",\{authorized:true\}\)/);
+ assert.match(page,/id="checkReadinessBtn"/);
+ assert.match(js,/bind\("checkReadinessBtn",checkCeoReadiness\)/);
+});
