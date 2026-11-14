@@ -135,12 +135,22 @@ try {
   # Only expose controlled stage, category and HTTP code. Never raw exception text.
   $category = "LOCAL_VALIDATION_OR_UNEXPECTED_ERROR"
   $http = ""
+  # ErrorRecord.Exception does not always expose .Response (StrictMode safe).
+  # Inspect the property via PSObject rather than direct member access.
   $ex = $_.Exception
-  if($ex -is [System.Net.WebException] -and $null -ne $ex.Response) {
-    try { $http = [int]$ex.Response.StatusCode } catch { $http = "" }
-  } elseif($null -ne $ex.Response -and $null -ne $ex.Response.StatusCode) {
-    try { $http = [int]$ex.Response.StatusCode } catch { $http = "" }
+  $response = $null
+  if($null -ne $ex) {
+    $responseProperty = $ex.PSObject.Properties['Response']
+    if($null -ne $responseProperty) { $response = $responseProperty.Value }
   }
+  if($null -ne $response) {
+    $statusProperty = $response.PSObject.Properties['StatusCode']
+    if($null -ne $statusProperty) {
+      try { $http = [string][int]$statusProperty.Value } catch { $http = "" }
+    }
+  }
+  # Windows PowerShell WebException may carry a ProtocolError status.
+  # Never print raw HTTP body, exception text, URL or authentication headers.
   switch ([string]$http) {
     "400" { $category = "HTTP_BAD_REQUEST" }
     "401" { $category = "HTTP_UNAUTHORIZED_KEY" }
