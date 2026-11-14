@@ -20,11 +20,11 @@
   <div class="live-controls">
    <label>Khóa truy cập staging (chỉ giữ trong phiên trang này)<input type="password" id="liveToken" autocomplete="off" spellcheck="false" placeholder="Khóa DD04_A00_PREVIEW_TOKEN" /></label>
    <label>Mã lệnh (tối đa 5, cách nhau bằng dấu phẩy)<input type="text" id="liveIds" autocomplete="off" spellcheck="false" placeholder="cmd_..." /></label>
-   <button type="button" id="liveLoad">Đọc dữ liệu API</button>
+   <button type="button" id="liveLoad">Đọc theo mã lệnh</button><button type="button" id="liveAll">Tải danh sách lệnh trong deploy</button>
    <button type="button" id="liveClear">Xóa khóa / kết quả</button>
   </div>
-  <p class="live-message" id="liveMessage" role="status" aria-live="polite">Chưa kết nối bản ghi. Nhập khóa và mã lệnh để xác minh.</p>
-  <p class="muted">Lưu ý: A00 hiện dùng Netlify Blobs theo từng deploy. Lệnh tạo ở deploy cũ có thể trả HTTP 404 sau khi cập nhật bản mới. Trong trường hợp đó hãy tạo một lệnh thử mới tại trang operator-test trên cùng Deploy Preview; không được hiển thị dữ liệu demo thay thế.</p>
+  <p class="live-message" id="liveMessage" role="status" aria-live="polite">Chưa kết nối bản ghi. Nhập khóa và bấm tải danh sách để xem toàn bộ lệnh được lưu trong bản deploy này; hoặc nhập mã lệnh cụ thể.</p>
+  <p class="muted">Lưu ý: A00 hiện dùng Netlify Blobs theo từng deploy. Danh sách được giới hạn 30 lệnh / lần đọc, không phải dữ liệu toàn hệ thống. Lệnh tạo ở deploy cũ có thể trả HTTP 404 sau khi cập nhật bản mới. Trong trường hợp đó hãy tạo một lệnh thử mới tại trang operator-test trên cùng Deploy Preview; không được hiển thị dữ liệu demo thay thế.</p>
  </div>
  <div class="live-summary" id="liveSummary"></div>
  <div class="columns">
