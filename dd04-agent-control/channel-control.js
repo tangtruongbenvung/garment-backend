@@ -11,7 +11,17 @@ const positions=[
  ["Siêu nhân tí hon","Anh hùng đời thường","hào hứng, tích cực"],
  ["Thế giới đồ chơi","Đồ chơi tưởng tượng","sáng tạo, vui nhộn"],
  ["Bé đố mẹ","Câu đố và hiểu nhầm","bất ngờ, trong sáng"],
- ["Ngày hội tí hon","Sân khấu và lễ hội","rộn ràng, lịch sự"]
+ ["Ngày hội tí hon","Sân khấu và lễ hội","rộn ràng, lịch sự"],
+ ["Những ngày mưa vui","Tình huống ngày mưa trong nhà","êm dịu, tinh nghịch"],
+ ["Bé làm nhạc trưởng","Âm nhạc và tiết tấu hoạt hình gốc","vui tươi, nhịp nhàng"],
+ ["Chuyến tàu tưởng tượng","Phiêu lưu qua những góc nhà","hào hứng, kể chuyện"],
+ ["Mẹ làm học trò","Bé hướng dẫn mẹ những trò chơi nhỏ","đảo vai, hài hước"],
+ ["Cuộc sống của chiếc tất","Nhân cách hóa vật dụng hư cấu","bất ngờ, nhẹ nhàng"],
+ ["Chú thỏ và hai mẹ con","Thú bông là nhân vật phụ cố định","đáng yêu, ấm áp"],
+ ["Bữa tiệc sắc màu","Màu sắc, hình khối và trí tưởng tượng","trong trẻo, tươi sáng"],
+ ["Nhà mình có bí mật","Bất ngờ nhỏ trong gia đình","hồi hộp vui, không đáng sợ"],
+ ["Bé làm phóng viên","Bé khám phá tin vui trong nhà","tếu táo, tò mò"],
+ ["Giờ kể chuyện lạ","Truyện ngắn hư cấu có cú chốt hài","dịu dàng, hóm hỉnh"]
 ];
 const names={A00:"Điều phối",A01:"Nghiên cứu xu hướng",A02:"Định hướng kênh",A03:"Viết kịch bản/caption",A04:"Nhân vật/ảnh",A05:"Sản xuất video",A06:"Quản lý kênh",A07:"Đăng sau G2",A08:"QC ngôn ngữ và nguyên bản",A09:"Tuân thủ/chính sách",A10:"Phân tích kết quả",A11:"Chi phí và KPI",A12:"Đối thủ",A13:"Tham chiếu viral",A14:"Bán hàng",A15:"Chăm sóc khách hàng",A16:"Lắng nghe cộng đồng",A17:"Tương tác minh bạch"};
 const assigned=["A00","A01","A02","A03","A04","A05","A06","A07","A08","A09","A10","A11","A12","A13","A16","A17"];
