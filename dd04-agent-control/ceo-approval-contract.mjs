@@ -31,7 +31,7 @@ export async function verifyAuthUser({token,supabaseUrl,publishableKey,fetchImpl
  return {ok:true,userId:user.id}; // No role inferred here.
 }
 
-export function verifyCeoEnrollment({identity,enrollment,tenantId,requireMfa=true}){
+export function verifyCeoEnrollment({identity,enrollment,assurance,tenantId,requireMfa=true}){
  if(identity?.ok!==true || !UUID.test(identity.userId||'') || !UUID.test(tenantId||''))return deny('AUTH_IDENTITY_REQUIRED');
  if(!enrollment || enrollment.user_id!==identity.userId || enrollment.tenant_id!==tenantId ||
     enrollment.role!=='CEO' || enrollment.status!=='ACTIVE' || enrollment.verified_by_admin!==true){
@@ -39,7 +39,9 @@ export function verifyCeoEnrollment({identity,enrollment,tenantId,requireMfa=tru
  }
  // Enrollment evidence must originate from a trusted database lookup.
  if(enrollment.identity_source!=='SERVER_DB_VERIFIED')return deny('UNTRUSTED_ENROLLMENT_SOURCE');
- if(requireMfa && enrollment.current_aal!=='aal2')return deny('MFA_AAL2_REQUIRED');
+ // MFA assurance MUST come from a separately verified Auth session/JWT,
+ // never from mutable enrollment data or browser input.
+ if(requireMfa && (assurance?.source!=='SERVER_VERIFIED_SESSION' || assurance?.userId!==identity.userId || assurance?.aal!=='aal2'))return deny('MFA_AAL2_REQUIRED');
  return {ok:true,userId:identity.userId,tenantId,role:'CEO'};
 }
 
