@@ -16,7 +16,7 @@ test('CEO page isolated to staging and never grants database roles or enables ap
 test('Hash token is removed from address before remote requests or rendering',()=>{
  const from=js.indexOf('function parseCallback()');
  const start=js.indexOf('const hash=location.hash;',from);
- const clear=js.indexOf('history.replaceState(null,"",location.pathname+location.search);',from);
+ const clear=js.indexOf('history.replaceState(null,"",location.pathname);',from);
  const token=js.indexOf('p.get("access_token")',from);
  assert.ok(from>=0&&start>from&&clear>start&&token>clear);
  assert.match(js,/window\.addEventListener\("pagehide",/);
@@ -40,11 +40,20 @@ test('first-time password uses recovery email and cannot update without verified
  assert.match(page,/id="newPassword" type="password"/);
  assert.match(page,/id="confirmPassword" type="password"/);
  assert.match(js,/\/recover\?redirect_to=/);
- assert.match(js,/if\(p\.get\("type"\)==="recovery"\)recoveryMode=true/);
+ assert.match(js,/recoveryMode=p.get\("type"\)==="recovery"/);
  assert.match(js,/if\(!recoveryMode\|\|!accessToken\)/);
  assert.match(js,/await auth\("\/user",\{method:"PUT",authorized:true,body:\{password\}\}\)/);
  assert.match(js,/password!==confirm/);
  assert.match(js,/function strongPassword\(password\)/);
  assert.match(js,/logout\(\);\s*message\("Đã cập nhật mật khẩu/);
  assert.doesNotMatch(js,/console\.log\(password\)|localStorage|service_role\s*=/);
+});
+
+test('recovery callback supports token_hash, scrubs URL, never logs tokens',()=>{
+ assert.match(js,/const query=location.search/);
+ assert.match(js,/history.replaceState\(null,"",location.pathname\)/);
+ assert.match(js,/q.get\("token_hash"\)/);
+ assert.match(js,/await auth\("\/verify",\{method:"POST",body:\{type:"recovery",token_hash:q.get\("token_hash"\)\}\}\)/);
+ assert.match(js,/if\(q.has\("code"\)\)/);
+ assert.doesNotMatch(js,/console\.log\(.*(?:accessToken|refreshToken|token_hash)/);
 });
