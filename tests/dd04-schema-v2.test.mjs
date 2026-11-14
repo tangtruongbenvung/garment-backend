@@ -24,6 +24,15 @@ test('Exactly seven DD04 private-schema tables, each with RLS and deny privilege
  assert.doesNotMatch(ddl,/grant\s+(all|select|insert|update|delete|usage)\b/i);
 });
 
+test('All eight trigger functions have paired PostgreSQL dollar quote delimiters',()=>{
+ const openers=[...ddl.matchAll(/\bas \\$\\$(?:\\r?\\n)/g)];
+ const closers=[...ddl.matchAll(/^\\$\\$;$/gm)];
+ assert.equal(openers.length,8,'expected 8 PL/pgSQL function bodies');
+ assert.equal(closers.length,8,'expected 8 closing dollar quotes');
+ assert.doesNotMatch(ddl,/\\bas \\$(?:\\r?\\n)/);
+ assert.doesNotMatch(ddl,/^\\$;$/gm);
+});
+
 test('Tenant scoping, unique idempotency and cross-tenant FKs present',()=>{
  assert.match(ddl,/dd04_commands_idempotent unique \(tenant_id, source, external_id\)/);
  assert.match(ddl,/primary key \(tenant_id, command_id\)/);
