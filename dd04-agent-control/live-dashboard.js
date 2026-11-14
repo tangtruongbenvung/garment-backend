@@ -38,7 +38,7 @@
   field(b,"Nhiệm vụ",Array.isArray(record.task_graph)?record.task_graph.length:"Không xác định");
   el("liveDetails").append(b);
  }
- function table(records){
+ function table(records,source){
   const t=make("table"),thead=make("thead"),head=make("tr");
   for(const label of ["Mã lệnh","Agent","Task ID","Trạng thái","Phiên bản","Nguồn"]){head.append(make("th",label))}
   thead.append(head);t.append(thead);
@@ -46,7 +46,7 @@
   for(const r of records){
    for(const task of r.task_graph){
     const tr=make("tr");
-    for(const value of [r.command_id,task.owner_agent,task.task_id,task.status,task.revision||"—","NETLIFY_BLOBS_API"]){
+    for(const value of [r.command_id,task.owner_agent,task.task_id,task.status,task.revision||"—",source]){
      tr.append(make("td",value));
     }
     body.append(tr);
@@ -81,8 +81,10 @@
    node.style.left=x+"px";node.style.top=y+"px";nodes.append(node);
   });
  }
- function render(records){
+ function render(records,source='A00_API'){
   reset();
+  // Remove empty-state placeholders after records pass API validation.
+  for(const id of ['liveDetails','liveTasks','liveAudit'])el(id).replaceChildren();
   live.records=records;live.connected=true;
   const all=records.flatMap(r=>r.task_graph);
   const agents=new Set(all.map(t=>t.owner_agent));
@@ -94,7 +96,7 @@
   addStat("Chờ G1 / chưa thực thi",planned);
   if(working)notice("Đọc được "+records.length+" lệnh; có "+working+" tác vụ ghi IN_PROGRESS, cần kiểm chứng bằng runtime telemetry.",false);
   else notice("PASS · Đã đọc "+records.length+" bản ghi API thật. Chưa có bằng chứng Agent đang thực thi; "+planned+" tác vụ đang chờ G1.",false);
-  records.forEach(viewRecord);table(records);events(records);map(records);
+  records.forEach(viewRecord);table(records,source);events(records);map(records);
  }
  function valid(record,id){
   return record&&record.schema_version==="5.3"&&record.command_id===id&&Array.isArray(record.task_graph)&&
@@ -136,7 +138,7 @@
    if(!Array.isArray(data.records)||!["DEPLOY_SCOPED_BLOBS_API","SUPABASE_STAGING_POSTGRES"].includes(data.source)){notice("API không trả về dữ liệu được xác minh.",true);return}
    const records=data.records.filter(r=>valid(r,r.command_id));
    if(!records.length){notice("Chưa có lệnh trong deploy hiện tại. Hãy tạo lệnh thử mới ở trang operator-test; không dùng dữ liệu DEMO.",true);listMode=true;return}
-   render(records);
+   render(records,data.source);
    if(data.truncated)notice("Đã đọc "+records.length+" lệnh từ "+data.source+", API giới hạn 30 bản ghi. Có thể đọc thêm theo mã lệnh.",true);
    listMode=true;
   }catch(e){notice("Không gọi được API danh sách lệnh.",true)}
