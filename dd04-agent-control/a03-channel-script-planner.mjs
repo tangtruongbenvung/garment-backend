@@ -64,10 +64,10 @@ function channelPlan(plan){
  if(typeof plan.campaign_id!=='string'||!ID.test(plan.campaign_id))throw Error('CAMPAIGN_ID_INVALID');
  return channels;
 }
-const dialogue=(title,hook,beat,punch)=>[
+const dialogue=(title,hook,beat1,beat2,twist,punch)=>[
  {from:0,to:4,visual:'Mở cảnh hoạt hình mẹ và bé hư cấu trong nhà Việt Nam, nhân vật nhất quán.',speech:hook},
- {from:4,to:12,visual:'Tình huống mở đầu: '+title+'.',speech:beat},
- {from:12,to:22,visual:'Cao trào hài bằng hành động và nét mặt; không gây nguy hiểm cho bé.',speech:null},
+ {from:4,to:12,visual:'Tình huống mở đầu: '+title+'. '+beat1,speech:null},
+ {from:12,to:22,visual:'Cao trào hài: '+beat2+' '+twist+' Không gây nguy hiểm cho bé.',speech:null},
  {from:22,to:30,visual:'Kết thúc nhẹ nhàng, hình ảnh ấm áp và tiếng cười tự nhiên.',speech:punch}
 ];
 export function planScripts(plan){
@@ -76,10 +76,9 @@ export function planScripts(plan){
   const angle=content[index];
   if(!angle)throw Error('CREATIVE_CAPACITY_EXCEEDED');
   const [title,approach,story,hook,beat1,beat2,twist,punch]=angle;
-  const fullBeat=beat1+' '+beat2+' '+twist;
   const identity={campaign_id:plan.campaign_id,channel_id:ch.channel_id,platform:ch.platform,revision:1};
-  const scenes=dialogue(title,hook,fullBeat,punch);
-  return {...identity,script_id:'a03_'+hash(identity).slice(0,20),status:'DRAFT_STAGING_NOT_EXECUTED',
+  const scenes=dialogue(title,hook,beat1,beat2,twist,punch);
+  return {...identity,channel_name:ch.name,script_id:'a03_'+hash(identity).slice(0,20),status:'DRAFT_STAGING_NOT_EXECUTED',
    creative:{title,approach,story,hook,beats:[beat1,beat2,twist],punchline:punch},
    duration_seconds:30,scenes,caption:'Một khoảnh khắc mẹ và bé thật đáng yêu: '+title+'! #MeVaBe #HoatHinhViet',
    video_brief:{format:'9:16',style:'Hoạt hình hư cấu Việt Nam, nhân vật mẹ và bé 0–36 tháng, không sao chép người thật',duration_seconds:30},
