@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {agentsFor,makeCommand,dispatch} from '../dd04-agent-control/runtime-core.mjs';
+import {agentsFor,makeCommand,dispatch,isStagingPreviewUrl} from '../dd04-agent-control/runtime-core.mjs';
 class FakeStore {
   records=new Map();
   async get(key){return this.records.get(key)||null}
@@ -35,4 +35,16 @@ test('không nhận đầu vào sai định dạng',()=> {
  for(const input of [{external_id:'a',message_text:'Nội dung đủ dài'}, {external_id:'case-005',message_text:'abc'}, {external_id:'case-006',message_text:'Xin chào nội dung',media_refs:[{}]}]){
   assert.throws(()=>makeCommand(input));
  }
+});
+
+test('runtime chỉ được nhận chính xác domain Deploy Preview của site staging',()=>{
+ assert.equal(isStagingPreviewUrl('https://deploy-preview-1--ducduy-ai-os-test.netlify.app/api/dd04-a00/health'),true);
+ for(const url of [
+  'https://ducduy-ai-os-test.netlify.app/api/dd04-a00/health',
+  'https://ducduy.netlify.app/api/dd04-a00/health',
+  'https://deploy-preview-1--other-site.netlify.app/api/dd04-a00/health',
+  'http://deploy-preview-1--ducduy-ai-os-test.netlify.app/api/dd04-a00/health',
+  'https://deploy-preview-1--ducduy-ai-os-test.netlify.app.evil.example/api',
+  'not-a-url'
+ ]) assert.equal(isStagingPreviewUrl(url),false,url);
 });
