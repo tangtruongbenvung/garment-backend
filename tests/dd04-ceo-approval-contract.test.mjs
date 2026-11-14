@@ -21,7 +21,7 @@ test('reject forged role, no enrollment and missing MFA',()=>{
  assert.equal(verifyCeoEnrollment({identity:{ok:true,userId:user},tenantId:tenant,enrollment:{...enrollment,identity_source:'BROWSER'}}).reason,'UNTRUSTED_ENROLLMENT_SOURCE');
  assert.equal(verifyCeoEnrollment({identity:{ok:true,userId:user},tenantId:tenant,enrollment,assurance:{...assurance,aal:'aal1'}}).reason,'MFA_AAL2_REQUIRED');
  assert.equal(verifyCeoEnrollment({identity:{ok:true,userId:user},tenantId:other,enrollment}).reason,'CEO_ENROLLMENT_REQUIRED');
- assert.equal(verifyCeoEnrollment({identity:{ok:true,userId:user},tenantId:tenant,enrollment,assurance}),{ok:true,userId:user,tenantId:tenant,role:'CEO'});
+ assert.deepEqual(verifyCeoEnrollment({identity:{ok:true,userId:user},tenantId:tenant,enrollment,assurance}),{ok:true,userId:user,tenantId:tenant,role:'CEO'});
 });
 test('G1 requires verified CEO, proposal version and approved scope/budget evidence',()=>{
  assert.equal(prepareGateDecision({actor:{role:'CEO'},command:cmd,gate:'G1',decision:'APPROVED',evidence:{}}).reason,'VERIFIED_CEO_REQUIRED');
