@@ -21,4 +21,5 @@ jobs:
       - run: node --check dd04-agent-control/runtime-core.mjs
       - run: node --check netlify/functions/dd04-a00.mjs
       - run: node --check dd04-agent-control/live-dashboard.js
-      - run: node --test tests/dd04-a00.test.mjs
+      - run: node --check dd04-agent-control/persistence-contract.mjs
+      - run: node --test tests/dd04-a00.test.mjs tests/dd04-persistence-contract.test.mjs
