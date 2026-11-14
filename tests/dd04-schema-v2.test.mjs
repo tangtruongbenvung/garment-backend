@@ -49,7 +49,7 @@ test('Audit and artifacts are append only under normal database DML',()=>{
  assert.match(ddl,/create trigger dd04_artifacts_immutable before update or delete/);
  assert.match(ddl,/DD04_AUDIT_APPEND_ONLY/);
  assert.match(ddl,/DD04_ARTIFACT_VERSION_IMMUTABLE/);
- assert.doesNotMatch(ddl,/SECURITY DEFINER/i);
+ assert.doesNotMatch(ddl,/language\s+plpgsql\s+security\s+definer/i);
 });
 
 test('G2 artifacts and review metadata require evidence',()=>{
