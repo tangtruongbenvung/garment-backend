@@ -123,9 +123,30 @@
    if(!found.length&&!errors.length)notice("Không có bản ghi API được xác minh.",true);
   }finally{btn.disabled=false;}
  }
+ let listMode=false;
+ async function loadAll(){
+  if(!strictHost.test(location.hostname)||location.protocol!=="https:"){notice("Không đúng domain Deploy Preview #1.",true);return}
+  const token=el("liveToken").value.trim();
+  if(token.length<32){notice("Nhập khóa staging hợp lệ trước khi đọc danh sách.",true);return}
+  const btn=el("liveAll");btn.disabled=true;reset();notice("Đang tải danh sách lệnh đã lưu trong deploy này…");
+  try{
+   const response=await fetch("/api/dd04-a00/commands",{headers:{Authorization:"Bearer "+token},cache:"no-store"});
+   const data=await response.json();
+   if(!response.ok){notice("Không đọc được danh sách: HTTP "+response.status+" · "+(data.error||"Lỗi API"),true);listMode=false;return}
+   if(!Array.isArray(data.records)||data.source!=="DEPLOY_SCOPED_BLOBS_API"){notice("API không trả về dữ liệu được xác minh.",true);return}
+   const records=data.records.filter(r=>valid(r,r.command_id));
+   if(!records.length){notice("Chưa có lệnh trong deploy hiện tại. Hãy tạo lệnh thử mới ở trang operator-test; không dùng dữ liệu DEMO.",true);listMode=true;return}
+   render(records);
+   if(data.truncated)notice("Đã đọc "+records.length+" lệnh, nhưng API giới hạn 30 bản ghi. Cần lọc theo mã để xem bản ghi khác.",true);
+   listMode=true;
+  }catch(e){notice("Không gọi được API danh sách lệnh.",true)}
+  finally{btn.disabled=false}
+ }
+ el("liveAll").addEventListener("click",loadAll);
+
  el("liveLoad").addEventListener("click",load);
  el("liveClear").addEventListener("click",()=>{
-   el("liveToken").value="";el("liveIds").value="";reset();notice("Đã xóa khóa khỏi ô nhập và xóa bản ghi khỏi giao diện.");
+   el("liveToken").value="";el("liveIds").value="";listMode=false;reset();notice("Đã xóa khóa khỏi ô nhập và xóa bản ghi khỏi giao diện.");
  });
  window.addEventListener("pagehide",()=>{el("liveToken").value="";reset();});
  window.addEventListener("resize",()=>{if(live.connected){el("liveNodes").replaceChildren();el("liveLines").replaceChildren();map(live.records);}});
