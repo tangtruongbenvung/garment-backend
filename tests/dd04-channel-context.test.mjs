@@ -35,3 +35,9 @@ test('requires full channel identity before issuing agent task',()=>{
  const task={campaign_id:'CMP-001',task_id:'TASK-001',channel_id:p.channel_id,agent_id:'A03',objective:'Create draft',profile_version:1,profile_sha256:s.profile_sha256};
  assert.throws(()=>makeAgentHandoff(p,{...task,agent_id:'A15'}),/AGENT_NOT_ASSIGNED_TO_CHANNEL/);
 });
+
+test('pilot 20 channels have distinct content pillars and stage-specific framing',()=>{
+ const a=createDemoChannels(20);
+ assert.equal(new Set(a.map(c=>c.content_pillars)).size,20);
+ assert.ok(a.every(c=>c.positioning.includes(c.content_pillars.toLowerCase())));
+});
