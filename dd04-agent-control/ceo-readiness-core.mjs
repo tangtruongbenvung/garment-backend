@@ -31,11 +31,12 @@ export async function inspectCeoReadiness({token,publishableKey,tenantId,lookup,
    backend.enrollment_status==='ACTIVE'&&backend.enrollment_user_id===identity.userId&&
    backend.enrollment_tenant_id===tenantId&&backend.verified_by_admin===true;
  const missing=[];
- if(assurance.aal!=='aal2')missing.push('MFA_AAL2_REQUIRED');
+ const mfaVerified=assurance.aal==='aal2'&&backend.mfa_session_verified===true;
+ if(!mfaVerified)missing.push('MFA_AAL2_REQUIRED');
  if(!enrolled)missing.push(backend.enrollment_table_present?'CEO_ENROLLMENT_NOT_VERIFIED':'CEO_ENROLLMENT_TABLE_NOT_MIGRATED');
  missing.push('G1_G2_DATABASE_GUARD_LOCKED');
  return {httpStatus:200,body:{
-  ok:true,identity_verified:true,session_valid:true,mfa_aal2:assurance.aal==='aal2',
+  ok:true,identity_verified:true,session_valid:true,mfa_aal2:mfaVerified,
   enrollment_verified:enrolled,ceo_approval_enabled:false,G1_enabled:false,G2_enabled:false,
   ready_for_gates:false,missing,source:'STAGING_AUTH_AND_DATABASE_READ_ONLY'
  }};
