@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { getDeployStore } from '@netlify/blobs';
 import { dispatch, isStagingPreviewUrl } from '../../dd04-agent-control/runtime-core.mjs';
+import { assertStagingDatabaseUrl, createPgRepository } from '../../dd04-agent-control/supabase-pg-repository.mjs';
 
 const reply=(body,status=200)=>new Response(JSON.stringify(body),{
   status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'}
@@ -10,6 +11,27 @@ const equal=(a,b)=>{
  const x=Buffer.from(a),y=Buffer.from(b);
  return x.length===y.length&&timingSafeEqual(x,y);
 };
+let pgPool;
+async function pgStore(){
+ const tenant=process.env.DD04_STAGING_TENANT_ID;
+ const url=process.env.DD04_STAGING_DATABASE_URL;
+ assertStagingDatabaseUrl(url,tenant);
+ if(!pgPool){
+  const {Pool}=await import('pg');
+  pgPool=new Pool({
+   connectionString:url,
+   ssl:{rejectUnauthorized:true},
+   max:3,
+   idleTimeoutMillis:10000,
+   connectionTimeoutMillis:8000,
+   statement_timeout:12000,
+   query_timeout:14000
+  });
+ }
+ return createPgRepository(pgPool,tenant);
+}
+const mode=()=>process.env.DD04_A00_STORE==='POSTGRES'?'POSTGRES':'BLOBS';
+
 export default async (request) => {
  const pathname=new URL(request.url).pathname;
  // CONTEXT is build-time metadata and may not exist in Netlify Functions runtime.
@@ -17,15 +39,19 @@ export default async (request) => {
  if(!isStagingPreviewUrl(request.url))return reply({ok:false,error:'PREVIEW_ONLY'},403);
  if(request.method==='GET' && pathname.endsWith('/health')){
   return reply({ok:true,component:'DD04-A00',runtime:'NODE_FUNCTION',mode:process.env.DD04_A00_PREVIEW_TOKEN?'AUTH_LOCKED':'NOT_CONFIGURED',
-    persistent_store:'DEPLOY_SCOPED_BLOBS',real_llm_execution:false,telegram_connected:false,ceo_approval:false,production_connected:false});
+    persistent_store:mode()==='POSTGRES'?(process.env.DD04_STAGING_DATABASE_URL&&process.env.DD04_STAGING_TENANT_ID?'SUPABASE_STAGING_POSTGRES_CONFIGURED':'SUPABASE_STAGING_POSTGRES_NOT_CONFIGURED'):'DEPLOY_SCOPED_BLOBS',real_llm_execution:false,telegram_connected:false,ceo_approval:false,production_connected:false});
  }
  const secret=process.env.DD04_A00_PREVIEW_TOKEN;
  if(!secret || secret.length<32)return reply({error:'PREVIEW_TOKEN_NOT_CONFIGURED'},503);
  const bearer=(request.headers.get('authorization')||'').replace(/^Bearer\s+/i,'');
  if(!equal(bearer,secret))return reply({error:'UNAUTHORIZED'},401);
- const store=getDeployStore('dd04-a00-runtime-poc');
+ const isPg=mode()==='POSTGRES';
+ let repository;
+ if(isPg){try{repository=await pgStore()}catch(e){console.error('DD04 PG config error:',e.message);return reply({error:'STAGING_DATABASE_NOT_CONFIGURED'},503)}}
+ const store=isPg?null:getDeployStore('dd04-a00-runtime-poc');
  if(request.method==='GET' && pathname.endsWith('/commands')){
   try{
+   if(isPg)return reply(await repository.list(30));
    const {blobs}=await store.list({prefix:'commands/'});
    // Staging cap prevents unbounded reads. No DB aggregation or production status inference.
    const selected=blobs.slice(0,30);
@@ -44,7 +70,7 @@ export default async (request) => {
   const raw=await request.text();
   if(raw.length>4096)return reply({error:'PAYLOAD_TOO_LARGE'},413);
   try{
-   const data=JSON.parse(raw),out=await dispatch(store,data);
+   const data=JSON.parse(raw),out=isPg?await repository.accept(data):await dispatch(store,data);
    return reply(out.body,out.code);
   }catch(e){
    if(e instanceof SyntaxError)return reply({error:'INVALID_JSON'},400);
@@ -56,7 +82,7 @@ export default async (request) => {
  if(request.method==='GET' && pathname.includes('/commands/')){
   const id=pathname.split('/').pop();
   if(!/^cmd_[a-f0-9]{20}$/.test(id||''))return reply({error:'INVALID_COMMAND_ID'},400);
-  try{const record=await store.get('commands/'+id,{type:'json'});return record?reply(record):reply({error:'NOT_FOUND'},404);}
+  try{const record=isPg?await repository.get(id):await store.get('commands/'+id,{type:'json'});return record?reply(record):reply({error:'NOT_FOUND'},404);}
   catch(e){console.error('DD04 read error type:',e.name);return reply({error:'STORE_UNAVAILABLE'},503);}
  }
  return reply({error:'NOT_FOUND'},404);
