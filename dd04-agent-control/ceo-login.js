@@ -141,8 +141,9 @@ async function savePassword(){
  finally{$("newPassword").value="";$("confirmPassword").value="";}
 }
 async function loadFactors(){
- const data=await auth("/factors",{authorized:true});
- const factors=Array.isArray(data)?data:(data.factors||[]);
+ // Supabase Auth returns user.factors via GET /auth/v1/user; GET /factors is not a public list endpoint.
+ const data=await auth("/user",{authorized:true});
+ const factors=Array.isArray(data?.factors)?data.factors:[];
  const verified=factors.find(x=>x.factor_type==="totp"&&x.status==="verified");
  if(verified){
   factorId=verified.id;
