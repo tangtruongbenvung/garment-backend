@@ -133,11 +133,11 @@
    const response=await fetch("/api/dd04-a00/commands",{headers:{Authorization:"Bearer "+token},cache:"no-store"});
    const data=await response.json();
    if(!response.ok){notice("Không đọc được danh sách: HTTP "+response.status+" · "+(data.error||"Lỗi API"),true);listMode=false;return}
-   if(!Array.isArray(data.records)||data.source!=="DEPLOY_SCOPED_BLOBS_API"){notice("API không trả về dữ liệu được xác minh.",true);return}
+   if(!Array.isArray(data.records)||!["DEPLOY_SCOPED_BLOBS_API","SUPABASE_STAGING_POSTGRES"].includes(data.source)){notice("API không trả về dữ liệu được xác minh.",true);return}
    const records=data.records.filter(r=>valid(r,r.command_id));
    if(!records.length){notice("Chưa có lệnh trong deploy hiện tại. Hãy tạo lệnh thử mới ở trang operator-test; không dùng dữ liệu DEMO.",true);listMode=true;return}
    render(records);
-   if(data.truncated)notice("Đã đọc "+records.length+" lệnh, nhưng API giới hạn 30 bản ghi. Cần lọc theo mã để xem bản ghi khác.",true);
+   if(data.truncated)notice("Đã đọc "+records.length+" lệnh từ "+data.source+", API giới hạn 30 bản ghi. Có thể đọc thêm theo mã lệnh.",true);
    listMode=true;
   }catch(e){notice("Không gọi được API danh sách lệnh.",true)}
   finally{btn.disabled=false}
