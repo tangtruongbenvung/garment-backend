@@ -36,6 +36,10 @@ test('Tenant scoping, unique idempotency and cross-tenant FKs present',()=>{
 test('No auto approval or task execution before identity service',()=>{
  assert.match(ddl,/create trigger dd04_tasks_guard before insert or update/);
  assert.match(ddl,/DD04_G1_PENDING_TASK_ONLY/);
+ assert.match(ddl,/DD04_COMMAND_G1_REQUIRED/);
+ assert.match(ddl,/DD04_COMMAND_TRANSITIONS_NOT_ENABLED/);
+ assert.match(ddl,/DD04_MEMORY_REVIEW_NOT_CONFIGURED/);
+ assert.match(ddl,/DD04_CAPABILITY_APPROVAL_NOT_CONFIGURED/);
  assert.match(ddl,/DD04_TASK_TRANSITIONS_NOT_ENABLED/);
  assert.match(ddl,/create trigger dd04_approval_guard before update/);
  assert.match(ddl,/create trigger dd04_approval_insert_guard before insert/);
