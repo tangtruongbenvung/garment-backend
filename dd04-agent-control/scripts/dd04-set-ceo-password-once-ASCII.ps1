@@ -1,4 +1,5 @@
 # DD04-A00-009 - one-time CEO Auth password bootstrap, local Windows PowerShell ONLY.
+# SCRIPT_BUILD: DD04-CEO-CLIPBOARD-20261115-FIX3
 # No emails, no schema changes, no CEO grants, no G1/G2.
 [CmdletBinding()]
 param([switch]$Apply)
@@ -27,6 +28,7 @@ function Get-TemporaryPlainText([Security.SecureString]$Secret) {
 }
 
 Write-Host "=== DUC DUY DD04 STAGING - FIRST PASSWORD ==="
+Write-Host "Script build: DD04-CEO-CLIPBOARD-20261115-FIX3" -ForegroundColor Cyan
 Write-Host "Project: $ProjectId (STAGING ONLY)"
 Write-Host "User ID: $ExpectedUserId (EXACT MATCH)"
 Write-Host ("Mode: " + $(if($Apply){"APPLY ONE TIME"}else{"READ-ONLY CHECK"}))
