@@ -74,3 +74,105 @@ main{padding:14px 18px}
 @media(max-width:1100px){.layout{grid-template-columns:305px minmax(0,1fr)}.side-hint{display:none}}
 @media(max-width:780px){.layout{display:block}.channel-sidebar{position:static;max-height:none;margin-bottom:12px}.channel-list{max-height:310px}.profile-head{gap:10px}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.tabs{flex-wrap:nowrap;overflow-x:auto}.tabs button{white-space:nowrap}.profile-status{align-items:flex-end}}
 @media(max-width:480px){header{padding:14px}main{padding:8px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.profile-head{display:flex;flex-direction:column}.profile-status{flex-direction:row;align-items:center;flex-wrap:wrap}.data-grid,.agent-grid{grid-template-columns:1fr}.side-hint{display:none}}
+
+/* Channel Registry V2.2 — two independent full-width channel lists on top. */
+.registry-section{margin-bottom:14px;padding:18px!important}
+.registry-heading{display:flex;align-items:start;justify-content:space-between;gap:16px;margin-bottom:12px}
+.registry-heading h2{font-size:20px;margin:0 0 4px}
+.registry-heading .eyebrow{margin:0 0 5px}
+.registry-heading p.muted{font-size:12px;margin:0;max-width:880px}
+.registry-state{display:inline-flex;align-items:center;white-space:nowrap;border:1px solid #8a754f;border-radius:7px;color:#f8dca5;background:#352a1a;font-size:11px;padding:5px 9px}
+.registry-toolbar{display:grid;grid-template-columns:minmax(260px,1.7fr) minmax(105px,.48fr) minmax(138px,.58fr) auto;gap:12px;align-items:end;padding:12px;background:#0d2133;border:1px solid #2c4760;border-radius:10px;margin:10px 0 9px}
+.registry-toolbar label{font-size:11px;margin:0}
+.registry-toolbar input,.registry-toolbar select{margin:5px 0 0;min-height:39px}
+.registry-toolbar .import-tools{min-width:160px;max-width:230px;margin:0;align-self:end}
+.registry-toolbar .import-tools summary{min-height:22px;padding:3px 0;font-size:12px}
+.registry-toolbar .import-tools[open]{position:relative;z-index:3}
+.registry-section .list-meta{padding:3px 2px 10px}
+.channel-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:stretch}
+.platform-panel{border:1px solid #36526b;border-radius:12px;background:#0c1c2c;min-width:0;overflow:hidden;padding:0 11px 11px;display:flex;flex-direction:column}
+.facebook-panel{border-top:3px solid #609aff}
+.tiktok-panel{border-top:3px solid #ef8cae}
+.platform-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 2px}
+.platform-panel-head>div{display:flex;align-items:center;gap:10px;min-width:0}
+.platform-panel-head h3{font-size:15px;line-height:1.2;margin:0 0 2px}
+.platform-panel-head p{font-size:11px;margin:0}
+.platform-letter{width:34px;height:34px;display:inline-grid;place-items:center;flex:0 0 34px;border-radius:9px;font-weight:850;font-size:21px}
+.fb-letter{color:#eef6ff;background:#255ab8}
+.tt-letter{color:#fff;background:#432c40;border:1px solid #cb7097}
+.platform-count{font-size:12px;font-weight:700;white-space:nowrap;padding:5px 9px;border-radius:7px}
+.fb-count{background:#19375d;color:#bedaff}
+.tt-count{background:#3b2939;color:#ffd3e3}
+.column-headings{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr) 55px;gap:9px;align-items:center;color:#9eb9cf;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.3px;background:#152b40;padding:9px 12px;margin:0 -3px 3px;border-radius:6px}
+.column-headings span:last-child{text-align:right}
+.platform-panel .channel-list{min-height:180px;height:auto;max-height:330px;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:3px;padding:2px 3px}
+.platform-panel .channel-row{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr) 55px;align-items:center;gap:9px;width:100%;margin:0;padding:9px 10px;background:#11273a;border:1px solid #244259;border-radius:7px;text-align:left}
+.platform-panel .channel-row.item-fb{border-left:3px solid #497ccc}
+.platform-panel .channel-row.item-tt{border-left:3px solid #b06b90}
+.platform-panel .channel-row:hover{background:#1c3c52}
+.platform-panel .channel-row.selected{background:#184556;border-color:#6be1d8;box-shadow:inset 0 0 0 1px #6be1d8}
+.channel-main{display:flex;flex-direction:column;min-width:0;gap:1px}
+.channel-main .channel-code{font-size:11px;color:#95d1e4;line-height:1.4}
+.channel-main .channel-title{font-size:12px;font-weight:750;display:block}
+.platform-panel .channel-description{font-size:11px;white-space:normal;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.4}
+.platform-panel .channel-version{text-align:center;font-size:11px;background:#243d52;padding:4px;border-radius:6px}
+.platform-panel .pagination{margin-top:auto;padding:11px 3px 0}
+.platform-panel .pagination span{font-size:12px;font-weight:700;color:#c4d9e8}
+.empty-list{color:#a9c3d5;padding:24px 10px;text-align:center;font-size:12px}
+.channel-details{min-width:0}
+.channel-details .detail-panel{padding:19px 21px}
+.channel-details #channelDetailsTitle{scroll-margin-top:16px}
+.channel-details .profile-head{padding-bottom:12px;border-bottom:1px solid #2b475e}
+.channel-details .profile-head h2{font-size:21px}
+.channel-details .tabs{border-bottom:1px solid #2f4a63;padding-bottom:0;margin:13px 0 17px}
+.channel-details .tabs button{padding:11px 15px;font-weight:700;min-width:120px;text-align:center}
+.channel-details .tabs button.active{background:#174457;color:#eaffff}
+.channel-details .detail-content{display:flex;flex-direction:column;gap:13px}
+.info-section{padding:14px;background:#102438;border:1px solid #2e4a61;border-radius:11px}
+.info-section h3{font-size:15px;font-weight:800;color:#eaf8ff;margin:0 0 5px}
+.info-section-head{margin-bottom:12px}
+.info-section-head .muted{font-size:11px;margin:0}
+.info-section .data-grid{gap:9px}
+.info-section .datum{background:#0b1e30;padding:11px 13px}
+.info-section .datum label{font-size:11px;color:#93b4cd;font-weight:650}
+.info-section .datum p{font-size:13px;line-height:1.55;color:#eaf5fd}
+.detail-footer{display:flex;flex-direction:column;gap:10px}
+.detail-actions{display:flex;gap:8px;flex-wrap:wrap}
+.detail-actions button{padding:8px 12px;font-size:12px}
+.detail-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.detail-toolbar p{max-width:770px}
+.agent-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.info-section .agent{background:#0c2031;border-color:#304e63}
+.task-table{font-size:12px}
+.task-table th{background:#18344b;white-space:nowrap}
+.task-table td{vertical-align:top}
+.agent-code-cell{font-weight:800;color:#8ed8e5}
+.task-state{display:inline-block;border:1px solid #785e3c;background:#32291f;color:#f4d59e;border-radius:5px;font-size:10px;font-weight:650;padding:4px 7px;white-space:nowrap}
+.workflow-details{padding:13px 17px!important}
+.workflow-details summary{cursor:pointer;font-size:13px;font-weight:750;color:#afcbdf}
+.workflow-details[open] summary{margin-bottom:13px}
+@media(max-width:1100px){
+ .registry-toolbar{grid-template-columns:minmax(200px,1.7fr) minmax(100px,.6fr) minmax(130px,.8fr)}
+ .registry-toolbar .import-tools{grid-column:1/-1;max-width:none}
+ .agent-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:840px){
+ .channel-columns{grid-template-columns:1fr}
+ .platform-panel .channel-list{max-height:245px}
+ .registry-heading{flex-wrap:wrap}
+ .agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+ .registry-section{padding:12px!important}
+ .registry-toolbar{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:9px}
+ .registry-toolbar .search-field,.registry-toolbar .import-tools{grid-column:1/-1}
+ .column-headings{grid-template-columns:minmax(0,1.3fr) minmax(0,.95fr) 38px}
+ .platform-panel .channel-row{grid-template-columns:minmax(0,1.3fr) minmax(0,.95fr) 38px;padding:8px 6px;gap:5px}
+ .platform-panel .channel-version{font-size:10px;padding:3px}
+ .platform-panel .channel-description{font-size:10px}
+ .channel-details .detail-panel{padding:12px}
+ .channel-details .tabs button{min-width:auto;font-size:11px;padding:10px}
+ .channel-details .profile-head{flex-direction:column;align-items:flex-start}
+ .agent-grid{grid-template-columns:1fr}
+ .detail-toolbar{flex-direction:column;align-items:stretch}
+}
