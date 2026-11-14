@@ -19,3 +19,13 @@ test('The demo UI does not write/read Supabase or hold approval credentials',()=
  assert.match(js,/BLOCKED_G2/);
  assert.doesNotMatch(js,/\bfetch\(|localStorage|sessionStorage|service_role|sb_secret_/);
 });
+
+test('Channel strategy can be revised only as unapproved local draft',()=>{
+ assert.match(js,/function editProfile\(c\)/);
+ assert.match(js,/c\.version\+\+/);
+ assert.match(js,/DRAFT_CHANGED_REVIEW_REQUIRED/);
+ assert.match(js,/function exportProfiles\(list\)/);
+ assert.match(js,/BROWSER_STAGING_DRAFT_NOT_APPROVED/);
+ assert.match(js,/URL\.createObjectURL\(blob\)/);
+ assert.doesNotMatch(js,/\bfetch\(|localStorage|sessionStorage/);
+});
