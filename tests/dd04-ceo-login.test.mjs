@@ -57,3 +57,14 @@ test('recovery callback supports token_hash, scrubs URL, never logs tokens',()=>
  assert.match(js,/if\(q.has\("code"\)\)/);
  assert.doesNotMatch(js,/console\.log\(.*(?:accessToken|refreshToken|token_hash)/);
 });
+
+test('callback diagnostics expose only fixed labels, never secret values',()=>{
+ assert.match(page,/id="callbackDiagnostics"/);
+ assert.match(js,/diagnostic\("BEARER_SESSION_RECEIVED"\)/);
+ assert.match(js,/diagnostic\("RECOVERY_TOKEN_HASH_RECEIVED"\)/);
+ assert.match(js,/diagnostic\("PKCE_CODE_UNSUPPORTED"\)/);
+ assert.match(js,/diagnostic\("DIRECT_PAGE_NO_AUTH"\)/);
+ assert.match(js,/diagnostic\(\(hash\?"FRAGMENT":"QUERY"\)\+"_WITHOUT_AUTH_FIELDS"\)/);
+ assert.match(js,/\$\("callbackDiagnostics"\)\.textContent="Chẩn đoán callback: "\+code/);
+ assert.doesNotMatch(js,/callbackDiagnostics"\)\.textContent.*(?:accessToken|refreshToken|token_hash)/);
+});
