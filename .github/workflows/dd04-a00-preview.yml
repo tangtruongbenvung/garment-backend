@@ -28,4 +28,4 @@ jobs:
       - run: node --check dd04-agent-control/pg-tls.mjs
       - run: node --check dd04-agent-control/ceo-approval-contract.mjs
       - run: node --check dd04-agent-control/ceo-login.js
-      - run: node --test tests/dd04-a00.test.mjs tests/dd04-persistence-contract.test.mjs tests/dd04-schema-v2.test.mjs tests/dd04-postgres-adapter.test.mjs tests/dd04-pg-tls.test.mjs tests/dd04-ceo-approval-contract.test.mjs tests/dd04-ceo-login.test.mjs tests/dd04-ceo-admin-bootstrap.test.mjs tests/dd04-a03-channel-scripts.test.mjs
+      - run: node --test tests/dd04-a00.test.mjs tests/dd04-persistence-contract.test.mjs tests/dd04-schema-v2.test.mjs tests/dd04-postgres-adapter.test.mjs tests/dd04-pg-tls.test.mjs tests/dd04-ceo-approval-contract.test.mjs tests/dd04-ceo-login.test.mjs tests/dd04-ceo-admin-bootstrap.test.mjs tests/dd04-a03-channel-scripts.test.mjs tests/dd04-a03-preview-api.test.mjs
