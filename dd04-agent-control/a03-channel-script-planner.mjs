@@ -1,3 +1,4 @@
+import {snapshotChannel} from './channel-context-core.mjs';
 // DD04 A03 — deterministic staging-only concept drafts, NOT an LLM or autonomous Agent.
 import {createHash} from 'node:crypto';
 export const A03_VERSION='0.1.0-STAGING-DRAFT';
@@ -76,9 +77,18 @@ export function planScripts(plan){
   const angle=content[index];
   if(!angle)throw Error('CREATIVE_CAPACITY_EXCEEDED');
   const [title,approach,story,hook,beat1,beat2,twist,punch]=angle;
-  const identity={campaign_id:plan.campaign_id,channel_id:ch.channel_id,platform:ch.platform,revision:1};
+  // When a full channel profile is supplied, bind to its immutable version/hash.
+  // A template concept is NOT evidence of editorial fit; A08 must evaluate it.
+  const snap=ch.profile===undefined?null:snapshotChannel(ch.profile);
+  if(snap&&(snap.channel_id!==ch.channel_id||snap.platform!==ch.platform||snap.name!==ch.name))
+   throw Error('CHANNEL_CONTEXT_MISMATCH');
+  if(ch.profile_sha256!==undefined&&(!snap||ch.profile_sha256!==snap.profile_sha256))
+   throw Error('CHANNEL_CONTEXT_MISMATCH');
+  const identity={campaign_id:plan.campaign_id,channel_id:ch.channel_id,platform:ch.platform,revision:1,
+    ...(snap?{profile_version:snap.version,profile_sha256:snap.profile_sha256}:{})};
   const scenes=dialogue(title,hook,beat1,beat2,twist,punch);
-  return {...identity,channel_name:ch.name,script_id:'a03_'+hash(identity).slice(0,20),status:'DRAFT_STAGING_NOT_EXECUTED',
+  return {...identity,channel_name:ch.name,channel_context:snap?{positioning:snap.positioning,audience:snap.audience,content_pillars:snap.content_pillars,tone:snap.tone,character_bible:snap.character_bible,visual_style:snap.visual_style,forbidden:snap.forbidden,cta_policy:snap.cta_policy,target_outcome:snap.target_outcome}:null,
+   channel_fit_status:snap?'REQUIRES_A08_PROFILE_ALIGNMENT_REVIEW':'NO_CHANNEL_PROFILE_DEMO_ONLY',script_id:'a03_'+hash(identity).slice(0,20),status:'DRAFT_STAGING_NOT_EXECUTED',
    creative:{title,approach,story,hook,beats:[beat1,beat2,twist],punchline:punch},
    duration_seconds:30,scenes,caption:'Một khoảnh khắc mẹ và bé thật đáng yêu: '+title+'! #MeVaBe #HoatHinhViet',
    video_brief:{format:'9:16',style:'Hoạt hình hư cấu Việt Nam, nhân vật mẹ và bé 0–36 tháng, không sao chép người thật',duration_seconds:30},
