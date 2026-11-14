@@ -6,11 +6,12 @@ const PUBLISHABLE_KEY="sb_publishable_eYGZHWqLAvhuFjIU3ej3Zg_eQdL5lrU";
 const CALLBACK="https://deploy-preview-1--ducduy-ai-os-test.netlify.app/dd04-agent-control/ceo-login.html";
 const EXPECTED_HOST="deploy-preview-1--ducduy-ai-os-test.netlify.app";
 const $=id=>document.getElementById(id);
-let accessToken="",refreshToken="",factorId="";
+let accessToken="",refreshToken="",factorId="",recoveryMode=false;
 function message(text,ok=false){$("message").textContent=text;$("message").className=ok?"pass":"fail";}
 function clearSecret(){$("secret").value="";$("totpCode").value="";$("totpEnroll").hidden=true;$("verifyPanel").hidden=true;}
 function logout(){
- accessToken="";refreshToken="";factorId="";clearSecret();$("password").value="";
+ accessToken="";refreshToken="";factorId="";recoveryMode=false;clearSecret();$("password").value="";
+ $("newPassword").value="";$("confirmPassword").value="";$("passwordRecoveryPanel").hidden=true;
  $("sessionPanel").hidden=true;$("loginPanel").hidden=false;$("identity").textContent="";
  message("Đã xóa phiên khỏi bộ nhớ tab. Không có quyền CEO được cấp.",true);
 }
@@ -24,7 +25,7 @@ function parseCallback(){
  if(p.get("access_token")&&p.get("token_type")?.toLowerCase()==="bearer"){
   accessToken=p.get("access_token")||"";
   refreshToken=p.get("refresh_token")||"";
-  if(p.get("type")==="recovery"){logout();message("Đây là liên kết khôi phục mật khẩu, không phải đăng nhập CEO. Vui lòng sử dụng phương thức đăng nhập thông thường.");}
+  if(p.get("type")==="recovery")recoveryMode=true;
  }else message("Liên kết chưa có phiên xác thực. Hãy đăng nhập bằng email.");
 }
 async function auth(path,{method="GET",body,authorized=false}={}){
@@ -45,7 +46,13 @@ async function checkSession(){
   const user=await auth("/user",{authorized:true});
   if(!user?.id||!user?.email_confirmed_at||user?.is_anonymous===true)throw new Error("Tài khoản chưa đủ điều kiện email đã xác minh.");
   $("identity").textContent="Supabase Auth: Email đã xác minh. ID người dùng đã kiểm tra (được giữ riêng tư).";
-  $("sessionPanel").hidden=false;$("loginPanel").hidden=true;$("password").value="";
+  $("loginPanel").hidden=true;$("password").value="";
+  if(recoveryMode){
+   $("sessionPanel").hidden=true;$("passwordRecoveryPanel").hidden=false;
+   message("Đã xác minh liên kết khôi phục. Nhập mật khẩu mới; chưa có quyền CEO hoặc G1/G2.",true);
+   return;
+  }
+  $("passwordRecoveryPanel").hidden=true;$("sessionPanel").hidden=false;
   message("Đăng nhập Supabase thành công. Chưa xác định quyền CEO; G1/G2 vẫn khóa.",true);
   await loadFactors();
  }catch(e){logout();message("Không xác minh được phiên Supabase: "+e.message);}
@@ -68,6 +75,30 @@ async function magicSignIn(){
   await auth("/otp?redirect_to="+encodeURIComponent(CALLBACK),{method:"POST",body:{email,create_user:false}});
   message("Đã gửi yêu cầu đăng nhập qua email. Chỉ mở liên kết mới; đừng gửi ảnh URL có token.",true);
  }catch(e){message("Không gửi được liên kết email: "+e.message);}
+}
+async function requestPasswordRecovery(){
+ const email=$("email").value.trim();
+ if(!email||!email.includes("@")){message("Vui lòng nhập email tài khoản staging đã được xác minh.");return;}
+ try{
+  await auth("/recover?redirect_to="+encodeURIComponent(CALLBACK),{method:"POST",body:{email}});
+  message("Đã gửi yêu cầu thiết lập mật khẩu. Kiểm tra email mới; đường dẫn chỉ dùng một lần. Nếu Supabase giới hạn 2 email/giờ, không bấm lại liên tục.",true);
+ }catch(e){message("Không gửi được email khôi phục: "+e.message);}
+}
+function strongPassword(password){
+ return password.length>=12&&password.length<=128&&/[a-z]/.test(password)&&/[A-Z]/.test(password)&&/[0-9]/.test(password)&&/[^a-zA-Z0-9]/.test(password);
+}
+async function savePassword(){
+ if(!recoveryMode||!accessToken){message("Bạn cần mở liên kết khôi phục mới và xác minh phiên trước khi đặt mật khẩu.");return;}
+ const password=$("newPassword").value,confirm=$("confirmPassword").value;
+ if(!strongPassword(password)){message("Mật khẩu phải có ít nhất 12 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.");return;}
+ if(password!==confirm){message("Hai lần nhập mật khẩu chưa trùng nhau.");return;}
+ try{
+  const user=await auth("/user",{method:"PUT",authorized:true,body:{password}});
+  if(!user?.id)throw new Error("Không xác nhận được việc cập nhật mật khẩu.");
+  logout();
+  message("Đã cập nhật mật khẩu qua Supabase Auth. Hãy đăng nhập lại bằng mật khẩu mới rồi thiết lập MFA. Chưa cấp quyền CEO.",true);
+ }catch(e){message("Chưa cập nhật được mật khẩu: "+e.message);}
+ finally{$("newPassword").value="";$("confirmPassword").value="";}
 }
 async function loadFactors(){
  const data=await auth("/factors",{authorized:true});
@@ -114,8 +145,9 @@ if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
 }else{
  parseCallback();
  bind("passwordBtn",passwordSignIn);bind("magicBtn",magicSignIn);
+ bind("recoveryBtn",requestPasswordRecovery);bind("savePasswordBtn",savePassword);bind("cancelRecoveryBtn",logout);
  bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);
  bind("showSecret",()=>{$("secret").type=$("secret").type==="password"?"text":"password"});
- window.addEventListener("pagehide",()=>{accessToken="";refreshToken="";clearSecret();});
+ window.addEventListener("pagehide",()=>{accessToken="";refreshToken="";recoveryMode=false;clearSecret();$("newPassword").value="";$("confirmPassword").value="";});
  if(accessToken)void checkSession();
 }
