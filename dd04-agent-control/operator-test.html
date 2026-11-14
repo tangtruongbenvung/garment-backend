@@ -11,7 +11,7 @@
 <p class="muted">Chỉ dán khóa nếu đây là đúng domain <code>deploy-preview-1--ducduy-ai-os-test.netlify.app</code>. Khóa chỉ giữ tạm trong ô nhập và được xóa sau khi kết thúc phép thử.</p>
 <label for="extid">Mã lệnh thử</label><input id="extid" readonly>
 <label for="message">Nội dung thử</label><textarea id="message" maxlength="2000">Tạo một kịch bản video hoạt hình mẹ và bé dài 30 giây để kiểm thử quy trình điều phối.</textarea>
-<button id="send" type="button">Gửi lệnh thử</button><button id="repeat" type="button" disabled class="secondary">Thử gửi trùng</button><button id="read" type="button" disabled class="secondary">Đọc lại bản ghi</button><button id="clear" type="button" class="secondary">Xóa khóa và kết quả</button>
+<button id="diagnose" type="button" class="secondary">Kiểm tra Supabase (chỉ đọc)</button><button id="send" type="button">Gửi lệnh thử</button><button id="repeat" type="button" disabled class="secondary">Thử gửi trùng</button><button id="read" type="button" disabled class="secondary">Đọc lại bản ghi</button><button id="clear" type="button" class="secondary">Xóa khóa và kết quả</button>
 <p id="status" class="status"></p><div id="result" class="result" aria-live="polite">Chưa gửi lệnh.</div></div>
 <div class="panel"><h2>3. Điều kiện nghiệm thu</h2><ol><li>Lệnh đầu tiên có HTTP <b>201</b> và trạng thái <code>WAITING_CEO_PLAN</code>.</li><li>Gửi lại cùng mã và nội dung nhận HTTP <b>200</b>, <code>duplicate: true</code>.</li><li>Đọc lại bản ghi có <code>task_graph</code>, <code>meeting</code> và trạng thái duyệt <code>PENDING</code>.</li></ol><p>Không được tự duyệt G1, tạo video hoặc đăng mạng xã hội. Đây chỉ là A00 phân tuyến theo quy tắc.</p></div>
 </main><script>
@@ -31,7 +31,7 @@ async function call(method,path,payload){
  const token=$("token").value.trim();
  if(token.length<32){status("Chưa có khóa staging hợp lệ (tối thiểu 32 ký tự).",false);return}
  if(inProgress)return;
- inProgress=true;for(const id of ["send","repeat","read"])$(id).disabled=true;
+ inProgress=true;for(const id of ["send","repeat","read","diagnose"])$(id).disabled=true;
  try{
   const response=await fetch(api+path,{method,headers:{"Authorization":"Bearer "+token,...(payload?{"Content-Type":"application/json"}:{})},...(payload?{body:JSON.stringify(payload)}:{})});
   const data=await response.json();render({http_status:response.status,...data});
@@ -40,8 +40,9 @@ async function call(method,path,payload){
   if(good&&method==="POST"){lastId=data.command_id;lastPayload=payload}
   if(good&&method==="GET"&&data.command_id){status(data.status==="WAITING_CEO_PLAN"?"Đã đọc lại bản ghi: chờ G1, chưa phê duyệt.":"Cần kiểm tra trạng thái G1 của bản ghi.",data.status==="WAITING_CEO_PLAN")}
  }catch(e){status("Không gọi được A00: "+e.message,false)}
- finally{inProgress=false;$("send").disabled=false;$("repeat").disabled=!lastPayload;$("read").disabled=!lastId}
+ finally{inProgress=false;$("send").disabled=false;$("diagnose").disabled=false;$("repeat").disabled=!lastPayload;$("read").disabled=!lastId}
 }
+$("diagnose").onclick=()=>call("GET","/diagnostics");
 $("send").onclick=()=>{const payload={external_id:$("extid").value,message_text:$("message").value};call("POST","/commands",payload)};
 $("repeat").onclick=()=>lastPayload&&call("POST","/commands",lastPayload);
 $("read").onclick=()=>lastId&&call("GET","/commands/"+lastId);
