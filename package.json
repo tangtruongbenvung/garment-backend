@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Staging-only Netlify functions dependency manifest; no production build changes",
   "dependencies": {
-    "@netlify/blobs": "11.1.9"
+    "@netlify/blobs": "11.1.9",
+    "pg": "8.16.3"
   }
 }
