@@ -1,0 +1,17 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><meta http-equiv="Cache-Control" content="no-store">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; script-src 'self'; connect-src 'self'; style-src 'self'; img-src 'self'">
+<title>Đức Duy DD04 · A03 Kịch bản đa kênh</title><link rel="stylesheet" href="./ceo-login.css"><script type="module" src="./a03-preview.js"></script>
+<style></style></head><body><main style="max-width:1100px">
+<header><span class="eyebrow">ĐỨC DUY AI OS · A03 · STAGING</span><h1>1 kênh = 1 kịch bản khác biệt</h1><p class="muted">Bản nháp kiểm thử theo mẫu; chưa sử dụng LLM, chưa chạy Agent thật. G1/G2 chưa được CEO phê duyệt. Không đăng tải.</p></header>
+<section class="panel"><h2>Kế hoạch theo kênh</h2>
+<label for="token">Khóa vận hành Deploy Preview (chỉ nhập trên trình duyệt của bạn)</label><input id="token" type="password" autocomplete="off" placeholder="DD04_A00_PREVIEW_TOKEN" spellcheck="false">
+<label for="campaign">Mã chiến dịch thử nghiệm</label><input id="campaign" value="DD04-TEST-20261114" autocomplete="off">
+<label for="count">Số kênh cần làm video</label><input id="count" type="number" min="1" max="20" value="5">
+<p class="muted small">Mặc định 5 kênh mẫu minh họa, không phải kênh thật. Có thể sửa từng mã, nền tảng, tên trước khi tạo.</p>
+<div id="channels"></div>
+<div class="actions"><button type="button" id="generate">Tạo đủ kịch bản theo kênh</button><button type="button" class="secondary" id="clear">Xóa kết quả và khóa</button></div>
+<p role="status" id="status">Chưa yêu cầu tạo bản nháp.</p></section>
+<section class="panel"><h2>Kết quả A03 · Bản nháp kiểm thử</h2><p id="totals" class="muted">Chưa có dữ liệu.</p>
+<div class="actions"><button type="button" class="secondary" id="download" disabled>Xuất JSON kịch bản và reply_library</button></div><div id="results"></div></section>
+<p><a href="./">Trở về Dashboard 18 Agent</a></p>
+</main></body></html>
