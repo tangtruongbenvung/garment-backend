@@ -20,4 +20,5 @@ jobs:
           node-version: '22'
       - run: node --check dd04-agent-control/runtime-core.mjs
       - run: node --check netlify/functions/dd04-a00.mjs
+      - run: node --check dd04-agent-control/live-dashboard.js
       - run: node --test tests/dd04-a00.test.mjs
