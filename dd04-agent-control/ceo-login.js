@@ -8,6 +8,7 @@ const EXPECTED_HOST="deploy-preview-1--ducduy-ai-os-test.netlify.app";
 const $=id=>document.getElementById(id);
 let accessToken="",refreshToken="",factorId="",recoveryMode=false;
 function message(text,ok=false){$("message").textContent=text;$("message").className=ok?"pass":"fail";}
+function diagnostic(code){$("callbackDiagnostics").textContent="Chẩn đoán callback: "+code+". Không ghi/lưu token.";}
 function clearSecret(){$("secret").value="";$("totpCode").value="";$("totpEnroll").hidden=true;$("verifyPanel").hidden=true;}
 function logout(){
  accessToken="";refreshToken="";factorId="";recoveryMode=false;clearSecret();$("password").value="";
@@ -21,21 +22,24 @@ async function parseCallback(){
  const hash=location.hash;
  const query=location.search;
  if(hash||query)history.replaceState(null,"",location.pathname);
- if(!hash&&!query)return;
+ if(!hash&&!query){diagnostic("DIRECT_PAGE_NO_AUTH");return;}
  const h=new URLSearchParams(hash.startsWith("#")?hash.slice(1):hash);
  const q=new URLSearchParams(query.startsWith("?")?query.slice(1):query);
  const p=h.has("access_token")?h:q;
  if(h.has("error")||q.has("error")){
+  diagnostic("SUPABASE_ERROR_RETURNED");
   message("Supabase từ chối hoặc liên kết đã hết hạn. Hãy kiểm tra email và mẫu Reset Password; không gửi token cho người khác.");
   return;
  }
  if(p.get("access_token")&&(!p.get("token_type")||p.get("token_type").toLowerCase()==="bearer")){
+  diagnostic("BEARER_SESSION_RECEIVED");
   accessToken=p.get("access_token")||"";
   refreshToken=p.get("refresh_token")||"";
   recoveryMode=p.get("type")==="recovery";
   return;
  }
  if(q.get("type")==="recovery" && q.get("token_hash")){
+  diagnostic("RECOVERY_TOKEN_HASH_RECEIVED");
   try{
    const verified=await auth("/verify",{method:"POST",body:{type:"recovery",token_hash:q.get("token_hash")}});
    if(!verified?.access_token)throw new Error("NO_SESSION");
@@ -44,18 +48,22 @@ async function parseCallback(){
    recoveryMode=true;
    await checkSession();
   }catch{
+   diagnostic("RECOVERY_TOKEN_HASH_REJECTED");
    message("Liên kết token_hash không xác minh được hoặc đã dùng/hết hạn. Không tiếp tục thử lại email cũ.");
   }
   return;
  }
  if(q.has("code")){
+  diagnostic("PKCE_CODE_UNSUPPORTED");
   message("Liên kết sử dụng PKCE code nhưng phiên này không có mã xác minh PKCE. Cần cấu hình lại mẫu email Reset Password; không dán mã code vào chat.");
   return;
  }
  if(!hash && !query){
+  diagnostic("NO_AUTH_DATA");
   message("Liên kết không có dữ liệu xác thực.");
  }else{
-  message("Liên kết chưa có phiên xác thực. Kiểm tra mẫu email Reset Password sử dụng ConfirmationURL, không phải SiteURL hoặc RedirectTo.");
+  diagnostic((hash?"FRAGMENT":"QUERY")+"_WITHOUT_AUTH_FIELDS");
+  message("Liên kết chưa có phiên xác thực. Địa chỉ chuyển hướng không cung cấp dữ liệu xác thực được hỗ trợ.");
  }
 }
 async function auth(path,{method="GET",body,authorized=false}={}){
@@ -79,13 +87,14 @@ async function checkSession(){
   $("loginPanel").hidden=true;$("password").value="";
   if(recoveryMode){
    $("sessionPanel").hidden=true;$("passwordRecoveryPanel").hidden=false;
+   diagnostic("RECOVERY_SESSION_VERIFIED");
    message("Đã xác minh liên kết khôi phục. Nhập mật khẩu mới; chưa có quyền CEO hoặc G1/G2.",true);
    return;
   }
   $("passwordRecoveryPanel").hidden=true;$("sessionPanel").hidden=false;
   message("Đăng nhập Supabase thành công. Chưa xác định quyền CEO; G1/G2 vẫn khóa.",true);
   await loadFactors();
- }catch(e){logout();message("Không xác minh được phiên Supabase: "+e.message);}
+ }catch(e){diagnostic("AUTH_USER_VERIFICATION_FAILED");logout();message("Không xác minh được phiên Supabase: "+e.message);}
 }
 async function passwordSignIn(){
  const email=$("email").value.trim(),password=$("password").value;
