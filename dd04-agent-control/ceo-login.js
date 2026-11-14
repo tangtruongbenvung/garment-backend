@@ -14,6 +14,7 @@ function logout(){
  accessToken="";refreshToken="";factorId="";recoveryMode=false;clearSecret();$("password").value="";
  $("newPassword").value="";$("confirmPassword").value="";$("passwordRecoveryPanel").hidden=true;
  $("sessionPanel").hidden=true;$("loginPanel").hidden=false;$("identity").textContent="";
+ $("readinessStatus").textContent="Phiên đã đăng xuất; điều kiện G1/G2 chưa xác minh.";
  message("Đã xóa phiên khỏi bộ nhớ tab. Không có quyền CEO được cấp.",true);
 }
 // Callback handles fragment sessions and safe recovery token hashes; no token is ever logged.
@@ -178,6 +179,27 @@ async function verify(){
  }catch(e){message("Xác minh MFA chưa đạt: "+e.message);}
  finally{$("totpCode").value="";}
 }
+async function checkCeoReadiness(){
+ if(!accessToken){message("Đăng nhập và xác minh phiên trước khi kiểm tra quyền CEO.");return;}
+ $("readinessStatus").textContent="Đang kiểm tra danh tính và điều kiện quyền, không thay đổi dữ liệu...";
+ try{
+  const response=await fetch("/api/dd04-ceo-readiness",{
+   method:"POST",headers:{"authorization":"Bearer "+accessToken,"accept":"application/json"},
+   cache:"no-store",referrerPolicy:"no-referrer",signal:AbortSignal.timeout(12000)
+  });
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok){$("readinessStatus").textContent="Chưa xác minh được: "+(result.error||"HTTP "+response.status)+". G1/G2 tiếp tục khóa.";return;}
+  const status=[
+   result.identity_verified?"Auth: đã xác minh":"Auth: chưa xác minh",
+   result.mfa_aal2?"MFA: AAL2 đã xác minh":"MFA: chưa đạt AAL2",
+   result.enrollment_verified?"Enrollment: đã xác minh":"Enrollment: chưa cấp quyền CEO",
+   "G1/G2: vẫn khóa"
+  ];
+  $("readinessStatus").textContent=status.join(" · ")+". Mã điều kiện: "+(result.missing||[]).join(", ");
+ }catch{
+  $("readinessStatus").textContent="Không kiểm tra được dịch vụ staging. G1/G2 vẫn khóa.";
+ }
+}
 function bind(id,fn){$(id).addEventListener("click",()=>void Promise.resolve(fn()).catch(e=>message("Yêu cầu chưa hoàn thành: "+e.message)));}
 if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
  document.body.textContent="Chỉ dùng trang này trên HTTPS Deploy Preview #1 của Đức Duy.";
@@ -185,7 +207,7 @@ if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
  void parseCallback();
  bind("passwordBtn",passwordSignIn);bind("magicBtn",magicSignIn);
  bind("recoveryBtn",requestPasswordRecovery);bind("savePasswordBtn",savePassword);bind("cancelRecoveryBtn",logout);
- bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);
+ bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);
  bind("showSecret",()=>{$("secret").type=$("secret").type==="password"?"text":"password"});
  window.addEventListener("pagehide",()=>{accessToken="";refreshToken="";recoveryMode=false;clearSecret();$("newPassword").value="";$("confirmPassword").value="";});
  // parseCallback handles token_hash verification asynchronously; fragment path needs a session check.
