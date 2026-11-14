@@ -18,7 +18,7 @@ test('A03 UI sends explicit channel list and no CEO approvals',()=>{
  assert.match(html,/id="count" type="number" min="1" max="20" value="5"/);
  assert.match(html,/Chưa sử dụng LLM|chưa sử dụng LLM|chưa sử dụng LLM/i);
  assert.match(client,/data\.script_count!==channels\.length/);
- assert.match(client,/authorization:"Bearer "\+token/);
+ assert.match(client,/"authorization":"Bearer "\+token/);
  assert.match(client,/download="DD04_A03_|a\.download="DD04_A03_/);
  assert.doesNotMatch(client,/localStorage|sessionStorage|service_role|fetch\(["']https:\/\/(?:\w+\.)?supabase/);
 });
