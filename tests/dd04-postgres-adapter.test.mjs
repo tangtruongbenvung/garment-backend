@@ -12,6 +12,8 @@ function mockPool(){
    if(sql==='BEGIN')return {rowCount:0,rows:[]};
    if(sql==='COMMIT'){committed++;return {rowCount:0,rows:[]}}
    if(sql==='ROLLBACK'){rolledBack++;return {rowCount:0,rows:[]}}
+   if(sql.startsWith('select current_database()'))return {rows:[{db_name:'postgres',db_user:'postgres.wbvkqfnrlasmtizjszab'}]};
+   if(sql.startsWith('select count(*)::int as table_count from information_schema.tables'))return {rows:[{table_count:7}]};
    if(sql.startsWith('insert into dd04_stage.commands')){
     const key=params[3],existing=commands.get(key);
     if(existing)return {rowCount:0,rows:[]};
@@ -96,4 +98,11 @@ test('Missing ID returns null; no data is synthesized',async()=>{
  const db=mockPool(),repo=createPgRepository(db.pool,tenant);
  assert.equal(await repo.get('cmd_aaaaaaaaaaaaaaaaaaaa'),null);
  assert.equal(await repo.get('bad'),null);
+});
+
+test('Authenticated read-only diagnostic probes staging DB without exposing credentials',async()=>{
+ const db=mockPool(),repository=createPgRepository(db.pool,tenant);
+ const info=await repository.diagnose();
+ assert.deepEqual(info,{ok:true,stage:'DATABASE_READ_ONLY',tables:7});
+ assert.equal(db.stats().commands,0);
 });
