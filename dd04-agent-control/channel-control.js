@@ -103,8 +103,33 @@ function renderStrategy(c){
  exportOne.addEventListener("click",()=>exportProfiles([c]));
  exportAll.addEventListener("click",()=>exportProfiles(channels));
 }
+const mandatoryAgents=["A00","A02","A03","A04","A05","A06","A07","A08","A09","A10"];
+function editAgentAssignments(c){
+ $("details").replaceChildren(make("p","Chỉ thay đổi phân công mẫu trong phiên này; tất cả Agent thiết yếu phải được giữ, không làm phát sinh quyền đăng hoặc quyền duyệt.","checkpoint"));
+ const grid=make("div",undefined,"agent-grid");
+ for(const [id,label] of Object.entries(names)){
+  const row=make("label",undefined,"agent"),input=document.createElement("input");input.type="checkbox";input.checked=c.assigned_agents.includes(id);input.dataset.agent=id;
+  input.style.width="auto";input.style.marginRight="10px";input.disabled=mandatoryAgents.includes(id);
+  row.append(input,make("span",id+" · "+label+(mandatoryAgents.includes(id)?" (bắt buộc)":"")));grid.append(row);
+ }
+ $("details").append(grid);
+ const controls=make("div",undefined,"tabs"),save=make("button","Lưu phân công nháp"),cancel=make("button","Hủy");
+ controls.append(save,cancel);$("details").append(controls);
+ save.addEventListener("click",()=>{
+  const next=[...grid.querySelectorAll("input")].filter(e=>e.checked).map(e=>e.dataset.agent);
+  if(mandatoryAgents.some(a=>!next.includes(a)))return;
+  if(JSON.stringify(next)!==JSON.stringify(c.assigned_agents)){
+   c.assigned_agents=next;c.version++;c.profile_status="DRAFT_AGENT_TEAM_CHANGED_REVIEW_REQUIRED";
+  }
+  detail();
+ });
+ cancel.addEventListener("click",detail);
+}
 function renderAgents(c){
  $("details").append(make("p","Agent dùng chung toàn hệ thống nhưng từng nhiệm vụ phải gắn với "+c.channel_id+". Không có Agent nào được tự đổi hồ sơ chiến lược đã chốt.","muted"));
+ const btn=make("button","Điều chỉnh Agent phụ trách — bản nháp");
+ btn.addEventListener("click",()=>editAgentAssignments(c));
+ $("details").append(btn);
  const grid=make("div",undefined,"agent-grid");
  for(const id of c.assigned_agents){const a=make("div",undefined,"agent");a.append(make("strong",id+" · "+names[id]),make("p",id==="A02"?"Quản trị chiến lược và đề xuất thay đổi có duyệt.":id==="A03"?"Kịch bản phải đúng trụ cột: "+c.pillars+"; không lấy kịch bản kênh khác.":id==="A04"?"Giữ nhân vật và phong cách của "+c.channel_id+".":id==="A05"?"Video phải dùng script và character bible cùng phiên bản.":id==="A08"?"Đối chiếu với profile, nội dung trước đây và các kênh khác.":id==="A09"?"Chặn sai lệch chính sách, không thay CEO duyệt.":id==="A07"?"Chỉ đăng khi G2 đã duyệt và đủ quyền hợp lệ.":"Nhận brief kênh đã khóa; chỉ xử lý trong chức năng được giao."));grid.append(a)}
  $("details").append(grid);
