@@ -3,7 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
 <meta http-equiv="Cache-Control" content="no-store">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; script-src 'self'; connect-src https://wbvkqfnrlasmtizjszab.supabase.co; img-src 'self' data:; style-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; script-src 'self'; connect-src 'self' https://wbvkqfnrlasmtizjszab.supabase.co; img-src 'self' data:; style-src 'self'">
 <title>Đức Duy DD04 · Đăng nhập CEO staging</title>
 <link rel="stylesheet" href="./ceo-login.css">
 <script type="module" src="./ceo-login.js"></script>
@@ -31,6 +31,7 @@
 <h2>2. Phiên đăng nhập Supabase</h2>
 <p id="identity" class="status" aria-live="polite"></p>
 <p class="warning">Đây mới là xác minh danh tính Auth. Chưa có quyền CEO và chưa thể duyệt G1/G2.</p>
+<section class="readiness-box" id="readinessPanel"><h2>3. Kiểm tra điều kiện quyền CEO và G1/G2</h2><p class="muted small">Chỉ đọc phiên Auth và trạng thái quyền CEO trên staging. Không cấp quyền, không duyệt và không đổi dữ liệu.</p><button type="button" id="checkReadinessBtn" class="secondary">Kiểm tra quyền CEO · MFA · G1/G2</button><p id="readinessStatus" role="status" aria-live="polite">Chưa kiểm tra điều kiện phê duyệt.</p></section>
 <div class="actions"><button id="enrollBtn" type="button">Tạo MFA bằng ứng dụng Authenticator</button><button id="factorBtn" type="button" class="secondary">Kiểm tra MFA đã đăng ký</button></div>
 <div id="totpEnroll" hidden>
 <p class="muted">Thêm mã bí mật bên dưới vào ứng dụng Authenticator. Không chia sẻ hoặc chụp ảnh mã này. Sau đó nhập mã 6 chữ số để hoàn tất.</p>
