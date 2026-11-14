@@ -17,8 +17,15 @@
 <input id="email" type="email" autocomplete="username" placeholder="email@congty.vn" maxlength="254">
 <label for="password">Mật khẩu (nếu đã thiết lập)</label>
 <input id="password" type="password" autocomplete="current-password" placeholder="Mật khẩu Supabase Auth">
-<div class="actions"><button id="passwordBtn" type="button">Đăng nhập bằng mật khẩu</button><button id="magicBtn" class="secondary" type="button">Gửi liên kết đăng nhập email</button></div>
+<div class="actions"><button id="passwordBtn" type="button">Đăng nhập bằng mật khẩu</button><button id="magicBtn" class="secondary" type="button">Gửi liên kết đăng nhập email</button><button id="recoveryBtn" class="secondary" type="button">Thiết lập / quên mật khẩu</button></div>
 <p class="muted small">Liên kết email chỉ gửi cho tài khoản đã tồn tại. Không gửi mật khẩu/OTP/token vào ChatGPT. Không dùng token A00 để đăng nhập.</p>
+</section>
+<section class="panel" id="passwordRecoveryPanel" hidden>
+<h2>Thiết lập mật khẩu cho tài khoản đã xác minh</h2>
+<p class="muted">Chỉ xuất hiện sau khi mở liên kết khôi phục mới từ email và xác minh phiên hợp lệ. Mật khẩu chỉ gửi trực tiếp đến Supabase Auth.</p>
+<label for="newPassword">Mật khẩu mới (ít nhất 12 ký tự)</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Mật khẩu mới">
+<label for="confirmPassword">Nhập lại mật khẩu</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Nhập lại mật khẩu">
+<div class="actions"><button id="savePasswordBtn" type="button">Lưu mật khẩu mới</button><button id="cancelRecoveryBtn" type="button" class="secondary">Hủy và xóa phiên</button></div>
 </section>
 <section class="panel" id="sessionPanel" hidden>
 <h2>2. Phiên đăng nhập Supabase</h2>
