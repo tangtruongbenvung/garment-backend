@@ -30,3 +30,10 @@ test('PowerShell file has exactly one top-level try/catch/finally and no duplica
  assert.equal((code.match(/Set-Clipboard -Value "" -ErrorAction Stop/g)||[]).length,1);
  assert.doesNotMatch(code,/\n\) \{/);
 });
+
+test('HTTP error handling stays strict-mode safe for exceptions without Response property',()=>{
+ assert.match(code,/\$ex\.PSObject\.Properties\['Response'\]/);
+ assert.match(code,/\$response\.PSObject\.Properties\['StatusCode'\]/);
+ assert.doesNotMatch(code,/\$ex\.Response/);
+ assert.doesNotMatch(code,/Write-Host\s+\$_\.Exception|Write-Host\s+\$ex\.Message/);
+});
