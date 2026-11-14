@@ -80,6 +80,34 @@ create table dd04_stage.tasks (
 create index dd04_tasks_agent_state_idx on dd04_stage.tasks(tenant_id,owner_agent,status);
 create index dd04_tasks_command_idx on dd04_stage.tasks(tenant_id,command_id);
 
+-- Fail closed: G1 identity service is not deployed yet.
+-- Therefore task rows can only begin PLANNED_WAIT_G1 and cannot advance.
+-- A future migration must introduce atomic, verified transition functions.
+create function dd04_stage.guard_task_state()
+returns trigger language plpgsql security invoker
+set search_path = pg_catalog, dd04_stage as $
+begin
+ if tg_op = 'INSERT' then
+   if new.status <> 'PLANNED_WAIT_G1' then
+     raise exception 'DD04_G1_PENDING_TASK_ONLY';
+   end if;
+ else
+   if new.status is distinct from old.status then
+     raise exception 'DD04_TASK_TRANSITIONS_NOT_ENABLED';
+   end if;
+   if new.tenant_id is distinct from old.tenant_id
+      or new.command_id is distinct from old.command_id
+      or new.task_id is distinct from old.task_id
+      or new.owner_agent is distinct from old.owner_agent then
+     raise exception 'DD04_TASK_IDENTITY_IMMUTABLE';
+   end if;
+ end if;
+ return new;
+end;
+$;
+create trigger dd04_tasks_guard before insert or update on dd04_stage.tasks
+for each row execute function dd04_stage.guard_task_state();
+
 -- 3/7 TASK EVENTS: evidence, actor, before/after state.
 create table dd04_stage.task_events (
  event_id bigint generated always as identity primary key,
@@ -260,6 +288,10 @@ end;
 $$;
 create trigger dd04_approval_guard before update on dd04_stage.approvals
 for each row execute function dd04_stage.deny_approval_decision();
+
+-- Pending approval snapshots may not be deleted.
+create trigger dd04_approval_no_delete before delete on dd04_stage.approvals
+for each row execute function dd04_stage.deny_audit_mutation();
 
 -- Block any attempt to insert decisions pre-approved without identity.
 create function dd04_stage.only_pending_approval_insert()
