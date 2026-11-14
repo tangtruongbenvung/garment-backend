@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="vi"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
+<meta http-equiv="Cache-Control" content="no-store">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; script-src 'self'; connect-src https://wbvkqfnrlasmtizjszab.supabase.co; img-src 'self' data:; style-src 'self'">
+<title>Đức Duy DD04 · Đăng nhập CEO staging</title>
+<link rel="stylesheet" href="./ceo-login.css">
+<script type="module" src="./ceo-login.js"></script>
+</head><body>
+<main>
+<header><span class="eyebrow">ĐỨC DUY AI OS · DD04-A00-009</span><h1>Đăng nhập &amp; MFA — Staging</h1>
+<p class="muted">Tài khoản Supabase Auth chưa đồng nghĩa quyền CEO. G1/G2 vẫn khóa cho đến khi được nghiệm thu và phê duyệt migration riêng.</p></header>
+<section class="panel" id="loginPanel">
+<h2>1. Xác thực email</h2>
+<label for="email">Email đã đăng ký Supabase Staging</label>
+<input id="email" type="email" autocomplete="username" placeholder="email@congty.vn" maxlength="254">
+<label for="password">Mật khẩu (nếu đã thiết lập)</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="Mật khẩu Supabase Auth">
+<div class="actions"><button id="passwordBtn" type="button">Đăng nhập bằng mật khẩu</button><button id="magicBtn" class="secondary" type="button">Gửi liên kết đăng nhập email</button></div>
+<p class="muted small">Liên kết email chỉ gửi cho tài khoản đã tồn tại. Không gửi mật khẩu/OTP/token vào ChatGPT. Không dùng token A00 để đăng nhập.</p>
+</section>
+<section class="panel" id="sessionPanel" hidden>
+<h2>2. Phiên đăng nhập Supabase</h2>
+<p id="identity" class="status" aria-live="polite"></p>
+<p class="warning">Đây mới là xác minh danh tính Auth. Chưa có quyền CEO và chưa thể duyệt G1/G2.</p>
+<div class="actions"><button id="enrollBtn" type="button">Tạo MFA bằng ứng dụng Authenticator</button><button id="factorBtn" type="button" class="secondary">Kiểm tra MFA đã đăng ký</button></div>
+<div id="totpEnroll" hidden>
+<p class="muted">Thêm mã bí mật bên dưới vào ứng dụng Authenticator. Không chia sẻ hoặc chụp ảnh mã này. Sau đó nhập mã 6 chữ số để hoàn tất.</p>
+<label for="secret">Mã thiết lập TOTP (giữ kín)</label><input id="secret" readonly type="password">
+<button type="button" id="showSecret" class="secondary">Hiện / ẩn mã để nhập trên điện thoại</button>
+</div>
+<div id="verifyPanel" hidden>
+<label for="totpCode">Mã xác thực 6 chữ số</label><input id="totpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000">
+<button type="button" id="verifyBtn">Xác minh MFA</button>
+</div>
+<div class="actions"><button id="logoutBtn" class="secondary" type="button">Đăng xuất &amp; xóa phiên</button></div>
+</section>
+<section class="panel"><h2>Trạng thái kiểm thử</h2><p id="message" role="status" aria-live="polite">Chưa đăng nhập.</p>
+<p class="muted small">Phiên và token chỉ nằm trong bộ nhớ tab hiện tại, không lưu localStorage. Khi tải lại trang cần đăng nhập lại. Không có API phê duyệt CEO trên trang này.</p>
+<a href="./">Trở về Dashboard 3D</a></section>
+</main>
+</body></html>
