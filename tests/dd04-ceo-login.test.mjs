@@ -6,7 +6,7 @@ const page=readFileSync(new URL('ceo-login.html',dir),'utf8');
 const js=readFileSync(new URL('ceo-login.js',dir),'utf8');
 test('CEO page isolated to staging and never grants database roles or enables approval',()=>{
  assert.match(page,/noindex,nofollow/);
- assert.match(page,/connect-src https:\/\/wbvkqfnrlasmtizjszab\.supabase\.co/);
+ assert.match(page,/connect-src 'self' https:\/\/wbvkqfnrlasmtizjszab\.supabase\.co/);
  assert.match(js,/EXPECTED_HOST="deploy-preview-1--ducduy-ai-os-test\.netlify\.app"/);
  assert.match(js,/const CALLBACK="https:\/\/deploy-preview-1--ducduy-ai-os-test\.netlify\.app\/dd04-agent-control\/ceo-login\.html"/);
  assert.doesNotMatch(js,/const\s+\w+\s*=\s*["\x27](?:sb_secret_|eyJ[^"\x27]*service_role)/);
