@@ -1,6 +1,14 @@
 import { createHash } from 'node:crypto';
 
 export const SCHEMA_VERSION = '5.3';
+// Netlify exposes CONTEXT to build steps but not necessarily to Functions runtime.
+// Fail closed for all hosts except this exact Netlify Deploy Preview hostname.
+export function isStagingPreviewUrl(url) {
+ try {
+  const u=new URL(url);
+  return u.protocol==='https:' && /^deploy-preview-[1-9][0-9]*--ducduy-ai-os-test[.]netlify[.]app$/.test(u.hostname);
+ } catch {return false;}
+}
 export const sha = (value) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 export function agentsFor(message) {
   const s=message.toLocaleLowerCase('vi-VN');
