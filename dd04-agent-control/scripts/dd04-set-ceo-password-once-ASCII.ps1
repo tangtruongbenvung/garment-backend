@@ -1,5 +1,5 @@
 # DD04-A00-009 - one-time CEO Auth password bootstrap, local Windows PowerShell ONLY.
-# SCRIPT_BUILD: DD04-CEO-CLIPBOARD-20261115-FIX3
+# SCRIPT_BUILD: DD04-CEO-CLIPBOARD-20261115-FIX4
 # No emails, no schema changes, no CEO grants, no G1/G2.
 [CmdletBinding()]
 param([switch]$Apply)
@@ -28,7 +28,7 @@ function Get-TemporaryPlainText([Security.SecureString]$Secret) {
 }
 
 Write-Host "=== DUC DUY DD04 STAGING - FIRST PASSWORD ==="
-Write-Host "Script build: DD04-CEO-CLIPBOARD-20261115-FIX3" -ForegroundColor Cyan
+Write-Host "Script build: DD04-CEO-CLIPBOARD-20261115-FIX4" -ForegroundColor Cyan
 Write-Host "Project: $ProjectId (STAGING ONLY)"
 Write-Host "User ID: $ExpectedUserId (EXACT MATCH)"
 Write-Host ("Mode: " + $(if($Apply){"APPLY ONE TIME"}else{"READ-ONLY CHECK"}))
@@ -45,7 +45,10 @@ try {
   Write-Host "Mo Supabase Staging > Project Settings > API Keys. Copy secret/service_role key bang nut Copy."
   Write-Host "Script chi doc Clipboard MOT LAN khi ban nhan ENTER. Khong in hoac luu khoa."
   $stage = "SECRET_INPUT"
-  $clipboardMode = (Read-Host "Nhan ENTER de doc khoa trong Clipboard; nhap M de go thu cong").Trim()
+  # Windows PowerShell 5.1 Read-Host may return $null on a blank ENTER under StrictMode.
+  # Cast to string first so pressing ENTER always selects clipboard mode.
+  $clipboardMode = [string](Read-Host "Nhan ENTER de doc khoa trong Clipboard; nhap M de go thu cong")
+  $clipboardMode = $clipboardMode.Trim()
   if($clipboardMode -eq "") {
     $stage = "SECRET_CLIPBOARD_READ"
     $clipboardText = $null
