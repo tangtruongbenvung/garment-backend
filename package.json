@@ -1,0 +1,10 @@
+{
+  "name": "ducduy-dd04-agent-preview",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Staging-only Netlify functions dependency manifest; no production build changes",
+  "dependencies": {
+    "@netlify/blobs": "11.1.9"
+  }
+}
