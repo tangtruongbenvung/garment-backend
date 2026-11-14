@@ -36,13 +36,13 @@
 - Khi đổi hồ sơ từ V1→V2: khóa nhiệm vụ cũ, tạo diff và đề xuất CEO duyệt; không âm thầm cập nhật profile mới vào tài sản cũ. Đổi video/caption/lịch/kênh sau G2 phải yêu cầu G2 mới.
 
 ## IV. Công việc mã nguồn đã tạo
-- `channel-control.html`, `channel-control.css`, `channel-control.js`: màn hình quản lý theo kênh responsive, demo 20 hoặc 100/300 kênh, lọc và xem hồ sơ/Agent/tasks/version.
+- `channel-control.html`, `channel-control.css`, `channel-control.js`: màn hình quản lý theo kênh responsive, demo 20 hoặc 100/300 kênh, lọc và xem hồ sơ/Agent/tasks/version. Có chỉnh sửa hồ sơ **nháp trong bộ nhớ tab**, tăng version khi thay đổi, xuất JSON của một hoặc toàn bộ kênh để CEO rà soát; **không lưu database**, không cấp quyền vận hành. 20 hồ sơ demo đầu tiên có 20 trụ cột nội dung khác nhau.
 - `channel-context-core.mjs`: snapshot + SHA-256, kiểm tra hồ sơ tối thiểu, nhận bàn giao Agent đúng identity, kiểm đầu ra fail-closed, generator demo 20/300.
 - `a03-channel-script-planner.mjs`: cho phép thêm `profile` từng kênh, liên kết `profile_version` + `profile_sha256` và trạng thái QC riêng; **không** đưa script template lên workflow thực.
 - CI: `dd04-channel-context.test.mjs`, `dd04-channel-control-ui.test.mjs`, các kiểm thử A03 profile riêng.
 
 ## V. Giới hạn và bước phát triển kế
-**Chưa có:** database channel registry & strategy version thật; lưu lịch sử dài hạn; phân quyền RLS theo kênh; Agent LLM thật; chấm chất lượng/kiểm trùng bằng semantic embeddings; xác thực CEO/MFA và G1/G2 thật.
+**Chưa có:** giao diện nhập dữ liệu thực tế nhiều nhân viên và lưu nháp giữa các phiên, database channel registry & strategy version thật; lưu lịch sử dài hạn; phân quyền RLS theo kênh; Agent LLM thật; chấm chất lượng/kiểm trùng bằng semantic embeddings; xác thực CEO/MFA và G1/G2 thật.
 
 **Đề xuất migration staging V3 — chỉ trình duyệt, KHÔNG CHẠY:** `channels` (sổ kênh và giấy phép), `channel_profile_versions` (hồ sơ bất biến), `channel_agent_assignments` (vai trò), `channel_content_history` (script/concept/asset hash), `channel_task_context` (bản snapshot và cơ sở giao việc), `channel_change_requests` (diff, G1 approval). Bảng được đề xuất bổ sung sau khi rà 7 bảng DD04 V2 hiện có; chưa quyết định tên schema/SQL vật lý. Mỗi bảng tenant-scoped, RLS/fail-closed cho nhân viên, CEO phê duyệt cuối cùng.
 
