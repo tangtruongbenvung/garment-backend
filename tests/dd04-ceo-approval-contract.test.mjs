@@ -7,6 +7,7 @@ const other='123e4567-e89b-42d3-a456-426614174222';
 const cmd={command_id:'cmd_91c7ce5ec8760df9fa0f',tenant_id:tenant,status:'WAITING_CEO_PLAN'};
 const enrollment={user_id:user,tenant_id:tenant,role:'CEO',status:'ACTIVE',verified_by_admin:true,identity_source:'SERVER_DB_VERIFIED',current_aal:'aal2'};
 const actor={ok:true,role:'CEO',userId:user,tenantId:tenant};
+const assurance={source:'SERVER_VERIFIED_SESSION',userId:user,aal:'aal2'};
 const sha='a'.repeat(64);
 
 test('Supabase auth URL is locked to staging and does not accept operator tokens as CEO',async()=>{
@@ -18,9 +19,9 @@ test('reject forged role, no enrollment and missing MFA',()=>{
  assert.equal(verifyCeoEnrollment({identity:{ok:true,userId:user},tenantId:tenant}).reason,'CEO_ENROLLMENT_REQUIRED');
  assert.equal(verifyCeoEnrollment({identity:{ok:true,userId:user},tenantId:tenant,enrollment:{...enrollment,role:'STAFF'}}).reason,'CEO_ENROLLMENT_REQUIRED');
  assert.equal(verifyCeoEnrollment({identity:{ok:true,userId:user},tenantId:tenant,enrollment:{...enrollment,identity_source:'BROWSER'}}).reason,'UNTRUSTED_ENROLLMENT_SOURCE');
- assert.equal(verifyCeoEnrollment({identity:{ok:true,userId:user},tenantId:tenant,enrollment:{...enrollment,current_aal:'aal1'}}).reason,'MFA_AAL2_REQUIRED');
+ assert.equal(verifyCeoEnrollment({identity:{ok:true,userId:user},tenantId:tenant,enrollment,assurance:{...assurance,aal:'aal1'}}).reason,'MFA_AAL2_REQUIRED');
  assert.equal(verifyCeoEnrollment({identity:{ok:true,userId:user},tenantId:other,enrollment}).reason,'CEO_ENROLLMENT_REQUIRED');
- assert.equal(verifyCeoEnrollment({identity:{ok:true,userId:user},tenantId:tenant,enrollment}),{ok:true,userId:user,tenantId:tenant,role:'CEO'});
+ assert.equal(verifyCeoEnrollment({identity:{ok:true,userId:user},tenantId:tenant,enrollment,assurance}),{ok:true,userId:user,tenantId:tenant,role:'CEO'});
 });
 test('G1 requires verified CEO, proposal version and approved scope/budget evidence',()=>{
  assert.equal(prepareGateDecision({actor:{role:'CEO'},command:cmd,gate:'G1',decision:'APPROVED',evidence:{}}).reason,'VERIFIED_CEO_REQUIRED');
