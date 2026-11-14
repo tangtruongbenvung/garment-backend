@@ -37,3 +37,10 @@ test('HTTP error handling stays strict-mode safe for exceptions without Response
  assert.doesNotMatch(code,/\$ex\.Response/);
  assert.doesNotMatch(code,/Write-Host\s+\$_\.Exception|Write-Host\s+\$ex\.Message/);
 });
+
+test('blank ENTER on Windows PowerShell 5.1 is converted safely before Trim under StrictMode',()=>{
+ assert.match(code,/\$clipboardMode = \[string\]\(Read-Host/);
+ assert.match(code,/\$clipboardMode = \$clipboardMode\.Trim\(\)/);
+ assert.doesNotMatch(code,/\$clipboardMode = \(Read-Host[^\n]*\)\.Trim\(\)/);
+ assert.match(code,/DD04-CEO-CLIPBOARD-20261115-FIX4/);
+});
