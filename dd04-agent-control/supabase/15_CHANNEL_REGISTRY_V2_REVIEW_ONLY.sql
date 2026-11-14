@@ -31,18 +31,11 @@ CREATE TABLE dd04_stage.channel_profile_versions (
  cta_policy text NOT NULL CHECK (length(btrim(cta_policy)) BETWEEN 3 AND 350),
  target_outcome text NOT NULL CHECK (length(btrim(target_outcome)) BETWEEN 3 AND 350),
  assigned_agents jsonb NOT NULL CHECK (jsonb_typeof(assigned_agents)='array'),
- decision text NOT NULL DEFAULT 'PENDING' CHECK (decision IN ('PENDING','APPROVED','REJECTED','SUPERSEDED')),
  proposed_by uuid REFERENCES auth.users(id),
- reviewed_by uuid REFERENCES auth.users(id),
- reviewed_at timestamptz,
  created_at timestamptz NOT NULL DEFAULT now(),
  CONSTRAINT dd04_channel_profiles_pk PRIMARY KEY(tenant_id,channel_id,profile_version),
  CONSTRAINT dd04_channel_profiles_fk FOREIGN KEY (tenant_id,channel_id) REFERENCES dd04_stage.channels(tenant_id,channel_id),
- CONSTRAINT dd04_channel_profiles_hash_uq UNIQUE(tenant_id,channel_id,profile_version,profile_sha256),
- CONSTRAINT dd04_channel_profiles_approval_guard CHECK (
-   (decision='PENDING' AND reviewed_by IS NULL AND reviewed_at IS NULL)
-   OR (decision<>'PENDING' AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL)
- )
+ CONSTRAINT dd04_channel_profiles_hash_uq UNIQUE(tenant_id,channel_id,profile_version,profile_sha256)
 );
 CREATE TABLE dd04_stage.channel_agent_assignments (
  tenant_id uuid NOT NULL,
@@ -94,7 +87,7 @@ CREATE TABLE dd04_stage.channel_change_requests (
  request_id uuid NOT NULL DEFAULT gen_random_uuid(),
  tenant_id uuid NOT NULL,
  channel_id text NOT NULL,
- current_version integer NOT NULL CHECK (current_version>=1),
+ current_version integer NOT NULL CHECK (current_version>=0),
  proposed_version integer NOT NULL CHECK(proposed_version>current_version),
  diff jsonb NOT NULL CHECK (jsonb_typeof(diff)='object'),
  status text NOT NULL DEFAULT 'WAITING_CEO_G1' CHECK(status IN ('WAITING_CEO_G1','APPROVED','REJECTED','CANCELLED')),
@@ -122,7 +115,10 @@ ALTER TABLE dd04_stage.channel_task_context ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dd04_stage.channel_change_requests ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON dd04_stage.channels,dd04_stage.channel_profile_versions,dd04_stage.channel_agent_assignments,
  dd04_stage.channel_content_history,dd04_stage.channel_task_context,dd04_stage.channel_change_requests FROM PUBLIC,anon,authenticated;
--- Profile versions cannot be silently altered or removed. Change requests create new versions instead.
+-- Profiles are immutable; approval decisions belong to change_requests, not editable profile rows.
+-- Initial registration: current_version=0, proposed_version=1.
+-- No status can be approved via anon/authenticated: no grants/RLS policies.
+-- Add CEO-verified decision service/trigger only in a separately approved security rollout.
 CREATE FUNCTION dd04_stage.reject_profile_version_mutation() RETURNS trigger LANGUAGE plpgsql
  SET search_path = pg_catalog,dd04_stage
  AS $$
