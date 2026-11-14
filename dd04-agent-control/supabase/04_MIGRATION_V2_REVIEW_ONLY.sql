@@ -51,7 +51,7 @@ create index dd04_commands_received_idx on dd04_stage.commands(tenant_id,receive
 -- Until verified CEO G1 orchestration exists, commands stay WAITING_CEO_PLAN.
 create function dd04_stage.guard_command_state()
 returns trigger language plpgsql security invoker
-set search_path=pg_catalog, dd04_stage as $
+set search_path=pg_catalog, dd04_stage as $$
 begin
  if tg_op='INSERT' then
   if new.status <> 'WAITING_CEO_PLAN' then raise exception 'DD04_COMMAND_G1_REQUIRED'; end if;
@@ -68,7 +68,7 @@ begin
  end if;
  return new;
 end;
-$;
+$$;
 create trigger dd04_commands_guard before insert or update on dd04_stage.commands
 for each row execute function dd04_stage.guard_command_state();
 
@@ -109,7 +109,7 @@ create index dd04_tasks_command_idx on dd04_stage.tasks(tenant_id,command_id);
 -- A future migration must introduce atomic, verified transition functions.
 create function dd04_stage.guard_task_state()
 returns trigger language plpgsql security invoker
-set search_path = pg_catalog, dd04_stage as $
+set search_path = pg_catalog, dd04_stage as $$
 begin
  if tg_op = 'INSERT' then
    if new.status <> 'PLANNED_WAIT_G1' then
@@ -128,7 +128,7 @@ begin
  end if;
  return new;
 end;
-$;
+$$;
 create trigger dd04_tasks_guard before insert or update on dd04_stage.tasks
 for each row execute function dd04_stage.guard_task_state();
 
@@ -265,7 +265,7 @@ create index dd04_capability_agent_status_idx on dd04_stage.capability_versions(
 -- identity, benchmark and evidence workflows receive separate approval.
 create function dd04_stage.guard_memory_review()
 returns trigger language plpgsql security invoker
-set search_path=pg_catalog, dd04_stage as $
+set search_path=pg_catalog, dd04_stage as $$
 begin
  if tg_op='INSERT' then
   if new.review_status <> 'PENDING' then
@@ -284,13 +284,13 @@ begin
  end if;
  return new;
 end;
-$;
+$$;
 create trigger dd04_memories_guard before insert or update on dd04_stage.agent_memories
 for each row execute function dd04_stage.guard_memory_review();
 
 create function dd04_stage.guard_capability_review()
 returns trigger language plpgsql security invoker
-set search_path=pg_catalog, dd04_stage as $
+set search_path=pg_catalog, dd04_stage as $$
 begin
  if tg_op='INSERT' then
   if new.status <> 'PROPOSED' then raise exception 'DD04_CAPABILITY_APPROVAL_NOT_CONFIGURED'; end if;
@@ -307,7 +307,7 @@ begin
  end if;
  return new;
 end;
-$;
+$$;
 create trigger dd04_capabilities_guard before insert or update on dd04_stage.capability_versions
 for each row execute function dd04_stage.guard_capability_review();
 
