@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {planScripts} from '../dd04-agent-control/a03-channel-script-planner.mjs';
+import {createDemoChannels,snapshotChannel} from '../dd04-agent-control/channel-context-core.mjs';
 const channels=n=>Array.from({length:n},(_,i)=>({channel_id:'dd04-demo-'+String(i+1).padStart(2,'0'),platform:i%2?'TIKTOK':'FANPAGE',name:'Kênh demo '+(i+1)}));
 const plan=n=>({campaign_id:'DD04-TEST-20261114',channels:channels(n)});
 test('1 channel creates precisely 1 fully scoped A03 script',()=>{
@@ -51,4 +52,24 @@ test('no script is approved, posted or marked as actually executed',()=>{
  assert.equal(x.status,'PRE_G1_DRAFT_NO_AGENT_EXECUTION');
  assert.equal(x.generator,'A03_STAGING_TEMPLATE_PREVIEW');
  assert.ok(x.scripts.every(s=>s.review.A08==='PENDING'&&s.review.A09==='PENDING'&&s.publishing_allowed===false));
+});
+
+test('A03 binds each draft to the exact channel identity hash when profiles are given',()=>{
+ const p=createDemoChannels(2);
+ const channels=p.map(c=>({channel_id:c.channel_id,platform:c.platform,name:c.name,profile:c,profile_sha256:snapshotChannel(c).profile_sha256}));
+ const result=planScripts({campaign_id:'TEST-PROFILE',channels});
+ assert.equal(result.scripts.length,2);
+ for(let i=0;i<2;i++){
+  assert.equal(result.scripts[i].profile_sha256,snapshotChannel(p[i]).profile_sha256);
+  assert.equal(result.scripts[i].profile_version,p[i].version);
+  assert.equal(result.scripts[i].channel_context.positioning,p[i].positioning);
+  assert.equal(result.scripts[i].channel_fit_status,'REQUIRES_A08_PROFILE_ALIGNMENT_REVIEW');
+  assert.equal(result.scripts[i].publishing_allowed,false);
+ }
+ const wrong=structuredClone(channels);
+ wrong[0].profile=p[1];
+ assert.throws(()=>planScripts({campaign_id:'TEST-PROFILE',channels:wrong}),/CHANNEL_CONTEXT_MISMATCH/);
+ const stale=structuredClone(channels);
+ stale[1].profile.version=2;
+ assert.throws(()=>planScripts({campaign_id:'TEST-PROFILE',channels:stale}),/CHANNEL_CONTEXT_MISMATCH/);
 });
