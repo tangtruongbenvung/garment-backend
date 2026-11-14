@@ -31,6 +31,20 @@ async function pgStore(){
  return createPgRepository(pgPool,tenant);
 }
 const mode=()=>process.env.DD04_A00_STORE==='POSTGRES'?'POSTGRES':'BLOBS';
+// Safe, non-sensitive classification. Never expose the SQL, DB host, credentials or raw error.
+function dbErrorCategory(e) {
+ const code=String(e?.code||'');
+ const named=String(e?.name||'');
+ if(code==='28P01'||code==='28000')return 'DB_AUTH_REJECTED';
+ if(code==='3D000'||code==='42P01'||code==='3F000')return 'DB_SCHEMA_OR_OBJECT_MISSING';
+ if(code==='42501')return 'DB_PERMISSION_DENIED';
+ if(code==='23505'||code==='23503'||code==='23514')return 'DB_CONSTRAINT_FAILED';
+ if(['ETIMEDOUT','ECONNREFUSED','ENOTFOUND','EAI_AGAIN','EHOSTUNREACH','ENETUNREACH'].includes(code))return 'DB_NETWORK_UNAVAILABLE';
+ if(['SELF_SIGNED_CERT_IN_CHAIN','UNABLE_TO_VERIFY_LEAF_SIGNATURE','CERT_HAS_EXPIRED','ERR_TLS_CERT_ALTNAME_INVALID'].includes(code))return 'DB_TLS_VERIFICATION_FAILED';
+ if(named==='SyntaxError')return 'DB_RESPONSE_OR_SQL_INVALID';
+ return 'DB_CONNECT_OR_QUERY_FAILED';
+}
+
 
 export default async (request) => {
  const pathname=new URL(request.url).pathname;
@@ -49,6 +63,17 @@ export default async (request) => {
  let repository;
  if(isPg){try{repository=await pgStore()}catch(e){console.error('DD04 PG config error:',e.message);return reply({error:'STAGING_DATABASE_NOT_CONFIGURED'},503)}}
  const store=isPg?null:getDeployStore('dd04-a00-runtime-poc');
+ if(request.method==='GET' && pathname.endsWith('/diagnostics')){
+  if(!isPg)return reply({ok:false,error:'POSTGRES_MODE_NOT_ENABLED'},409);
+  try{
+   const outcome=await repository.diagnose();
+   return reply({component:'DD04-A00',source:'SUPABASE_STAGING_POSTGRES',...outcome},outcome.ok?200:503);
+  }catch(e){
+   const error_code=dbErrorCategory(e);
+   console.error('DD04 diagnosis category:',error_code);
+   return reply({ok:false,component:'DD04-A00',error:'STAGING_DATABASE_UNAVAILABLE',error_code},503);
+  }
+ }
  if(request.method==='GET' && pathname.endsWith('/commands')){
   try{
    if(isPg)return reply(await repository.list(30));
@@ -75,8 +100,9 @@ export default async (request) => {
   }catch(e){
    if(e instanceof SyntaxError)return reply({error:'INVALID_JSON'},400);
    if(/^INVALID_|^MEDIA_NOT_ENABLED/.test(e.message))return reply({error:e.message},400);
-   console.error('DD04 runtime error type:',e.name);
-   return reply({error:'STORE_OR_RUNTIME_UNAVAILABLE'},503);
+   const error_code=isPg?dbErrorCategory(e):'BLOBS_STORE_UNAVAILABLE';
+   console.error('DD04 runtime error category:',error_code);
+   return reply({error:'STORE_OR_RUNTIME_UNAVAILABLE',error_code},503);
   }
  }
  if(request.method==='GET' && pathname.includes('/commands/')){
@@ -87,4 +113,4 @@ export default async (request) => {
  }
  return reply({error:'NOT_FOUND'},404);
 };
-export const config={path:['/api/dd04-a00/health','/api/dd04-a00/commands','/api/dd04-a00/commands/:id']};
+export const config={path:['/api/dd04-a00/health','/api/dd04-a00/commands','/api/dd04-a00/commands/:id','/api/dd04-a00/diagnostics']};
