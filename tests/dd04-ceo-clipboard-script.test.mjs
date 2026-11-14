@@ -21,3 +21,12 @@ test('admin key never leaves staging fixed user and script has safe fail-closed 
  assert.match(code,/HTTP_UNAUTHORIZED_KEY/);
  assert.equal(/[^\x00-\x7F]/.test(code),false);
 });
+
+test('PowerShell file has exactly one top-level try/catch/finally and no duplicated tail',()=>{
+ const occurrences=(code.match(/\[GC\]::Collect\(\)/g)||[]).length;
+ assert.equal(occurrences,1,'duplicate trailing script caused Unexpected token errors');
+ assert.ok(code.trimEnd().endsWith('}'),'script must end with closing finally');
+ assert.equal((code.match(/\$stage = "ADMIN_GET_AUTH_USER"/g)||[]).length,1);
+ assert.equal((code.match(/Set-Clipboard -Value "" -ErrorAction Stop/g)||[]).length,1);
+ assert.doesNotMatch(code,/\n\) \{/);
+});
