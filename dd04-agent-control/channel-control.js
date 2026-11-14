@@ -129,14 +129,33 @@ function editProfile(c){
  });
  cancel.addEventListener("click",detail);
 }
-function renderStrategy(c){
+function infoSection(title,note,items){
+ const section=make("section",undefined,"info-section");
+ const head=make("div",undefined,"info-section-head");
+ head.append(make("h3",title),make("p",note,"muted"));
+ section.append(head);
  const grid=make("div",undefined,"data-grid");
- for(const [k,v,w] of [["Định vị xuyên suốt",c.positioning,true],["Đối tượng",c.audience,false],["Trụ cột nội dung",c.pillars,false],["Giọng điệu và cá tính",c.voice,false],["Nhân vật / Character Bible",c.character,true],["Phong cách hình ảnh",c.visual,false],["Quy tắc CTA",c.cta,false],["Những điều cấm",c.rules,true],["Mục tiêu kênh",c.goal,true]])grid.append(field(k,v,w));
- $("details").append(grid);
-  $("details").append(make("p","Mọi Agent phải nhận đúng channel_id, profile_version và profile_sha256. Mọi thay đổi định vị cần tạo phiên bản mới, A02/A00 chuẩn bị đề xuất CEO phê duyệt.","checkpoint"));
- const tools=make("div",undefined,"tabs");
- const edit=make("button","Chỉnh sửa hồ sơ nháp"),exportOne=make("button","Xuất hồ sơ kênh JSON"),exportAll=make("button","Xuất toàn bộ hồ sơ JSON");
- tools.append(edit,exportOne,exportAll);$("details").append(tools);
+ for(const item of items)grid.append(field(item[0],item[1],item[2]||false));
+ section.append(grid);
+ return section;
+}
+function renderStrategy(c){
+ $("details").append(
+  infoSection("01 · Định vị & khán giả","Nền tảng định hướng để tất cả Agent xây nội dung nhất quán.",[
+   ["Định vị kênh",c.positioning,true],["Đối tượng người xem",c.audience,false],["Trụ cột nội dung",c.pillars,false],["Mục tiêu chính",c.goal,true]
+  ]),
+  infoSection("02 · Nhân vật & phong cách","Bộ quy chuẩn sáng tạo A03, A04 và A05 phải bám sát.",[
+   ["Giọng điệu và cá tính",c.voice,false],["Phong cách hình ảnh",c.visual,false],["Nhân vật / Character Bible",c.character,true]
+  ]),
+  infoSection("03 · Nguyên tắc & giới hạn","A08/A09 sử dụng các mục này làm tiêu chí kiểm duyệt.",[
+   ["Quy tắc tương tác / CTA",c.cta,false],["Những điều không được làm",c.rules,true]
+  ])
+ );
+ const footer=make("div",undefined,"detail-footer");
+ footer.append(make("p","Mọi Agent cần đúng channel_id, phiên bản và profile_sha256. Đề xuất đổi định vị phải trình CEO duyệt G1 trước khi áp dụng.","checkpoint"));
+ const actions=make("div",undefined,"detail-actions");
+ const edit=make("button","Chỉnh sửa hồ sơ nháp"),exportOne=make("button","Xuất hồ sơ kênh JSON"),exportAll=make("button","Xuất tất cả hồ sơ JSON");
+ actions.append(edit,exportOne,exportAll);footer.append(actions);$("details").append(footer);
  edit.addEventListener("click",()=>editProfile(c));
  exportOne.addEventListener("click",()=>exportProfiles([c]));
  exportAll.addEventListener("click",()=>exportProfiles(channels));
@@ -164,29 +183,59 @@ function editAgentAssignments(c){
  cancel.addEventListener("click",detail);
 }
 function renderAgents(c){
- $("details").append(make("p","Agent dùng chung toàn hệ thống nhưng từng nhiệm vụ phải gắn với "+c.channel_id+". Không có Agent nào được tự đổi hồ sơ chiến lược đã chốt.","muted"));
- const btn=make("button","Điều chỉnh Agent phụ trách — bản nháp");
- btn.addEventListener("click",()=>editAgentAssignments(c));
- $("details").append(btn);
- const grid=make("div",undefined,"agent-grid");
- for(const id of c.assigned_agents){const a=make("div",undefined,"agent");a.append(make("strong",id+" · "+names[id]),make("p",id==="A02"?"Quản trị chiến lược và đề xuất thay đổi có duyệt.":id==="A03"?"Kịch bản phải đúng trụ cột: "+c.pillars+"; không lấy kịch bản kênh khác.":id==="A04"?"Giữ nhân vật và phong cách của "+c.channel_id+".":id==="A05"?"Video phải dùng script và character bible cùng phiên bản.":id==="A08"?"Đối chiếu với profile, nội dung trước đây và các kênh khác.":id==="A09"?"Chặn sai lệch chính sách, không thay CEO duyệt.":id==="A07"?"Chỉ đăng khi G2 đã duyệt và đủ quyền hợp lệ.":"Nhận brief kênh đã khóa; chỉ xử lý trong chức năng được giao."));grid.append(a)}
- $("details").append(grid);
+ const toolbar=make("div",undefined,"detail-toolbar");
+ toolbar.append(make("p",c.assigned_agents.length+" Agent tham gia hồ sơ kênh "+c.channel_id+". Mỗi nhiệm vụ phải nhận đúng phiên bản định hướng.","muted"));
+ const edit=make("button","Điều chỉnh Agent — bản nháp");edit.addEventListener("click",()=>editAgentAssignments(c));toolbar.append(edit);
+ $("details").append(toolbar);
+ const groups=[
+  ["Điều phối & chiến lược",["A00","A01","A02","A12","A13"]],
+  ["Sản xuất nội dung",["A03","A04","A05"]],
+  ["Quản lý & kiểm duyệt",["A06","A07","A08","A09"]],
+  ["Hiệu quả & cộng đồng",["A10","A11","A14","A15","A16","A17"]]
+ ];
+ for(const [label,ids] of groups){
+  const active=ids.filter(id=>c.assigned_agents.includes(id));if(!active.length)continue;
+  const section=make("section",undefined,"info-section");
+  section.append(make("h3",label));
+  const grid=make("div",undefined,"agent-grid");
+  for(const id of active){
+   const card=make("article",undefined,"agent");
+   card.append(make("strong",id+" · "+names[id]),make("p",id==="A02"?"Giữ chiến lược và đề xuất thay đổi có duyệt.":id==="A03"?"Kịch bản đúng trụ cột: "+c.pillars+".":id==="A04"?"Nhân vật và hình ảnh đúng bản sắc kênh.":id==="A05"?"Video theo script và nhân vật đã khóa.":id==="A08"?"Kiểm tra lệch định hướng và trùng nội dung.":id==="A09"?"Kiểm soát chính sách, an toàn trẻ em.":id==="A07"?"Chỉ đăng sau G2 hợp lệ.":"Nhận đúng hồ sơ kênh, đúng chức năng."));
+   grid.append(card);
+  }
+  section.append(grid);$("details").append(section);
+ }
 }
 function renderTasks(c){
- const note=make("div",undefined,"checkpoint");note.textContent="Kế hoạch minh họa, chưa phải tác vụ thật. Tất cả đầu việc sản xuất đều PLANNED_WAIT_G1, không được tự thực thi."; $("details").append(note);
- const d=make("div",undefined,"tablewrap"),t=make("table"),head=make("tr");
- for(const h of ["Agent","Đầu việc phải làm đúng kênh","Trạng thái"])head.append(make("th",h));
- t.append(head);
- for(const [a,task,status] of deps){const tr=make("tr");for(const v of [a,task,status])tr.append(make("td",v));t.append(tr);}
- d.append(t);$("details").append(d);
- $("details").append(make("p","Bàn giao yêu cầu tối thiểu: campaign_id, channel_id, profile_version, profile_sha256, task_id, producer_agent, receiver_agent, output_refs, revision và nhật ký. Một chiến dịch có N kênh phải sinh N nhánh công việc A03. ","muted"));
+ $("details").append(make("div","Kế hoạch minh họa, chưa phải công việc thực tế. Tất cả đầu việc sản xuất vẫn chờ G1 và chưa có Agent AI tự thực thi.","checkpoint"));
+ const section=make("section",undefined,"info-section");
+ section.append(make("h3","Luồng công việc của "+c.channel_id));
+ const tablewrap=make("div",undefined,"tablewrap"),table=make("table",undefined,"task-table");
+ const header=make("tr");
+ for(const h of ["Agent","Nhiệm vụ","Tình trạng"])header.append(make("th",h));
+ table.append(header);
+ for(const [agent,task,status] of deps){
+  const row=make("tr");
+  row.append(make("td",agent,"agent-code-cell"),make("td",task));
+  const cell=make("td"),state=make("span",status.replaceAll("_"," "),"task-state");
+  cell.append(state);row.append(cell);table.append(row);
+ }
+ tablewrap.append(table);section.append(tablewrap);$("details").append(section);
+ $("details").append(make("p","Mỗi nhiệm vụ gắn campaign_id, channel_id, phiên bản hồ sơ, SHA-256 và Agent tiếp nhận. Một chiến dịch N kênh cần N nhánh A03.","muted"));
 }
 function renderHistory(c){
- $("details").append(field("Phiên bản hồ sơ",c.channel_id+" · v"+c.version+" · "+c.profile_status,true));
- $("details").append(field("Trạng thái lịch sử nội dung","Chưa có video thật, chưa có asset_hash hoặc chỉ số hiệu quả thật.",true));
- $("details").append(field("Kiểm tra QC bắt buộc","A08 so với nội dung kênh + kênh khác; A09 đối chiếu an toàn trẻ em, ngôn từ, bản quyền. Bản nào lệch profile phải trả REWORK.",true));
- $("details").append(field("Quy trình cập nhật chiến lược","A02 đề xuất → A00 lập hồ sơ v2 và diff → CEO G1 quyết định → nhiệm vụ sau này chỉ dùng v2. Asset v1 cần rà lại trước G2.",true));
- $("details").append(make("p","Không có lịch sử hoạt động hay quyền duyệt thật được suy ra từ dữ liệu mô phỏng.","checkpoint"));
+ $("details").append(
+  infoSection("Phiên bản chiến lược","Bản nháp, chưa có hồ sơ được CEO phê duyệt.",[
+   ["Phiên bản hiện tại",c.channel_id+" · V"+c.version,false],["Trạng thái",c.profile_status,false]
+  ]),
+  infoSection("Lịch sử nội dung & QC","Chỉ hiển thị dữ liệu xác thực khi Registry đã có quyền truy cập phù hợp.",[
+   ["Lịch sử video","Chưa có dữ liệu video thật.",false],["Kiểm tra chất lượng","A08 rà tính nguyên bản, tính nhất quán; A09 rà chính sách, ngôn ngữ và an toàn.",true]
+  ]),
+  infoSection("Quy trình thay đổi định hướng","Không tự cập nhật nội dung hoặc phê duyệt phiên bản mới.",[
+   ["Trình tự","A02 đề xuất → A00 lập bản mới → CEO duyệt G1 → các Agent mới được nhận phiên bản đã duyệt.",true]
+  ])
+ );
+ $("details").append(make("p","Chưa có số liệu thực tế hoặc quyền phê duyệt được xác nhận. Tất cả chỉ là hồ sơ staging.","checkpoint"));
 }
 function detail(){
  const c=channels.find(x=>x.channel_id===selected);
