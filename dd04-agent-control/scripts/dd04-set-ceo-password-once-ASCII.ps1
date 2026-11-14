@@ -41,9 +41,9 @@ try {
 
   Write-Host "Chi su dung SECRET KEY cua project STAGING wbvkqfnrlasmtizjszab; khong dung anon/publishable key."
   Write-Host "Mo Supabase Staging > Project Settings > API Keys. Copy secret/service_role key bang nut Copy."
-  Write-Host "Script co the doc Clipboard MOT LAN sau khi ban cho phep. Khong in hoac luu khoa."
+  Write-Host "Script chi doc Clipboard MOT LAN khi ban nhan ENTER. Khong in hoac luu khoa."
   $stage = "SECRET_INPUT"
-  $clipboardMode = (Read-Host "Nhan ENTER de DOC KHOA da copy tu Clipboard; hoac nhap M de go thu cong").Trim()
+  $clipboardMode = (Read-Host "Nhan ENTER de doc khoa trong Clipboard; nhap M de go thu cong").Trim()
   if($clipboardMode -eq "") {
     $stage = "SECRET_CLIPBOARD_READ"
     $clipboardText = $null
@@ -51,9 +51,28 @@ try {
       $clipboardText = Get-Clipboard -Raw -ErrorAction Stop
       if(-not ($clipboardText -is [string])) { throw "Clipboard unavailable" }
       $adminPlain = $clipboardText.Trim()
-      # Only accept expected key formats and plain single-line printable ASCII.
-      if($adminPlain.Length -gt 4096 -or $adminPlain.Length -lt 32 -or
-         $adminPlain -notmatch '^(sb_secret_[A-Za-z0-9_\\-]+|eyJ[A-Za-z0-9_\\-]+\\.[A-Za-z0-9_\\-]+\\.[A-Za-z0-9_\\-]+)
+      $looksValid = ($adminPlain -cmatch '^sb_secret_[A-Za-z0-9_-]+$') -or
+                    ($adminPlain -cmatch '^eyJ[A-Za-z0-9_-]+[.]eyJ[A-Za-z0-9_-]+[.][A-Za-z0-9_-]+$')
+      if(-not $looksValid -or $adminPlain.Length -gt 4096 -or $adminPlain.Length -lt 32) {
+        throw "Clipboard does not contain an accepted admin key"
+      }
+      Set-Clipboard -Value "" -ErrorAction Stop
+      Write-Host "Clipboard key format accepted; Clipboard cleared. Key not displayed." -ForegroundColor Green
+    } catch {
+      $adminPlain = $null
+      throw "Clipboard read, validation or clear failed. DUNG."
+    } finally {
+      $clipboardText = $null
+    }
+  } elseif($clipboardMode -ieq "M") {
+    $admin = Read-Host "Khoa bi mat quan tri staging (nhap an)" -AsSecureString
+    $adminPlain = Get-TemporaryPlainText $admin
+  } else {
+    throw "Lua chon khong hop le. DUNG."
+  }
+  if(-not ($adminPlain.StartsWith("sb_secret_") -or $adminPlain.StartsWith("eyJ"))) {
+    throw "Khoa quan tri phai la sb_secret_ hoac legacy service_role JWT; khong dung publishable / anon key."
+  }
 
   # Modern secret key: apikey header. Legacy service_role JWT: apikey + Bearer.
   # Supabase Auth Admin API must only be called from this trusted local process.
