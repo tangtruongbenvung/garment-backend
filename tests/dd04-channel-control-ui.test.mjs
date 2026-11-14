@@ -29,3 +29,22 @@ test('Channel strategy can be revised only as unapproved local draft',()=>{
  assert.match(js,/URL\.createObjectURL\(blob\)/);
  assert.doesNotMatch(js,/\bfetch\(|localStorage|sessionStorage/);
 });
+
+test('Platform layout distinguishes Facebook Fanpage/TikTok in compact grouped sidebar',()=>{
+ assert.match(html,/class="platform-switch"/);
+ assert.match(html,/data-platform="FANPAGE"/);
+ assert.match(html,/data-platform="TIKTOK"/);
+ assert.match(html,/id="fbSwitchCount"/);
+ assert.match(html,/id="ttSwitchCount"/);
+ assert.match(html,/class="import-tools"/);
+ assert.match(html,/id="selectedPlatform"/);
+ assert.match(js,/function syncPlatformSwitch\(\)/);
+ assert.match(js,/function updatePlatformCounts\(\)/);
+ assert.match(js,/for\(const platform of \["FANPAGE","TIKTOK"\]\)/);
+ assert.match(js,/group-fb/);
+ assert.match(js,/group-tt/);
+ assert.match(js,/channel-row-top/);
+ assert.match(js,/page\*size/);
+ assert.match(js,/selectedPlatform/);
+ assert.doesNotMatch(js,/\bfetch\(|localStorage|sessionStorage/);
+});
