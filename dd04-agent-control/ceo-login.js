@@ -15,18 +15,48 @@ function logout(){
  $("sessionPanel").hidden=true;$("loginPanel").hidden=false;$("identity").textContent="";
  message("Đã xóa phiên khỏi bộ nhớ tab. Không có quyền CEO được cấp.",true);
 }
-function parseCallback(){
- // Scrub the address bar before reading remote data or rendering a user identity.
+// Callback handles fragment sessions and safe recovery token hashes; no token is ever logged.
+// Immediately delete fragment and query parameters before rendering or making HTTP requests.
+async function parseCallback(){
  const hash=location.hash;
- if(hash)history.replaceState(null,"",location.pathname+location.search);
- if(!hash)return;
- const p=new URLSearchParams(hash.startsWith("#")?hash.slice(1):hash);
- if(p.get("error")){message("Liên kết xác thực bị từ chối hoặc hết hạn. Vui lòng yêu cầu liên kết mới.");return;}
- if(p.get("access_token")&&p.get("token_type")?.toLowerCase()==="bearer"){
+ const query=location.search;
+ if(hash||query)history.replaceState(null,"",location.pathname);
+ if(!hash&&!query)return;
+ const h=new URLSearchParams(hash.startsWith("#")?hash.slice(1):hash);
+ const q=new URLSearchParams(query.startsWith("?")?query.slice(1):query);
+ const p=h.has("access_token")?h:q;
+ if(h.has("error")||q.has("error")){
+  message("Supabase từ chối hoặc liên kết đã hết hạn. Hãy kiểm tra email và mẫu Reset Password; không gửi token cho người khác.");
+  return;
+ }
+ if(p.get("access_token")&&(!p.get("token_type")||p.get("token_type").toLowerCase()==="bearer")){
   accessToken=p.get("access_token")||"";
   refreshToken=p.get("refresh_token")||"";
-  if(p.get("type")==="recovery")recoveryMode=true;
- }else message("Liên kết chưa có phiên xác thực. Hãy đăng nhập bằng email.");
+  recoveryMode=p.get("type")==="recovery";
+  return;
+ }
+ if(q.get("type")==="recovery" && q.get("token_hash")){
+  try{
+   const verified=await auth("/verify",{method:"POST",body:{type:"recovery",token_hash:q.get("token_hash")}});
+   if(!verified?.access_token)throw new Error("NO_SESSION");
+   accessToken=verified.access_token;
+   refreshToken=verified.refresh_token||"";
+   recoveryMode=true;
+   await checkSession();
+  }catch{
+   message("Liên kết token_hash không xác minh được hoặc đã dùng/hết hạn. Không tiếp tục thử lại email cũ.");
+  }
+  return;
+ }
+ if(q.has("code")){
+  message("Liên kết sử dụng PKCE code nhưng phiên này không có mã xác minh PKCE. Cần cấu hình lại mẫu email Reset Password; không dán mã code vào chat.");
+  return;
+ }
+ if(!hash && !query){
+  message("Liên kết không có dữ liệu xác thực.");
+ }else{
+  message("Liên kết chưa có phiên xác thực. Kiểm tra mẫu email Reset Password sử dụng ConfirmationURL, không phải SiteURL hoặc RedirectTo.");
+ }
 }
 async function auth(path,{method="GET",body,authorized=false}={}){
  const headers={"apikey":PUBLISHABLE_KEY,"accept":"application/json"};
@@ -143,11 +173,12 @@ function bind(id,fn){$(id).addEventListener("click",()=>void Promise.resolve(fn(
 if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
  document.body.textContent="Chỉ dùng trang này trên HTTPS Deploy Preview #1 của Đức Duy.";
 }else{
- parseCallback();
+ void parseCallback();
  bind("passwordBtn",passwordSignIn);bind("magicBtn",magicSignIn);
  bind("recoveryBtn",requestPasswordRecovery);bind("savePasswordBtn",savePassword);bind("cancelRecoveryBtn",logout);
  bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);
  bind("showSecret",()=>{$("secret").type=$("secret").type==="password"?"text":"password"});
  window.addEventListener("pagehide",()=>{accessToken="";refreshToken="";recoveryMode=false;clearSecret();$("newPassword").value="";$("confirmPassword").value="";});
+ // parseCallback handles token_hash verification asynchronously; fragment path needs a session check.
  if(accessToken)void checkSession();
 }
