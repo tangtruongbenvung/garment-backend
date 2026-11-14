@@ -24,4 +24,5 @@ jobs:
       - run: node --check dd04-agent-control/persistence-contract.mjs
       - run: node --check dd04-agent-control/supabase-pg-repository.mjs
       - run: node --check dd04-agent-control/pg-tls.mjs
-      - run: node --test tests/dd04-a00.test.mjs tests/dd04-persistence-contract.test.mjs tests/dd04-schema-v2.test.mjs tests/dd04-postgres-adapter.test.mjs tests/dd04-pg-tls.test.mjs
+      - run: node --check dd04-agent-control/ceo-approval-contract.mjs
+      - run: node --test tests/dd04-a00.test.mjs tests/dd04-persistence-contract.test.mjs tests/dd04-schema-v2.test.mjs tests/dd04-postgres-adapter.test.mjs tests/dd04-pg-tls.test.mjs tests/dd04-ceo-approval-contract.test.mjs
