@@ -55,7 +55,7 @@ export default async (request) => {
  if(!isStagingPreviewUrl(request.url))return reply({ok:false,error:'PREVIEW_ONLY'},403);
  if(request.method==='GET' && pathname.endsWith('/health')){
   return reply({ok:true,component:'DD04-A00',runtime:'NODE_FUNCTION',mode:process.env.DD04_A00_PREVIEW_TOKEN?'AUTH_LOCKED':'NOT_CONFIGURED',
-    persistent_store:mode()==='POSTGRES'?(process.env.DD04_STAGING_DATABASE_URL&&process.env.DD04_STAGING_TENANT_ID?'SUPABASE_STAGING_POSTGRES_CONFIGURED':'SUPABASE_STAGING_POSTGRES_NOT_CONFIGURED'):'DEPLOY_SCOPED_BLOBS',real_llm_execution:false,telegram_connected:false,ceo_approval:false,production_connected:false});
+    persistent_store:mode()==='POSTGRES'?(process.env.DD04_STAGING_DATABASE_URL&&process.env.DD04_STAGING_TENANT_ID?(process.env.DD04_STAGING_DB_CA_PEM?'SUPABASE_STAGING_POSTGRES_CONFIGURED':'SUPABASE_STAGING_TLS_CA_REQUIRED'):'SUPABASE_STAGING_POSTGRES_NOT_CONFIGURED'):'DEPLOY_SCOPED_BLOBS',real_llm_execution:false,telegram_connected:false,ceo_approval:false,production_connected:false});
  }
  const secret=process.env.DD04_A00_PREVIEW_TOKEN;
  if(!secret || secret.length<32)return reply({error:'PREVIEW_TOKEN_NOT_CONFIGURED'},503);
@@ -63,7 +63,7 @@ export default async (request) => {
  if(!equal(bearer,secret))return reply({error:'UNAUTHORIZED'},401);
  const isPg=mode()==='POSTGRES';
  let repository;
- if(isPg){try{repository=await pgStore()}catch(e){console.error('DD04 PG config error:',e.message);return reply({error:'STAGING_DATABASE_NOT_CONFIGURED'},503)}}
+ if(isPg){try{repository=await pgStore()}catch(e){const error_code=dbErrorCategory(e);console.error('DD04 PG config category:',error_code);return reply({error:'STAGING_DATABASE_NOT_CONFIGURED',error_code},503)}}
  const store=isPg?null:getDeployStore('dd04-a00-runtime-poc');
  if(request.method==='GET' && pathname.endsWith('/diagnostics')){
   if(!isPg)return reply({ok:false,error:'POSTGRES_MODE_NOT_ENABLED'},409);
