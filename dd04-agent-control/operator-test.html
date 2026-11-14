@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'none'; base-uri 'none'; frame-ancestors 'none'">
+<title>A00 – Kiểm thử nhận lệnh trên staging</title><style>
+:root{color-scheme:dark;font-family:system-ui,Segoe UI,Arial,sans-serif}*{box-sizing:border-box}body{margin:0;background:#091526;color:#e4f3ff;padding:28px}main{max-width:760px;margin:auto}.panel{background:#14263b;border:1px solid #33516b;border-radius:16px;padding:23px;margin:15px 0}.tag{font-size:12px;color:#60e5d3;font-weight:bold;letter-spacing:1px}h1{font-size:25px;margin:10px 0}p,.help{color:#abc1d4}label{display:block;font-weight:650;margin:18px 0 8px}input,textarea{width:100%;border:1px solid #48667f;border-radius:9px;padding:13px;background:#091a2a;color:white;font:inherit}textarea{min-height:85px}button{border:0;border-radius:10px;background:#40c8b4;padding:12px 18px;color:#05212b;font-weight:800;cursor:pointer;margin:12px 6px 0 0}button:disabled{opacity:.45;cursor:not-allowed}button.secondary{background:#2c506a;color:#e8f6ff}.notice{background:#30281b;border:1px solid #98713e;border-radius:10px;padding:12px;color:#f9d69d}.result{white-space:pre-wrap;overflow-wrap:anywhere;background:#07121f;border:1px solid #29435a;border-radius:10px;padding:16px;min-height:50px;color:#c8e6fa;font-size:13px}.pass{color:#6de7ae}.fail{color:#ffb1a4}.status{font-weight:bold;margin:8px 0}.muted{font-size:12px;color:#8aabc0}a{color:#81d8f0}li{margin:7px 0}@media(max-width:650px){body{padding:10px}.panel{padding:15px}}
+</style></head><body><main><div class="tag">ĐỨC DUY AI OS · DD04-A00-004 · STAGING PREVIEW ONLY</div>
+<h1>Kiểm thử A00 nhận lệnh trực tuyến</h1><div class="notice">Đây là trang thử nghiệm kỹ thuật, không phải cổng CEO duyệt. Chỉ dùng một lệnh giả lập. Không nhập thông tin khách hàng, dữ liệu sản xuất thật, mật khẩu, hay token nào ngoài khóa staging được cấp riêng cho phép thử này. Không chụp ảnh để lộ khóa.</div>
+<div class="panel"><h2>1. Trạng thái kết nối</h2><p id="health" class="status">Đang kiểm tra API…</p><p class="muted">API ở cùng domain Deploy Preview. Phần gửi lệnh vẫn yêu cầu xác thực bằng khóa đã cấu hình.</p></div>
+<div class="panel"><h2>2. Gửi lệnh thử nghiệm</h2>
+<label for="token">Khóa staging A00 (không lưu)</label><input id="token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Dán khóa DD04_A00_PREVIEW_TOKEN">
+<p class="muted">Chỉ dán khóa nếu đây là đúng domain <code>deploy-preview-1--ducduy-ai-os-test.netlify.app</code>. Khóa chỉ giữ tạm trong ô nhập và được xóa sau khi kết thúc phép thử.</p>
+<label for="extid">Mã lệnh thử</label><input id="extid" readonly>
+<label for="message">Nội dung thử</label><textarea id="message" maxlength="2000">Tạo một kịch bản video hoạt hình mẹ và bé dài 30 giây để kiểm thử quy trình điều phối.</textarea>
+<button id="send" type="button">Gửi lệnh thử</button><button id="repeat" type="button" disabled class="secondary">Thử gửi trùng</button><button id="read" type="button" disabled class="secondary">Đọc lại bản ghi</button><button id="clear" type="button" class="secondary">Xóa khóa và kết quả</button>
+<p id="status" class="status"></p><div id="result" class="result" aria-live="polite">Chưa gửi lệnh.</div></div>
+<div class="panel"><h2>3. Điều kiện nghiệm thu</h2><ol><li>Lệnh đầu tiên có HTTP <b>201</b> và trạng thái <code>WAITING_CEO_PLAN</code>.</li><li>Gửi lại cùng mã và nội dung nhận HTTP <b>200</b>, <code>duplicate: true</code>.</li><li>Đọc lại bản ghi có <code>task_graph</code>, <code>meeting</code> và trạng thái duyệt <code>PENDING</code>.</li></ol><p>Không được tự duyệt G1, tạo video hoặc đăng mạng xã hội. Đây chỉ là A00 phân tuyến theo quy tắc.</p></div>
+</main><script>
+"use strict";
+const $=id=>document.getElementById(id);
+const api="/api/dd04-a00";
+const allowedHost=/^deploy-preview-1--ducduy-ai-os-test[.]netlify[.]app$/;
+const newId="a00test-"+Date.now().toString(36);
+$("extid").value=newId;
+let lastId=null, lastPayload=null, inProgress=false;
+function status(text,good){$("status").textContent=text;$("status").className="status "+(good?"pass":"fail")}
+function render(obj){$("result").textContent=JSON.stringify(obj,null,2)}
+function guard(){if(!allowedHost.test(location.hostname)||location.protocol!=="https:"){status("Không đúng domain Deploy Preview #1. Không gửi khóa.",false);return false}return true}
+async function health(){if(!guard())return;try{const res=await fetch(api+"/health",{cache:"no-store"});const data=await res.json();$("health").textContent="HTTP "+res.status+" · "+(data.component||"Không xác định")+" · "+(data.mode||data.error||"Không có trạng thái");$("health").className="status "+(res.ok?"pass":"fail")}catch(e){$("health").textContent="Không tải được A00 Health: "+e.message;$("health").className="status fail"}}
+async function call(method,path,payload){
+ if(!guard())return;
+ const token=$("token").value.trim();
+ if(token.length<32){status("Chưa có khóa staging hợp lệ (tối thiểu 32 ký tự).",false);return}
+ if(inProgress)return;
+ inProgress=true;for(const id of ["send","repeat","read"])$(id).disabled=true;
+ try{
+  const response=await fetch(api+path,{method,headers:{"Authorization":"Bearer "+token,...(payload?{"Content-Type":"application/json"}:{})},...(payload?{body:JSON.stringify(payload)}:{})});
+  const data=await response.json();render({http_status:response.status,...data});
+  const good=(method==="POST"&&(response.status===201||response.status===200))||(method==="GET"&&response.ok);
+  status(good?"Đã nhận phản hồi thành công từ A00.":"A00 trả về lỗi; kiểm tra mã và cấu hình.",good);
+  if(good&&method==="POST"){lastId=data.command_id;lastPayload=payload}
+  if(good&&method==="GET"&&data.command_id){status(data.status==="WAITING_CEO_PLAN"?"Đã đọc lại bản ghi: chờ G1, chưa phê duyệt.":"Cần kiểm tra trạng thái G1 của bản ghi.",data.status==="WAITING_CEO_PLAN")}
+ }catch(e){status("Không gọi được A00: "+e.message,false)}
+ finally{inProgress=false;$("send").disabled=false;$("repeat").disabled=!lastPayload;$("read").disabled=!lastId}
+}
+$("send").onclick=()=>{const payload={external_id:$("extid").value,message_text:$("message").value};call("POST","/commands",payload)};
+$("repeat").onclick=()=>lastPayload&&call("POST","/commands",lastPayload);
+$("read").onclick=()=>lastId&&call("GET","/commands/"+lastId);
+$("clear").onclick=()=>{$("token").value="";lastId=null;lastPayload=null;$("repeat").disabled=true;$("read").disabled=true;$("result").textContent="Đã xóa khóa khỏi ô nhập và xóa kết quả hiển thị.";status("Không còn khóa trong biểu mẫu.",true)};
+window.addEventListener("pagehide",()=>{$("token").value=""});
+health();
+</script></body></html>
