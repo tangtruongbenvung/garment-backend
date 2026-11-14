@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { getDeployStore } from '@netlify/blobs';
 import { dispatch, isStagingPreviewUrl } from '../../dd04-agent-control/runtime-core.mjs';
 import { assertStagingDatabaseUrl, createPgRepository } from '../../dd04-agent-control/supabase-pg-repository.mjs';
+import { createVerifiedPgTlsConfig } from '../../dd04-agent-control/pg-tls.mjs';
 
 const reply=(body,status=200)=>new Response(JSON.stringify(body),{
   status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'}
@@ -16,11 +17,11 @@ async function pgStore(){
  const tenant=process.env.DD04_STAGING_TENANT_ID;
  const url=process.env.DD04_STAGING_DATABASE_URL;
  assertStagingDatabaseUrl(url,tenant);
+ const tls=createVerifiedPgTlsConfig(url,tenant,process.env.DD04_STAGING_DB_CA_PEM);
  if(!pgPool){
   const {Pool}=await import('pg');
   pgPool=new Pool({
-   connectionString:url,
-   ssl:{rejectUnauthorized:true},
+   ...tls,
    max:3,
    idleTimeoutMillis:10000,
    connectionTimeoutMillis:8000,
@@ -36,6 +37,7 @@ function dbErrorCategory(e) {
  const code=String(e?.code||'');
  const named=String(e?.name||'');
  if(code==='28P01'||code==='28000')return 'DB_AUTH_REJECTED';
+ if(['DB_CA_CERTIFICATE_REQUIRED','DB_CA_CERTIFICATE_INVALID'].includes(String(e?.message||'')))return String(e.message);
  if(code==='3D000'||code==='42P01'||code==='3F000')return 'DB_SCHEMA_OR_OBJECT_MISSING';
  if(code==='42501')return 'DB_PERMISSION_DENIED';
  if(code==='23505'||code==='23503'||code==='23514')return 'DB_CONSTRAINT_FAILED';
