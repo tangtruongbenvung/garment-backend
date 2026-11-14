@@ -6,7 +6,7 @@
 .scene{height:490px;background:radial-gradient(circle at 50% 42%,#22546d70,transparent 48%),linear-gradient(170deg,#091e2d,#05111d)}.ring{box-shadow:0 0 40px #33bddd16}.ring.second{border-color:#347e9c}.core{box-shadow:0 0 45px #42e5de77,0 0 90px #2abec533}.node{transition:background .2s,box-shadow .2s}.node.active{box-shadow:0 0 25px #62ffdb99}.flowline{fill:none;stroke-width:1.7;opacity:.7;stroke-dasharray:5 8}.flowdot{filter:drop-shadow(0 0 7px currentColor)}.flowlabel{position:absolute;z-index:9;right:12px;top:12px;pointer-events:none;background:#142b3fe0;border:1px solid #315670;padding:7px 10px;border-radius:8px;color:#c9e9f5;font-size:11px}@media(max-width:700px){.scene{height:430px}}</style></head><body>
 <header><div><div class="eyebrow">ĐỨC DUY AI OS · DD04 V5.3</div><h1>Trung tâm điều hành 18 AI Agent</h1><p class="sub">Công việc · Chất lượng · Năng lực · Bộ nhớ có kiểm chứng</p></div><span class="badge">STAGING PREVIEW · DEMO DATA</span></header>
 <div class="layout"><aside><button class="active" data-tab="overview">◈ Tổng quan 3D</button><button data-tab="tasks">▤ Công việc & QC</button><button data-tab="agents">⬡ Hồ sơ Agent</button><button data-tab="memory">◎ Bộ nhớ & học hỏi</button><button data-tab="audit">▥ Nhật ký</button></aside><main>
-<div class="notice"><strong>BẢN XEM THỬ CHỈ ĐỌC.</strong> Dữ liệu minh họa, không phải số liệu sản xuất. Không có Agent AI đang chạy, không đăng bài, không kết nối Supabase/Telegram hay chức năng duyệt CEO. Không nhập dữ liệu nhạy cảm.</div>
+<div class="notice"><strong>BẢN XEM THỬ CHỈ ĐỌC.</strong> Dữ liệu minh họa, không phải số liệu sản xuất. Không có Agent AI đang chạy, không đăng bài, không kết nối Supabase/Telegram hay chức năng duyệt CEO. Không nhập dữ liệu nhạy cảm. <strong id="runtimeIndicator" style="display:block;margin-top:8px;color:#80c9ff">A00 API: đang kiểm tra trạng thái...</strong></div>
 <section id="overview" class="view active"><div id="stats" class="stats"></div><div class="columns"><div class="panel"><div class="eyebrow">OPERATIONS MAP / CSS 3D PERSPECTIVE</div><h2>Hệ thống phối hợp Agent</h2><div class="scene" id="scene"><div class="ring"></div><div class="ring second"></div><div class="flowlabel">5 tuyến phối hợp · MÔ PHỎNG</div><svg id="flowSvg" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:hidden;z-index:3"></svg><div class="core"><b>A00</b><small>ĐIỀU PHỐI</small></div><div id="nodes"></div></div><div class="controls"><button id="spin">⏸ Dừng xoay</button><button id="reset">↺ Đặt lại</button><span class="muted">Kéo xoay · Cuộn thu phóng · Đường sáng mô phỏng bàn giao giữa Agent</span></div></div><div class="panel" id="detail"></div></div></section>
 <section id="tasks" class="view"><div class="panel"><div class="toolbar"><h2>Tiến độ và chất lượng công việc</h2><div class="filters"><select id="filterAgent"><option value="">Tất cả Agent</option></select><select id="filterStatus"><option value="">Tất cả trạng thái</option></select></div></div><div class="tablewrap"><table><thead><tr><th>Mã</th><th>Agent</th><th>Nội dung</th><th>Trạng thái</th><th>QC</th><th>Nguồn</th></tr></thead><tbody id="taskBody"></tbody></table></div></div></section>
 <section id="agents" class="view"><div class="panel"><h2>Hồ sơ vai trò, kỹ năng và sản phẩm bàn giao</h2><p class="muted">Chuẩn năng lực theo hợp đồng V5.3, không phải chứng nhận năng lực runtime.</p><div id="agentGrid" class="grid"></div></div></section>
@@ -86,5 +86,14 @@ const previousPosition=position;
 position=function(){previousPosition();paintFlows()};
 requestAnimationFrame(animateFlow);
 
-setup();
+async function checkA00Health(){
+ const label=$("runtimeIndicator");if(!label)return;
+ try {
+  const r=await fetch("/api/dd04-a00/health",{cache:"no-store"});
+  const d=await r.json();
+  if(r.ok && d.component==="DD04-A00") label.textContent="A00 runtime: "+(d.mode==="NOT_CONFIGURED"?"chưa cấu hình khóa truy cập, đang khóa":d.mode==="AUTH_LOCKED"?"đã cấu hình khóa, chờ kiểm thử xác thực":"đang kiểm tra")+" · Không có phê duyệt G1/G2 tự động";
+  else label.textContent="A00 runtime: endpoint chưa sẵn sàng hoặc chưa được cấp quyền";
+ }catch(e){label.textContent="A00 runtime: chưa xác minh được endpoint trực tuyến";}
+}
+setup();checkA00Health();
 </script></body></html>
