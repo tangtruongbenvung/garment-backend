@@ -39,11 +39,124 @@ try {
   $expectedEmail = (Read-Host "Nhap email cua tai khoan Auth dang co trong Supabase Staging").Trim()
   if(-not $expectedEmail.Contains("@") -or $expectedEmail.Length -gt 254) { throw "Email khong hop le." }
 
-  Write-Host "Nhap SECRET KEY rieng cua Supabase project staging. KHONG dan khoa vao chat hoac luu vao file."
-  Write-Host "Lay trong Supabase project wbvkqfnrlasmtizjszab > Project Settings > API Keys > Secret."
+  Write-Host "Chi su dung SECRET KEY cua project STAGING wbvkqfnrlasmtizjszab; khong dung anon/publishable key."
+  Write-Host "Mo Supabase Staging > Project Settings > API Keys. Copy secret/service_role key bang nut Copy."
+  Write-Host "Script co the doc Clipboard MOT LAN sau khi ban cho phep. Khong in hoac luu khoa."
   $stage = "SECRET_INPUT"
-  $admin = Read-Host "Khoa bi mat quan tri staging" -AsSecureString
-  $adminPlain = Get-TemporaryPlainText $admin
+  $clipboardMode = (Read-Host "Nhan ENTER de DOC KHOA da copy tu Clipboard; hoac nhap M de go thu cong").Trim()
+  if($clipboardMode -eq "") {
+    $stage = "SECRET_CLIPBOARD_READ"
+    $clipboardText = $null
+    try {
+      $clipboardText = Get-Clipboard -Raw -ErrorAction Stop
+      if(-not ($clipboardText -is [string])) { throw "Clipboard unavailable" }
+      $adminPlain = $clipboardText.Trim()
+      # Only accept expected key formats and plain single-line printable ASCII.
+      if($adminPlain.Length -gt 4096 -or $adminPlain.Length -lt 32 -or
+         $adminPlain -notmatch '^(sb_secret_[A-Za-z0-9_\\-]+|eyJ[A-Za-z0-9_\\-]+\\.[A-Za-z0-9_\\-]+\\.[A-Za-z0-9_\\-]+)
+
+  # Modern secret key: apikey header. Legacy service_role JWT: apikey + Bearer.
+  # Supabase Auth Admin API must only be called from this trusted local process.
+  $headers = @{ apikey = $adminPlain; accept = "application/json" }
+  $stage = "ADMIN_GET_AUTH_USER"
+  if($adminPlain.StartsWith("eyJ")) { $headers.authorization = "Bearer $adminPlain" }
+
+  # GET exact fixed user, then confirm email and verification state.
+  $user = Invoke-RestMethod -Method Get -Uri $BaseUrl -Headers $headers -TimeoutSec 15
+  if($user.PSObject.Properties.Name -contains 'user') { $user = $user.user }
+  $stage = "CHECK_USER_ID"
+  if([string]$user.id -ne $ExpectedUserId) { throw "ID tai khoan khong trung. DUNG." }
+  $stage = "CHECK_USER_EMAIL"
+  if([string]::IsNullOrWhiteSpace([string]$user.email) -or
+     -not [string]::Equals([string]$user.email,$expectedEmail,[StringComparison]::OrdinalIgnoreCase)) {
+    throw "Email khong trung ban ghi Supabase. DUNG."
+  }
+  $stage = "CHECK_USER_CONFIRMED"
+  if(-not ($user.PSObject.Properties.Name -contains 'email_confirmed_at') -or -not $user.email_confirmed_at -or
+     (($user.PSObject.Properties.Name -contains 'is_anonymous') -and $user.is_anonymous -eq $true)) {
+    throw "Tai khoan chua xac minh email hoac la tai khoan an danh. DUNG."
+  }
+  Write-Host "PASS - Dung project va dung nguoi dung, email da xac minh." -ForegroundColor Green
+  if(-not $Apply) {
+    Write-Host "READ-ONLY PASS - chua cap nhat mat khau. Chay lai voi -Apply de thuc thi."
+    return
+  }
+
+  Write-Host "Ban sap thiet lap mat khau cho MOT tai khoan trong Auth staging. Khong the hoan tac tu dong."
+  $stage = "CONFIRM_APPLY"
+  $confirmation = Read-Host 'Go chinh xac SET STAGING PASSWORD de xac nhan'
+  if($confirmation -cne "SET STAGING PASSWORD") { throw "Chua xac nhan. DUNG." }
+
+  $stage = "PASSWORD_INPUT"
+  $passwordSecure = Read-Host "Nhap MAT KHAU MOI (khong hien chu)" -AsSecureString
+  $passwordAgain = Read-Host "Nhap LAI mat khau moi (khong hien chu)" -AsSecureString
+  $passwordPlain = Get-TemporaryPlainText $passwordSecure
+  $againPlain = Get-TemporaryPlainText $passwordAgain
+  if($passwordPlain.Length -lt 12 -or $passwordPlain.Length -gt 128 -or
+     $passwordPlain -cnotmatch '[a-z]' -or $passwordPlain -cnotmatch '[A-Z]' -or
+     $passwordPlain -notmatch '[0-9]' -or $passwordPlain -notmatch '[^a-zA-Z0-9]') {
+    throw "Mat khau khong dat: tu 12-128 ky tu, co chu hoa, chu thuong, so, ky tu dac biet."
+  }
+  if($passwordPlain -cne $againPlain) { throw "Hai lan nhap mat khau khong trung. DUNG." }
+
+  # Mark BEFORE PUT to prevent accidental retries after ambiguous network failure.
+  [void][IO.Directory]::CreateDirectory($MarkerDir)
+  $stamp = "ATTEMPTED - "+[DateTime]::UtcNow.ToString('o')+[Environment]::NewLine+
+      "Project="+$ProjectId+[Environment]::NewLine+"User="+$ExpectedUserId+[Environment]::NewLine
+  [IO.File]::WriteAllText($MarkerFile,$stamp,[Text.Encoding]::UTF8)
+  $body = @{ password = $passwordPlain } | ConvertTo-Json -Compress
+  $stage = "ADMIN_UPDATE_PASSWORD"
+  $result = Invoke-RestMethod -Method Put -Uri $BaseUrl -Headers $headers -ContentType "application/json" -Body $body -TimeoutSec 20
+  if($result.PSObject.Properties.Name -contains 'user') { $result = $result.user }
+  if([string]$result.id -ne $ExpectedUserId) { throw "Phan hoi cap nhat khong dung ID; DUNG va kiem tra Auth Logs." }
+  Write-Host "PASS - Supabase Auth xac nhan cap nhat mat khau dung tai khoan staging." -ForegroundColor Green
+  Write-Host "KHONG can email. Dang nhap qua trang CEO staging roi kich hoat MFA."
+  Write-Host "Ban ghi chong chay lap da duoc tao trong LocalAppData (khong chua khoa hoac mat khau)."
+} catch {
+  # Only expose controlled stage, category and HTTP code. Never raw exception text.
+  $category = "LOCAL_VALIDATION_OR_UNEXPECTED_ERROR"
+  $http = ""
+  $ex = $_.Exception
+  if($ex -is [System.Net.WebException] -and $null -ne $ex.Response) {
+    try { $http = [int]$ex.Response.StatusCode } catch { $http = "" }
+  } elseif($null -ne $ex.Response -and $null -ne $ex.Response.StatusCode) {
+    try { $http = [int]$ex.Response.StatusCode } catch { $http = "" }
+  }
+  switch ([string]$http) {
+    "400" { $category = "HTTP_BAD_REQUEST" }
+    "401" { $category = "HTTP_UNAUTHORIZED_KEY" }
+    "403" { $category = "HTTP_FORBIDDEN_KEY_OR_ROLE" }
+    "404" { $category = "HTTP_NOT_FOUND_TARGET" }
+    "429" { $category = "HTTP_RATE_LIMIT" }
+    "500" { $category = "HTTP_REMOTE_SERVER" }
+    default { if($http) { $category = "HTTP_REMOTE_OTHER" } }
+  }
+  Write-Host ("STOP - Stage: "+$stage+" | Category: "+$category+" | HTTP: "+$(if($http){$http}else{"NONE"})) -ForegroundColor Red
+  Write-Host "No password change confirmed. NEVER share a key, password or raw exception."
+} finally {
+  $body = $null; $headers = $null
+  $adminPlain = $null; $passwordPlain = $null; $againPlain = $null
+  $admin = $null; $passwordSecure = $null; $passwordAgain = $null
+  [GC]::Collect()
+}
+) {
+        throw "Clipboard does not contain an accepted admin key"
+      }
+      # Clear the secret from Clipboard before making any HTTP request.
+      Set-Clipboard -Value "" -ErrorAction Stop
+      Write-Host "Clipboard key format accepted; Clipboard cleared. Secret was NOT displayed." -ForegroundColor Green
+    } catch {
+      $adminPlain = $null
+      throw "Clipboard read/validation/clear failed. STOP; use manual mode after checking key source."
+    } finally {
+      $clipboardText = $null
+    }
+  } elseif($clipboardMode -ieq "M") {
+    $admin = Read-Host "Khoa bi mat quan tri staging (nhap an)" -AsSecureString
+    $adminPlain = Get-TemporaryPlainText $admin
+  } else {
+    throw "Lua chon khong hop le. DUNG."
+  }
   if(-not ($adminPlain.StartsWith("sb_secret_") -or $adminPlain.StartsWith("eyJ"))) {
     throw "Khoa quan tri phai la sb_secret_ hoac legacy service_role JWT; khong dung publishable / anon key."
   }
