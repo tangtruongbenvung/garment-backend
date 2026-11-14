@@ -17,18 +17,18 @@
 1. Mở `https://supabase.com/dashboard/project/wbvkqfnrlasmtizjszab/settings/api-keys`; vào **Secret API keys**.
 2. Tìm một **Secret Key** cho **chính** staging, thường có prefix `sb_secret_`. Nếu chỉ có legacy `service_role` thì có thể dùng key đó; không dùng `anon` / `sb_publishable_`.
 3. Không gửi/không chụp key. Không copy key vào ô nhắn tin. Không đưa key vào Netlify Environment Variables cho quy trình này.
-4. Tải file `dd04-agent-control/scripts/dd04-set-ceo-password-once.ps1` từ GitHub **feature branch** bằng **Raw → Save As**, giữ nguyên tên file, đặt tại Downloads. Đọc/kiểm tra file bằng Notepad trước khi chạy.
+4. Tải file `dd04-agent-control/scripts/dd04-set-ceo-password-once-ASCII.ps1` từ GitHub **feature branch** bằng **Raw → Save As**, giữ nguyên tên file, đặt tại Downloads. Đọc/kiểm tra file bằng Notepad trước khi chạy.
 5. Mở **Windows PowerShell** bình thường, không yêu cầu Run as administrator. Gõ:
    ```powershell
    cd "$env:USERPROFILE\Downloads"
-   powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\dd04-set-ceo-password-once.ps1"
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\dd04-set-ceo-password-once-ASCII.ps1"
    ```
-   Nhập **email Auth staging** và **secret key staging** vào lời nhắc; kết quả mong đợi `READ-ONLY PASS`.
+   Nhập **email Auth staging**, sau đó copy khóa quản trị của đúng project từ bảng Supabase. Khi PowerShell hỏi, chỉ nhấn **Enter** để đọc Clipboard một lần (không paste); script kiểm tra định dạng và xóa Clipboard hiện tại trước khi gọi API. Hoặc nhập **M** để gõ khóa ẩn thủ công. Kết quả mong đợi `READ-ONLY PASS`. Tuy nhiên, việc xóa Clipboard không đảm bảo xóa khóa khỏi lịch sử Clipboard Windows (Win+V), đồng bộ Clipboard hay ứng dụng khác: người dùng tự kiểm tra/xóa lịch sử nếu đã bật.
 6. Chỉ sau READ-ONLY PASS và CEO sẵn sàng thay đổi mật khẩu Auth staging, gõ:
    ```powershell
-   powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\dd04-set-ceo-password-once.ps1" -Apply
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\dd04-set-ceo-password-once-ASCII.ps1" -Apply
    ```
-   - Nhập lại email và secret key staging ở màn hình prompt.
+   - Nhập lại email; copy lại secret key của staging và nhấn Enter khi PowerShell hỏi (hoặc M để nhập ẩn).
    - Xác nhận chính xác `SET STAGING PASSWORD`.
    - Nhập mật khẩu **mới** hai lần ở ô ẩn, >=12 ký tự, chữ thường/chữ hoa/số/ký tự đặc biệt.
    - Không dùng lại mật khẩu Dashboard, GitHub hoặc database.
@@ -36,7 +36,7 @@
 8. Sau khi xong, xóa file script ở Downloads; **không** lưu secret/password ở nơi khác. Có thể cân nhắc rotate secret key ngay sau thao tác (phải rà soát ứng dụng đang sử dụng khóa trước khi rotate).
 
 ## Khi gặp lỗi
-- Nếu bước dry-run không PASS: **dừng**. Kiểm tra đúng project, user, email và loại khóa. Không bật `-Apply`.
+- Nếu bước dry-run không PASS, đặc biệt `ADMIN_GET_AUTH_USER | HTTP 401`: **dừng**. Khả năng khóa không đúng project, bị thu hồi, không có quyền hoặc gateway từ chối. Tự động đọc Clipboard **không** giải quyết HTTP 401 do khóa không hợp lệ. Không bật `-Apply` và không thử liên tiếp nhiều khóa.
 - Nếu bước `-Apply` đã chạy nhưng không PASS: **dừng**; script có marker tại `%LOCALAPPDATA%\DucDuyAiOs\dd04-ceo-first-password.attempted`. Không xóa marker để chạy lại bừa bãi. Trước hết thử đăng nhập bằng mật khẩu mới, hoặc quản trị viên kiểm tra Auth logs.
 - Script có thể không tương thích với chính sách PowerShell của doanh nghiệp; không thay đổi chính sách hệ thống. Khi thiếu quyền chạy, dừng và trao đổi.
 - Nếu email ghi nhận khác hoặc User ID thay đổi, script **cố ý từ chối**. Không chỉnh ID để làm việc trên tài khoản khác.
