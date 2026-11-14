@@ -19,6 +19,7 @@ jobs:
         with:
           node-version: '22'
       - run: node --check dd04-agent-control/runtime-core.mjs
+      - run: node --check dd04-agent-control/a03-channel-script-planner.mjs
       - run: node --check netlify/functions/dd04-a00.mjs
       - run: node --check dd04-agent-control/live-dashboard.js
       - run: node --check dd04-agent-control/persistence-contract.mjs
@@ -26,4 +27,4 @@ jobs:
       - run: node --check dd04-agent-control/pg-tls.mjs
       - run: node --check dd04-agent-control/ceo-approval-contract.mjs
       - run: node --check dd04-agent-control/ceo-login.js
-      - run: node --test tests/dd04-a00.test.mjs tests/dd04-persistence-contract.test.mjs tests/dd04-schema-v2.test.mjs tests/dd04-postgres-adapter.test.mjs tests/dd04-pg-tls.test.mjs tests/dd04-ceo-approval-contract.test.mjs tests/dd04-ceo-login.test.mjs tests/dd04-ceo-admin-bootstrap.test.mjs
+      - run: node --test tests/dd04-a00.test.mjs tests/dd04-persistence-contract.test.mjs tests/dd04-schema-v2.test.mjs tests/dd04-postgres-adapter.test.mjs tests/dd04-pg-tls.test.mjs tests/dd04-ceo-approval-contract.test.mjs tests/dd04-ceo-login.test.mjs tests/dd04-ceo-admin-bootstrap.test.mjs tests/dd04-a03-channel-scripts.test.mjs
