@@ -42,11 +42,56 @@ function list(){
  }
  $("page").textContent=(page+1)+" / "+max;$("prev").disabled=page===0;$("next").disabled=page+1>=max;
 }
+// Editing is local-memory-only. Every change creates a new UNAPPROVED profile revision.
+const editFields=[["positioning","Định vị xuyên suốt"],["audience","Đối tượng"],["pillars","Trụ cột nội dung"],["voice","Giọng điệu và cá tính"],["character","Nhân vật / Character Bible"],["visual","Phong cách hình ảnh"],["cta","Quy tắc CTA"],["rules","Những điều cấm"],["goal","Mục tiêu kênh"]];
+function exportProfiles(list){
+ const payload={schema_version:"5.3",source:"BROWSER_STAGING_DRAFT_NOT_APPROVED",exported_for:"CEO_REVIEW_ONLY",channels:list.map(c=>({
+ channel_id:c.channel_id,name:c.name,platform:c.platform,version:c.version,
+ positioning:c.positioning,audience:c.audience,content_pillars:c.pillars,tone:c.voice,
+ character_bible:c.character,visual_style:c.visual,forbidden:c.rules,
+ cta_policy:c.cta,target_outcome:c.goal,assigned_agents:c.assigned_agents,
+ profile_status:c.profile_status
+ }))};
+ const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json;charset=utf-8"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="DD04_CHANNEL_PROFILES_STAGING_DRAFT.json";
+ document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+function editProfile(c){
+ $("details").replaceChildren();
+ const notice=make("p","Chỉ chỉnh sửa bản nháp trong bộ nhớ tab hiện tại. Chưa lưu Supabase, chưa duyệt G1/G2. Khi lưu bản nháp sẽ tăng phiên bản để buộc công việc mới rà lại.","checkpoint");
+ $("details").append(notice);
+ const form=make("div",undefined,"data-grid");
+ for(const [key,label] of editFields){
+  const wrap=make("div",undefined,"datum wide");
+  const lab=make("label",label);lab.htmlFor="edit-"+key;
+  const input=make("textarea");input.id="edit-"+key;input.value=c[key];input.rows=2;input.maxLength=900;input.setAttribute("aria-label",label);
+  wrap.append(lab,input);form.append(wrap);
+ }
+ $("details").append(form);
+ const actions=make("div",undefined,"tabs"),save=make("button","Lưu bản nháp trong phiên"),cancel=make("button","Hủy sửa");
+ actions.append(save,cancel);$("details").append(actions);
+ save.addEventListener("click",()=>{
+  const next=Object.fromEntries(editFields.map(([key])=>[key,$("edit-"+key).value.trim()]));
+  if(Object.values(next).some(value=>value.length<3)){const p=make("p","Mỗi trường cần ít nhất 3 ký tự; chưa lưu bản nháp.","checkpoint");$("details").prepend(p);return;}
+  if(editFields.some(([key])=>c[key]!==next[key])){
+   Object.assign(c,next);c.version++;c.profile_status="DRAFT_CHANGED_REVIEW_REQUIRED";
+  }
+  detail();
+ });
+ cancel.addEventListener("click",detail);
+}
 function renderStrategy(c){
  const grid=make("div",undefined,"data-grid");
  for(const [k,v,w] of [["Định vị xuyên suốt",c.positioning,true],["Đối tượng",c.audience,false],["Trụ cột nội dung",c.pillars,false],["Giọng điệu và cá tính",c.voice,false],["Nhân vật / Character Bible",c.character,true],["Phong cách hình ảnh",c.visual,false],["Quy tắc CTA",c.cta,false],["Những điều cấm",c.rules,true],["Mục tiêu kênh",c.goal,true]])grid.append(field(k,v,w));
  $("details").append(grid);
- $("details").append(make("p","Mọi Agent phải nhận đúng channel_id, profile_version và profile_sha256. Mọi thay đổi định vị cần tạo phiên bản mới, A02/A00 chuẩn bị đề xuất CEO phê duyệt.","checkpoint"));
+  $("details").append(make("p","Mọi Agent phải nhận đúng channel_id, profile_version và profile_sha256. Mọi thay đổi định vị cần tạo phiên bản mới, A02/A00 chuẩn bị đề xuất CEO phê duyệt.","checkpoint"));
+ const tools=make("div",undefined,"tabs");
+ const edit=make("button","Chỉnh sửa hồ sơ nháp"),exportOne=make("button","Xuất hồ sơ kênh JSON"),exportAll=make("button","Xuất toàn bộ hồ sơ JSON");
+ tools.append(edit,exportOne,exportAll);$("details").append(tools);
+ edit.addEventListener("click",()=>editProfile(c));
+ exportOne.addEventListener("click",()=>exportProfiles([c]));
+ exportAll.addEventListener("click",()=>exportProfiles(channels));
 }
 function renderAgents(c){
  $("details").append(make("p","Agent dùng chung toàn hệ thống nhưng từng nhiệm vụ phải gắn với "+c.channel_id+". Không có Agent nào được tự đổi hồ sơ chiến lược đã chốt.","muted"));
