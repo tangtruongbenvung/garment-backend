@@ -304,7 +304,7 @@ async function loadMasterTaskLedger(){
   const dest=$("worklistRows");dest.replaceChildren();
   for(const task of rows){
    const tr=document.createElement("tr");
-   for(const value of [task.task_id,task.owner_agent,task.status,task.revision]){
+   for(const value of [task.task_id,task.owner_agent,task.legacy_status,task.runtime_status??'Chưa khởi tạo',task.g1_decision??'Chưa có',task.runtime_revision??task.revision]){
     const td=document.createElement("td");td.textContent=String(value??"");tr.append(td);
    }dest.append(tr);
   }
