@@ -1,4 +1,4 @@
-// DD04-A00-014: CEO review queue, read only and only after MFA aal2.
+// DD04-A00-015 V5.4: CEO FINAL G2 publication queue ONLY, read-only after MFA aal2.
 // The queue does not approve, prepare or change any decision.
 import {Pool} from 'pg';
 import {verifyAuthUser} from '../../dd04-agent-control/ceo-approval-contract.mjs';
@@ -56,11 +56,11 @@ export default async request=>{
    FROM dd04_stage.approvals a
    JOIN dd04_stage.commands c
     ON c.tenant_id=a.tenant_id AND c.command_id=a.command_id
-   WHERE a.tenant_id=$1::uuid AND a.decision='PENDING'
+   WHERE a.tenant_id=$1::uuid AND a.gate='G2' AND a.decision='PENDING'
      AND a.approved_by IS NULL AND a.decided_at IS NULL
    ORDER BY a.created_at DESC LIMIT 30`,[tenantId]);
   await client.query('COMMIT');
-  return reply({ok:true,items:pending.rows,decision_enabled:false,read_only:true});
+  return reply({ok:true,items:pending.rows,queue_scope:'G2_FINAL_CEO_ONLY',internal_G1:'AI_AGENT_CHECKPOINT_NOT_IN_CEO_QUEUE',decision_enabled:false,read_only:true});
  }catch{
   if(client){try{await client.query('ROLLBACK')}catch{}}
   return deny('STAGING_REVIEW_QUEUE_UNAVAILABLE',503);
