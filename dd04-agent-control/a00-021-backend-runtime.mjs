@@ -12,10 +12,14 @@ const TENANT=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-
 export function assertA0021BackendDbUrl(raw){
  let url;
  try{url=new URL(raw)}catch{throw new Error('A00_BACKEND_DB_URL_REQUIRED')}
+ const direct=url.hostname==='db.'+PROJECT+'.supabase.co'
+   &&(!url.port||url.port==='5432')
+   &&decodeURIComponent(url.username)==='dd04_a00_backend';
+ const sessionPooler=/^aws-[0-9]+-ap-northeast-1\\.pooler\\.supabase\\.com$/.test(url.hostname)
+   &&url.port==='5432'
+   &&decodeURIComponent(url.username)==='dd04_a00_backend.'+PROJECT;
  if(!['postgres:','postgresql:'].includes(url.protocol)||
-    url.hostname!=='db.'+PROJECT+'.supabase.co'||
-    (url.port&&url.port!=='5432')||url.pathname!=='/postgres'||
-    decodeURIComponent(url.username)!=='dd04_a00_backend'||!url.password)
+    url.pathname!=='/postgres'||!url.password||(!direct&&!sessionPooler))
   throw new Error('A00_BACKEND_LOGIN_OR_STAGING_TARGET_INVALID');
  if(url.searchParams.get('sslmode')==='disable')
   throw new Error('A00_BACKEND_TLS_REQUIRED');
