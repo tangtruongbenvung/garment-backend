@@ -144,8 +144,8 @@ GRANT SELECT ON dd04_stage.commands,dd04_stage.tasks,dd04_stage.task_events,
   TO dd04_a00_runtime;
 GRANT INSERT ON dd04_stage.tasks,dd04_stage.task_events,
   dd04_stage.v55_agent_handoff_events TO dd04_a00_runtime;
-GRANT SELECT,INSERT,UPDATE ON dd04_stage.a00_workflow_instances,
-  dd04_stage.a00_task_contexts TO dd04_a00_runtime;
+GRANT SELECT,INSERT ON dd04_stage.a00_workflow_instances TO dd04_a00_runtime;
+GRANT SELECT,INSERT,UPDATE ON dd04_stage.a00_task_contexts TO dd04_a00_runtime;
 GRANT SELECT,INSERT ON dd04_stage.a00_transition_events TO dd04_a00_runtime;
 GRANT USAGE ON SEQUENCE dd04_stage.a00_transition_events_event_id_seq TO dd04_a00_runtime;
 GRANT USAGE ON SEQUENCE dd04_stage.task_events_event_id_seq TO dd04_a00_runtime;
@@ -175,9 +175,6 @@ CREATE POLICY a00_rt_workflow_select ON dd04_stage.a00_workflow_instances FOR SE
   USING(dd04_stage.a00_authorized(tenant_id,'READ'));
 CREATE POLICY a00_rt_workflow_insert ON dd04_stage.a00_workflow_instances FOR INSERT TO dd04_a00_runtime
   WITH CHECK(dd04_stage.a00_authorized(tenant_id,'SAVE_PLAN','A00') AND state='DRAFT_LOCKED');
-CREATE POLICY a00_rt_workflow_update ON dd04_stage.a00_workflow_instances FOR UPDATE TO dd04_a00_runtime
-  USING(dd04_stage.a00_authorized(tenant_id,'SAVE_PLAN','A00'))
-  WITH CHECK(dd04_stage.a00_authorized(tenant_id,'SAVE_PLAN','A00'));
 CREATE POLICY a00_rt_context_select ON dd04_stage.a00_task_contexts FOR SELECT TO dd04_a00_runtime
   USING(dd04_stage.a00_authorized(tenant_id,'READ'));
 CREATE POLICY a00_rt_context_insert ON dd04_stage.a00_task_contexts FOR INSERT TO dd04_a00_runtime
