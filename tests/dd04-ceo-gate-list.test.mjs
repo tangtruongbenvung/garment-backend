@@ -1,0 +1,37 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const fn=readFileSync(new URL('../netlify/functions/dd04-ceo-gate-list.mjs',import.meta.url),'utf8');
+const html=readFileSync(new URL('../dd04-agent-control/ceo-login.html',import.meta.url),'utf8');
+const client=readFileSync(new URL('../dd04-agent-control/ceo-login.js',import.meta.url),'utf8');
+test('Only Supabase verified MFA2 session and active CEO can view tenant-scoped pending queue',()=>{
+ assert.match(fn,/isStagingPreviewUrl\(request.url\)/);
+ assert.match(fn,/verifyAuthUser\(/);
+ assert.match(fn,/sessionAssuranceFromVerifiedJwt\(/);
+ assert.match(fn,/claims\.aal!=='aal2'/);
+ assert.match(fn,/FROM auth\.sessions s/);
+ assert.match(fn,/JOIN auth\.mfa_factors f/);
+ assert.match(fn,/dd04_stage\.ceo_enrollments/);
+ assert.match(fn,/role='CEO' AND status='ACTIVE'/);
+ assert.match(fn,/BEGIN READ ONLY/);
+ assert.match(fn,/a\.tenant_id=\$1::uuid AND a\.gate='G2' AND a\.decision='PENDING'/);
+ assert.match(fn,/decision_enabled:false/);
+ assert.doesNotMatch(fn,/\b(?:INSERT INTO|UPDATE dd04_stage|DELETE FROM|ALTER TABLE|DROP TABLE)\b/i);
+});
+test('Pending approval list UI uses server data, no hardcoded approvals, and remains review only',()=>{
+ assert.match(html,/id="gateApprovalSelect"/);
+ assert.match(html,/id="loadGateQueueBtn"/);
+ assert.match(client,/fetch\("\/api\/dd04-ceo-gate-list"/);
+ assert.match(client,/currentReadiness\?\.mfa_aal2!==true/);
+ assert.match(client,/currentReadiness\?\.enrollment_verified!==true/);
+ assert.match(client,/\$\("gateApprovalSelect"\)\.addEventListener\("change"/);
+ assert.match(client,/new Option\(label,a\.approval_id\)/);
+ assert.doesNotMatch(client,/APPROVED"\s*\}\s*,\s*method:"POST"/);
+});
+
+test('V5.4 filters out internal G1 and displays only CEO-final publication G2',()=>{
+ assert.match(fn,/queue_scope:'G2_FINAL_CEO_ONLY'/);
+ assert.match(html,/Hồ sơ phê duyệt cũ G2 — chỉ đọc/);
+ assert.match(client,/if\(a\.gate!=="G2"\)continue/);
+ assert.match(client,/G1 được chuyển thành kiểm tra nội bộ AI Agent/);
+});
