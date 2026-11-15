@@ -8,6 +8,7 @@ DECLARE actor text;
 DECLARE scoped boolean;
 DECLARE cross_tenant boolean;
 DECLARE visible_rows integer;
+DECLARE handoff_rejected boolean := false;
 BEGIN
  secret_key:='dd04w_'||encode(gen_random_bytes(48),'hex');
  INSERT INTO dd04_stage.a00_worker_identities
@@ -46,10 +47,13 @@ BEGIN
   VALUES ('6bc73b49-a396-4c7d-b390-ab6339d547cd',
   'cmd_1234567890abcdef1234','cmd_1234567890abcdef1234_A00',
   'A00','A08',1,repeat('a',64),repeat('b',64),'PENDING');
-  RAISE EXCEPTION 'UNAUTHORIZED_HANDOFF_ACCEPTED';
- EXCEPTION WHEN insufficient_privilege OR check_violation THEN
-  RAISE NOTICE 'PASS_UNAUTHORIZED_HANDOFF_REJECTED';
+ EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM='A00_HANDOFF_UNVERIFIED' THEN
+   handoff_rejected:=true;
+   RAISE NOTICE 'PASS_UNAUTHORIZED_HANDOFF_REJECTED_BY_A00_GUARD';
+  ELSE RAISE; END IF;
  END;
+ IF NOT handoff_rejected THEN RAISE EXCEPTION 'UNAUTHORIZED_HANDOFF_ACCEPTED'; END IF;
  RAISE NOTICE 'PASS_WORKER_SCOPE_TASK_INSERT_AND_AUDIT';
  EXECUTE 'RESET ROLE';
 END $test$;
