@@ -128,7 +128,31 @@ export function evaluateReferenceReview(manifest,{a08,a09}={}){
   return Object.freeze({ok:false,reason:'INDEPENDENT_IMAGE_QC_REQUIRED',publish_allowed:false});
  if(a08.actor_subject_id===a09.actor_subject_id)
   return Object.freeze({ok:false,reason:'SAME_REVIEWER_FORBIDDEN',publish_allowed:false});
- return Object.freeze({ok:true,reason:'REVIEW_EVIDENCE_CONTRACT_PASSED',
-  images_reviewed:true,ready_for_A05_scene_generation:true,
+ // Metadata and supplied reviewer JSON are NOT authenticated DB audit facts.
+ // This static preflight never grants live scene generation or G2.
+ return Object.freeze({ok:true,reason:'REVIEW_EVIDENCE_SHAPE_VALID_ONLY',
+  images_reviewed:false,authenticated_review_verified:false,
+  ready_for_A05_scene_generation:false,
   ceo_G2:'NOT_APPROVED',publish_allowed:false});
+}
+
+// Server-only adapter contract: immutable A08/A09 evidence must be read from
+// authenticated storage/DB, never accepted as a UI-supplied PASS assertion.
+// This function is advisory until the staging audited repository is connected.
+export async function checkTrustedReferenceReview(manifest,serverAuditRepository){
+ if(!serverAuditRepository||typeof serverAuditRepository.readImmutableQcEvents!=='function')
+  return Object.freeze({ok:false,reason:'SERVER_AUDIT_REPOSITORY_REQUIRED',
+   ready_for_A05_scene_generation:false,publish_allowed:false});
+ const events=await serverAuditRepository.readImmutableQcEvents(manifest.manifest_sha256);
+ if(!events||events.source!=='AUTHENTICATED_IMMUTABLE_STAGING_DB'||
+    events.manifest_sha256!==manifest.manifest_sha256||
+    events.media_bytes_verified!==true||events.visual_inspection_confirmed!==true)
+  return Object.freeze({ok:false,reason:'IMMUTABLE_VISUAL_REVIEW_EVIDENCE_MISSING',
+   ready_for_A05_scene_generation:false,publish_allowed:false});
+ const base=evaluateReferenceReview(manifest,{a08:events.a08,a09:events.a09});
+ if(!base.ok)return base;
+ return Object.freeze({ok:true,reason:'STAGING_REVIEW_CONTRACT_VERIFIED',
+  ready_for_A05_scene_generation:true,
+  authority:'STAGING_ONLY_NO_PROVIDER_EXECUTION',
+  render_allowed:false,ceo_G2:'NOT_APPROVED',publish_allowed:false});
 }
