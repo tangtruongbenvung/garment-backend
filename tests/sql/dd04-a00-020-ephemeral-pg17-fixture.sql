@@ -8,6 +8,7 @@ CREATE SCHEMA dd04_stage;
 
 CREATE TABLE dd04_stage.commands (
  tenant_id uuid NOT NULL, command_id text NOT NULL, status text NOT NULL,
+ input_sha256 text NOT NULL DEFAULT repeat('a',64),
  PRIMARY KEY(tenant_id,command_id)
 );
 CREATE TABLE dd04_stage.tasks (
@@ -51,7 +52,7 @@ ALTER TABLE dd04_stage.approvals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dd04_stage.artifacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dd04_stage.v55_agent_handoff_events ENABLE ROW LEVEL SECURITY;
 
-INSERT INTO dd04_stage.commands VALUES
+INSERT INTO dd04_stage.commands(tenant_id,command_id,status) VALUES
  ('6bc73b49-a396-4c7d-b390-ab6339d547cd','cmd_1234567890abcdef1234','WAITING_CEO_PLAN');
 INSERT INTO dd04_stage.tasks(tenant_id,command_id,task_id,owner_agent,status) VALUES
  ('6bc73b49-a396-4c7d-b390-ab6339d547cd','cmd_1234567890abcdef1234',
