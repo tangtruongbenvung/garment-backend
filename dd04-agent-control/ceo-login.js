@@ -224,7 +224,7 @@ async function checkCeoReadiness(){
   tile("ceoState",result.enrollment_verified?"CEO ACTIVE":"Chưa xác minh",result.enrollment_verified?"ok":"warn");
   tile("mfaState",result.mfa_aal2?"AAL2 đạt":"Cần xác minh MFA",result.mfa_aal2?"ok":"warn");
   tile("gateState","A07: đang khóa","blocked");
-  $("gateReviewPanel").hidden=!(result.mfa_aal2&&result.enrollment_verified&&result.identity_verified);
+  $("gateReviewPanel").hidden=true; // V5.5: CEO is not the routine G2 publishing approver.
   $("mfaHelp").hidden=result.mfa_aal2===true;
   if(!$("gateReviewPanel").hidden && $("gateApprovalSelect").options.length===1 && !$("gateApprovalSelect").value)await loadGateQueue();
   $("sessionGuidance").textContent=result.enrollment_verified
