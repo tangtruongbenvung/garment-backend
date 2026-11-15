@@ -93,15 +93,13 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
    ensure(STATES.has(task.state),'STATE_INVALID');
    ensure(task.owner_agent!=='A07','A07_PUBLISH_LOCKED');
    // Never use context state as a substitute for the protected canonical legacy task state.
-   ensure(task.legacy_status==='READY'||task.legacy_status==='IN_PROGRESS'||task.legacy_status==='REVIEW'||task.legacy_status==='DONE', 'CANONICAL_TASK_STILL_LOCKED');
+   ensure(['PLANNED_WAIT_G1','READY','IN_PROGRESS','REVIEW','DONE'].includes(task.legacy_status), 'CANONICAL_TASK_STATE_INVALID');
    const spec=request.action==='QC_PASS'?{from:['INTERNAL_REVIEW'],to:'INTERNAL_REVIEW'}:MAP[request.action];
    ensure(spec.from.includes(task.state),'TRANSITION_NOT_ALLOWED');
    allowAction(actor,task,request.action);
    // The original DB gate remains authoritative. A pending G1 never starts content.
-   const gate=rows(await client.query(`SELECT EXISTS(
- SELECT 1 FROM dd04_stage.approvals
- WHERE tenant_id=$1::uuid AND command_id=$2 AND gate='G1' AND decision='APPROVED'
- ) AS passed`,[actor.tenant_id,request.command_id]))[0];
+   const gate=rows(await client.query(`SELECT dd04_stage.a00_022_effective_g1(
+ $1::uuid,$2::text) AS passed`,[actor.tenant_id,request.command_id]))[0];
    ensure(gate?.passed===true,'G1_STILL_LOCKED');
    if(request.action==='QC_PASS'){
      ensure(task.output_sha256===request.evidence_sha256,'QC_INPUT_HASH_MISMATCH');
@@ -144,6 +142,9 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
 
      ensure(HEX.test(task.profile_sha256||'')||task.channel_id===null,'CHANNEL_PROFILE_UNVERIFIED');
    }
+   if(request.action==='REVIEW_PASS'&&['A03','A04'].includes(task.owner_agent)){
+      ensure(actor.agent_id==='A00','A00_STAGE_REVIEW_REQUIRED');
+   }
    if(request.action==='REVIEW_PASS'||request.action==='REVIEW_FAIL'){
     ensure(HEX.test(task.output_sha256||'')&&task.output_sha256===request.evidence_sha256,'REVIEW_INPUT_HASH_MISMATCH');
     ensure(actor.agent_id!==task.last_reviewer_agent||request.action==='REVIEW_FAIL','REPEATED_REVIEWER_DENIED');
@@ -157,7 +158,7 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
     ensure(savedReport?.artifact_found===true,'REVIEW_REPORT_ARTIFACT_NOT_REGISTERED');
     // REVIEW_PASS is only an internal acknowledgement after two distinct QC records.
     // This is NOT G2 authorization or permission to publish.
-    if(request.action==='REVIEW_PASS'){
+    if(request.action==='REVIEW_PASS'&&task.owner_agent==='A05'){
       const qc=rows(await client.query(`SELECT DISTINCT agent_id FROM dd04_stage.a00_transition_events
        WHERE tenant_id=$1::uuid AND command_id=$2 AND task_id=$3 AND action='QC_PASS'
         AND evidence_sha256=$4 AND report_sha256 IS NOT NULL`,
@@ -188,7 +189,7 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
  (tenant_id,command_id,task_id,from_agent,to_agent,revision,input_sha256,report_sha256,verdict)
  VALUES ($1::uuid,$2,$3,$4,$5,$6,$7,$8,'PENDING')`,
  [actor.tenant_id,request.command_id,request.task_id,task.owner_agent,
- task.owner_agent==='A08'?'A09':'A08',updated.revision,request.evidence_sha256,
+ ({A00:'A03',A03:'A04',A04:'A05',A05:'A08',A08:'A09'})[task.owner_agent]??'A08',updated.revision,request.evidence_sha256,
  hash({kind:'HANDOFF_PENDING_ONLY',task_id:request.task_id,revision:updated.revision,
    input_sha256:request.evidence_sha256})]);
    }
