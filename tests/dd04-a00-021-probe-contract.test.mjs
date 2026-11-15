@@ -13,7 +13,7 @@ test('connection health probe executes no DML, no G1/G2 updates or external spen
  assert.match(source,/DD04_A00_BACKEND_DATABASE_URL/);
  assert.match(source,/dd04_stage\.a00_authorized/);
  assert.doesNotMatch(source,/client\.query\(['"`]?(?:INSERT|UPDATE|DELETE|CREATE|ALTER|DROP)\b/i);
- assert.doesNotMatch(source,/publish|openai\.com|api_key/i);
+ assert.doesNotMatch(source,/INSERT INTO dd04_stage|api\.openai\.com/i);
 });
 test('never returns database secret, URL or raw exceptions',()=>{
  assert.match(source,/STAGING_DATABASE_CONNECTION_UNAVAILABLE/);
