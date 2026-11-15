@@ -14,7 +14,7 @@ test('Only Supabase verified MFA2 session and active CEO can view tenant-scoped 
  assert.match(fn,/dd04_stage\.ceo_enrollments/);
  assert.match(fn,/role='CEO' AND status='ACTIVE'/);
  assert.match(fn,/BEGIN READ ONLY/);
- assert.match(fn,/a\.tenant_id=\$1::uuid AND a\.decision='PENDING'/);
+ assert.match(fn,/a\.tenant_id=\$1::uuid AND a\.gate='G2' AND a\.decision='PENDING'/);
  assert.match(fn,/decision_enabled:false/);
  assert.doesNotMatch(fn,/\b(?:INSERT INTO|UPDATE dd04_stage|DELETE FROM|ALTER TABLE|DROP TABLE)\b/i);
 });
@@ -27,4 +27,11 @@ test('Pending approval list UI uses server data, no hardcoded approvals, and rem
  assert.match(client,/\$\("gateApprovalSelect"\)\.addEventListener\("change"/);
  assert.match(client,/new Option\(label,a\.approval_id\)/);
  assert.doesNotMatch(client,/APPROVED"\s*\}\s*,\s*method:"POST"/);
+});
+
+test('V5.4 filters out internal G1 and displays only CEO-final publication G2',()=>{
+ assert.match(fn,/queue_scope:'G2_FINAL_CEO_ONLY'/);
+ assert.match(html,/Danh sách bài chờ CEO duyệt đăng/);
+ assert.match(client,/if\(a\.gate!=="G2"\)continue/);
+ assert.match(client,/G1 được chuyển thành kiểm tra nội bộ AI Agent/);
 });
