@@ -25,7 +25,7 @@
 - Tất cả quyết định preflight đều `executable:false`, `spend_allowed:false`, `publish_allowed:false`; tên `DB_SERIALIZABLE_READ` trong dữ liệu chỉ là contract, không có quyền nếu được caller tự dựng.
 - Tests `dd04-a00-022-delegation.test.mjs` và `dd04-a00-022-sql-contract.test.mjs` kiểm tình huống tự duyệt, giả nguồn, sai tenant, stale revision, quá hạn mức, tự tạo QC và thứ tự Agent.
 
-## 3. SQL đề xuất — CHƯA ĐƯỢC PHÉP CHẠY
+## 3. SQL đề xuất — CHƯA ĐƯỢC PHÉP CHẠY TRÊN STAGING
 
 `dd04-agent-control/supabase/26_A00_022_DELEGATED_G1_FINANCE_REVIEW_ONLY_DO_NOT_RUN.sql`
 
@@ -52,7 +52,7 @@ G1 riêng có chính sách CEO → worker A00 có quyền đã cấp → kiểm 
 
 ## 6. Quyết định nghiệm thu
 
-- **A00-022 preflight và SQL thiết kế:** PASS xây dựng, CI cần xác nhận tại run cuối cùng.
+- **A00-022 preflight và SQL thiết kế:** PASS kiểm thử nguồn + SQL trên PostgreSQL 17 tạm thời (GitHub Actions run 578 / 43680538752, cả 3 nhóm PASS).
 - **A00-022 migration staging:** NOT APPLIED.
 - **A00-022 giao dịch phê duyệt nội bộ + bàn giao Agent thật:** NOT TESTED / NOT PASSED.
 - **A03/A04/A05 live providers:** NOT AUTHORIZED; **A07 publish:** LOCKED; production unchanged.
@@ -60,3 +60,9 @@ G1 riêng có chính sách CEO → worker A00 có quyền đã cấp → kiểm 
 ### Quyết định cần CEO duyệt tiếp
 
 Không phê duyệt bằng câu chung "tiếp tục". Khi hoàn tất bản migration tích hợp, trình đúng SQL byte SHA-256, target staging, kiểm thử PostgreSQL riêng và phạm vi thay đổi trigger/policy để CEO duyệt. Chỉ sau phê duyệt mới apply và chạy giao dịch thực.
+
+## 7. Chứng cứ CI cập nhật
+- GitHub Actions run **578**, URL https://github.com/tangtruongbenvung/garment-backend/actions/runs/43680538752 — `test-a00`, `validate-windows-powershell`, `validate-sql-ephemeral` đều thành công.
+- CI đã **thực thi SQL 26 trên PostgreSQL 17 disposable duy nhất**, sau fixture và SQL 24, sau đó xác nhận 5 bảng có RLS bật, không có policy/runtime grant và G1 thử nghiệm vẫn PENDING.
+- Trong CI, fixture không có toàn bộ trigger legacy, nên kiểm tra trigger legacy trên **Supabase staging thật đã dùng SELECT read-only** và xác nhận `dd04_tasks_guard`, `dd04_approval_guard`, `a00_context_transition_guard` còn được bật.
+- Staging `a00_022_%` tables = **0**; `v55_finance_policies` ACTIVE = **0**; worker ACTIVE = **0**. **Chưa có migration A00-022, không có bàn giao Agent thực trên staging.**
