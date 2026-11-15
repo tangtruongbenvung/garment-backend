@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ducduy.example/contracts/channel_character_bible.schema.json",
+  "title": "DD04 Channel Character Bible V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "channel_id",
+    "channel_name",
+    "platform",
+    "character_version",
+    "profile_sha256",
+    "canonical_seed",
+    "fictional",
+    "locale",
+    "reference_source",
+    "mother",
+    "baby",
+    "side_characters",
+    "cultural_rules",
+    "identity_edit_policy"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "DD04_CHARACTER_BIBLE_V1"
+    },
+    "channel_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{2,64}$"
+    },
+    "channel_name": {
+      "type": "string",
+      "minLength": 2
+    },
+    "platform": {
+      "enum": [
+        "FANPAGE",
+        "TIKTOK"
+      ]
+    },
+    "character_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "profile_sha256": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      ]
+    },
+    "canonical_seed": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "fictional": {
+      "const": true
+    },
+    "locale": {
+      "const": "vi-VN"
+    },
+    "reference_source": {
+      "enum": [
+        "GENERATED_CONTRACT_ONLY",
+        "UNVERIFIED_METADATA_NEEDS_STORAGE_BYTE_CHECK"
+      ]
+    },
+    "mother": {
+      "$ref": "#/$defs/character"
+    },
+    "baby": {
+      "$ref": "#/$defs/character"
+    },
+    "side_characters": {
+      "type": "array"
+    },
+    "cultural_rules": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "string"
+      }
+    },
+    "identity_edit_policy": {
+      "const": "LOCKED_UNTIL_SEPARATE_CHANNEL_VERSION_APPROVED"
+    },
+    "reference_assets": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "character_role",
+          "bytes_sha256",
+          "storage_ref"
+        ],
+        "properties": {
+          "character_role": {
+            "enum": [
+              "MOTHER",
+              "BABY"
+            ]
+          },
+          "bytes_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "storage_ref": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "character": {
+      "type": "object",
+      "required": [
+        "character_id",
+        "role",
+        "invariant",
+        "expression_variants"
+      ],
+      "properties": {
+        "character_id": {
+          "type": "string",
+          "minLength": 3
+        },
+        "role": {
+          "type": "string",
+          "minLength": 5
+        },
+        "invariant": {
+          "type": "object",
+          "required": [
+            "face_shape",
+            "hair",
+            "eye_color",
+            "skin_tone",
+            "silhouette",
+            "outfit",
+            "voice"
+          ]
+        },
+        "expression_variants": {
+          "type": "array",
+          "minItems": 3
+        }
+      }
+    }
+  }
+}
