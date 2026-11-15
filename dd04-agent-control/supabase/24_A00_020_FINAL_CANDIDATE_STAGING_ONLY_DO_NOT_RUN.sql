@@ -124,10 +124,24 @@ SET search_path=pg_catalog,dd04_stage AS $actor$
   LIMIT 1;
 $actor$;
 
+CREATE FUNCTION dd04_stage.a00_current_subject()
+RETURNS uuid LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,dd04_stage AS $subject$
+  SELECT w.subject_id FROM dd04_stage.a00_worker_identities w
+  WHERE w.status='ACTIVE' AND w.expires_at>now()
+    AND w.credential_sha256 =
+      encode(pg_catalog.sha256(pg_catalog.convert_to(
+        coalesce(pg_catalog.current_setting('dd04.worker_credential',true),''),
+        'UTF8')), 'hex')
+  LIMIT 1;
+$subject$;
+
 REVOKE ALL ON FUNCTION dd04_stage.a00_authorized(uuid,text,text) FROM PUBLIC,anon,authenticated;
 REVOKE ALL ON FUNCTION dd04_stage.a00_current_agent() FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION dd04_stage.a00_current_subject() FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION dd04_stage.a00_authorized(uuid,text,text) TO dd04_a00_runtime;
 GRANT EXECUTE ON FUNCTION dd04_stage.a00_current_agent() TO dd04_a00_runtime;
+GRANT EXECUTE ON FUNCTION dd04_stage.a00_current_subject() TO dd04_a00_runtime;
 
 ALTER TABLE dd04_stage.a00_worker_identities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dd04_stage.a00_workflow_instances ENABLE ROW LEVEL SECURITY;
@@ -201,6 +215,9 @@ RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER
 SET search_path=pg_catalog,dd04_stage AS $guard_event$
 DECLARE owner text;
 BEGIN
+  IF NEW.actor_user_id IS DISTINCT FROM dd04_stage.a00_current_subject() THEN
+    RAISE EXCEPTION 'A00_SUBJECT_SPOOF';
+  END IF;
   IF NEW.agent_id IS DISTINCT FROM dd04_stage.a00_current_agent() THEN
     RAISE EXCEPTION 'A00_AGENT_EVENT_SPOOF';
   END IF;
@@ -230,6 +247,13 @@ BEGIN
            AND a.sha256=NEW.report_sha256)
     THEN RAISE EXCEPTION 'A00_QC_REPORT_NOT_VERIFIED'; END IF;
   END IF;
+  IF NEW.action IN ('REVIEW_PASS','REVIEW_FAIL') AND (
+    NEW.report_sha256 IS NULL OR NEW.report_sha256=NEW.evidence_sha256
+    OR NOT EXISTS(SELECT 1 FROM dd04_stage.artifacts a
+      WHERE a.tenant_id=NEW.tenant_id AND a.command_id=NEW.command_id
+      AND a.task_id=NEW.task_id AND a.sha256=NEW.report_sha256
+      AND a.kind='REVIEW_REPORT_'||NEW.agent_id)
+  ) THEN RAISE EXCEPTION 'A00_REVIEW_REPORT_NOT_REGISTERED'; END IF;
   IF NEW.action='REVIEW_PASS' AND (
     NOT EXISTS (SELECT 1 FROM dd04_stage.a00_transition_events e
        WHERE e.tenant_id=NEW.tenant_id AND e.command_id=NEW.command_id
@@ -307,6 +331,8 @@ $guard_context$;
 
 REVOKE ALL ON FUNCTION dd04_stage.a00_guard_transition_event() FROM PUBLIC,anon,authenticated,service_role;
 REVOKE ALL ON FUNCTION dd04_stage.a00_guard_context_transition() FROM PUBLIC,anon,authenticated,service_role;
+GRANT EXECUTE ON FUNCTION dd04_stage.a00_guard_transition_event() TO dd04_a00_runtime;
+GRANT EXECUTE ON FUNCTION dd04_stage.a00_guard_context_transition() TO dd04_a00_runtime;
 CREATE TRIGGER a00_transition_event_guard
   BEFORE INSERT ON dd04_stage.a00_transition_events
   FOR EACH ROW EXECUTE FUNCTION dd04_stage.a00_guard_transition_event();
