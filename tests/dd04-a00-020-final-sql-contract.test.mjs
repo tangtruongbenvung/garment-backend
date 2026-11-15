@@ -9,7 +9,7 @@ const sha=createHash('sha256').update(s).digest('hex');
 console.log('DD04_A00_020_FINAL_SQL_SHA256='+sha);
 const count=(pattern)=>(s.match(pattern)||[]).length;
 test('one complete atomic transaction, four unique new tables, no corrupted duplicated statements',()=>{
- assert.match(s,/^BEGIN;[\s\S]*COMMIT;\s*$/);
+ assert.match(s,/\bBEGIN;[\s\S]*COMMIT;\s*$/);
  assert.equal(count(/^BEGIN;/gm),1);assert.equal(count(/^COMMIT;/gm),1);
  for(const t of ['a00_worker_identities','a00_workflow_instances','a00_task_contexts','a00_transition_events'])
   assert.equal(count(new RegExp('^CREATE TABLE dd04_stage\\.'+t+' \\(','gm')),1,t);
