@@ -1,1 +1,13 @@
 :root{font-family:system-ui,Segoe UI,Arial,sans-serif;color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#071320;color:#e8f4ff;padding:26px}main{max-width:730px;margin:auto}header{margin-bottom:20px}h1{font-size:27px;margin:5px 0}h2{font-size:18px;margin:0 0 14px}.eyebrow{font-size:12px;color:#65e6d7;letter-spacing:2px;font-weight:800}.panel{background:#132539;border:1px solid #2d506c;border-radius:14px;margin:14px 0;padding:24px}.muted{color:#a5bbce}.small{font-size:12px}.warning{color:#ffd599}label{display:block;margin:14px 0 8px;font-weight:700}input{background:#081a2b;border:1px solid #53738b;border-radius:8px;color:#fff;width:100%;padding:13px;font:inherit}.actions{display:flex;flex-wrap:wrap;gap:9px;margin:15px 0}button{border:0;border-radius:9px;background:#55d5c1;color:#06202d;padding:12px 15px;font:inherit;font-weight:750;cursor:pointer}button.secondary{background:#2d536e;color:#e8f5ff}button:disabled{opacity:.5}a{color:#76d7ea}.status{font-weight:750}.fail{color:#ff9eac}.pass{color:#79e8ae}#totpEnroll,#verifyPanel{border-top:1px solid #38526a;margin-top:15px;padding-top:15px}[hidden]{display:none!important}@media(max-width:600px){body{padding:10px}.panel{padding:15px}h1{font-size:22px}}
+/* DD04-A00-014 compact, readable security status summary */
+.readiness-box{border-top:1px solid #36516a;padding-top:18px;margin-top:20px}
+.status-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.status-tile{background:#0b1d2f;border:1px solid #365771;border-radius:10px;padding:12px 14px;min-width:0;display:flex;flex-direction:column;gap:7px}
+.status-tile>span{color:#bed0df;font-size:13px}
+.status-tile>strong{font-size:15px;line-height:1.4;overflow-wrap:anywhere}
+.status-tile>strong[data-state="ok"]{color:#81efbb}
+.status-tile>strong[data-state="warn"]{color:#ffca80}
+.status-tile>strong[data-state="blocked"]{color:#f5a6b2}
+#readinessStatus,#gateReviewStatus{line-height:1.6;overflow-wrap:anywhere}
+#sessionGuidance{line-height:1.5}
+@media(max-width:480px){.status-grid{grid-template-columns:1fr}.status-tile{padding:10px 12px}}
