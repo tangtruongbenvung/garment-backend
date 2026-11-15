@@ -32,7 +32,8 @@ test('TOTP challenge and verify must complete before MFA success feedback',()=>{
  assert.match(js,/\/challenge/);
  assert.match(js,/\/verify/);
  assert.match(js,/if\(!data\?\.access_token\)throw/);
- assert.match(js,/Chưa có phân quyền CEO hoặc G1\/G2/);
+ assert.match(js,/Đã xác minh MFA với Supabase/);
+ assert.match(js,/await checkCeoReadiness\(\)/);
 });
 
 test('first-time password uses recovery email and cannot update without verified recovery session',()=>{
@@ -75,4 +76,23 @@ test('MFA factor listing uses verified Auth user factors (not unsupported GET fa
  assert.doesNotMatch(js,/auth\("\/factors",\{authorized:true\}\)/);
  assert.match(page,/id="checkReadinessBtn"/);
  assert.match(js,/bind\("checkReadinessBtn",checkCeoReadiness\)/);
+});
+
+test('CEO Auth and MFA status uses server-provided enrollment, not obsolete hard-coded denial',()=>{
+ assert.match(page,/id="sessionGuidance"/);
+ assert.match(page,/id="authState"/);
+ assert.match(page,/id="ceoState"/);
+ assert.match(page,/id="mfaState"/);
+ assert.match(page,/id="gateState"/);
+ assert.match(page,/id="mfaHelp"/);
+ assert.match(page,/id="gateReviewPanel" hidden/);
+ assert.doesNotMatch(page,/Chưa có quyền CEO và chưa thể duyệt G1\/G2/);
+ assert.match(js,/result\.enrollment_verified\?"CEO ACTIVE"/);
+ assert.match(js,/result\.mfa_aal2\?"AAL2 đạt"/);
+ assert.match(js,/\$\("gateReviewPanel"\)\.hidden=!\(result\.mfa_aal2&&result\.enrollment_verified&&result\.identity_verified\)/);
+ assert.match(js,/if\(!accessToken\|\|currentReadiness\?\.mfa_aal2!==true/);
+ assert.match(js,/await loadFactors\(\);\s*await checkCeoReadiness\(\);/);
+ assert.match(js,/message\("Đã xác minh MFA với Supabase/);
+ assert.match(js,/resetReadiness\(\)/);
+ assert.doesNotMatch(js,/Chưa có phân quyền CEO hoặc G1\/G2/);
 });
