@@ -27,7 +27,7 @@ export async function createA0021Runtime({
  if(environment!=='STAGING'||!TENANT.test(tenantId||''))
   throw new Error('A00_STAGING_TENANT_REQUIRED');
  assertA0021BackendDbUrl(connectionString);
- const tls=createVerifiedPgTlsConfig(connectionString,tenantId,caPem);
+ const tls=createVerifiedPgTlsConfig(connectionString,tenantId,caPem,assertA0021BackendDbUrl);
  const {Pool}=await import('pg');
  const pool=new Pool({...tls,max:2,connectionTimeoutMillis:6000,
   idleTimeoutMillis:8000,statement_timeout:8000,query_timeout:10000});
