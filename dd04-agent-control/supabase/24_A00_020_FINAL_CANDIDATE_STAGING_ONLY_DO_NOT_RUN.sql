@@ -313,11 +313,23 @@ BEGIN
           WHERE a.tenant_id=NEW.tenant_id AND a.command_id=NEW.command_id
           AND a.task_id=NEW.task_id AND a.sha256=NEW.output_sha256)
   ) THEN RAISE EXCEPTION 'A00_OUTPUT_ATTACH_NOT_REGISTERED'; END IF;
+  IF expected_action IN ('START','REVIEW_PASS','REVIEW_FAIL','AUTO_READY')
+     AND NEW.output_sha256 IS DISTINCT FROM OLD.output_sha256
+  THEN RAISE EXCEPTION 'A00_OUTPUT_HASH_IMMUTABLE'; END IF;
+  IF expected_action='REWORK' AND NEW.output_sha256 IS NOT NULL
+  THEN RAISE EXCEPTION 'A00_REWORK_MUST_CLEAR_OUTPUT'; END IF;
+  IF expected_action IN ('REVIEW_PASS','REVIEW_FAIL') THEN
+    IF NEW.last_reviewer_agent IS DISTINCT FROM dd04_stage.a00_current_agent()
+    THEN RAISE EXCEPTION 'A00_REVIEWER_ID_MISMATCH'; END IF;
+  ELSIF NEW.last_reviewer_agent IS DISTINCT FROM OLD.last_reviewer_agent
+  THEN RAISE EXCEPTION 'A00_REVIEWER_FIELD_IMMUTABLE'; END IF;
   IF NOT EXISTS(SELECT 1 FROM dd04_stage.a00_transition_events e
     WHERE e.tenant_id=NEW.tenant_id AND e.command_id=NEW.command_id
       AND e.task_id=NEW.task_id AND e.from_state=OLD.state
       AND e.to_state=NEW.state AND e.expected_revision=OLD.revision
-      AND e.action=expected_action AND e.agent_id=dd04_stage.a00_current_agent())
+      AND e.action=expected_action AND e.agent_id=dd04_stage.a00_current_agent()
+      AND (expected_action NOT IN ('ATTACH','SUBMIT') OR e.evidence_sha256=NEW.output_sha256)
+      AND (expected_action NOT IN ('REVIEW_PASS','REVIEW_FAIL') OR e.evidence_sha256=OLD.output_sha256))
   THEN RAISE EXCEPTION 'A00_ATOMIC_AUDIT_REQUIRED'; END IF;
   IF expected_action='AUTO_READY' AND EXISTS(
     SELECT 1 FROM unnest(NEW.dependency_task_ids) AS dependency(id)
