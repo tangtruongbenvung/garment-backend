@@ -21,8 +21,8 @@ test('rejects production, postgres/service_role, wrong schema, unsafe SSL and mi
  for(const url of bad)
   assert.throws(()=>assertA0021BackendDbUrl(url),/A00_BACKEND_/);
 });
-test('runtime constructor refuses production and invalid tenant before network use',()=>{
- assert.throws(()=>createA0021Runtime({
+test('runtime constructor refuses production and invalid tenant before network use',async()=>{
+ await assert.rejects(createA0021Runtime({
   connectionString:good,tenantId:'6bc73b49-a396-4c7d-b390-ab6339d547cd',
   environment:'PRODUCTION'}),/A00_STAGING_TENANT_REQUIRED/);
 });
