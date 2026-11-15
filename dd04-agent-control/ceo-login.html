@@ -9,8 +9,8 @@
 <script type="module" src="./ceo-login.js"></script>
 </head><body>
 <main>
-<header><span class="eyebrow">ĐỨC DUY AI OS · DD04-A00-014</span><h1>Đăng nhập &amp; MFA — Staging</h1>
-<p class="muted">Chính sách V5.4: AI Agent xử lý kiểm tra nội bộ G1; CEO chỉ phê duyệt đăng bài G2 sau khi xem bản cuối, kênh và lịch. Mọi quyết định vẫn khóa cho đến khi giao dịch được nghiệm thu.</p></header>
+<header><span class="eyebrow">ĐỨC DUY AI OS · DD04-A00-017 · V5.5</span><h1>Đăng nhập &amp; MFA — Staging</h1>
+<p class="muted">Chính sách V5.5: CEO gửi lệnh, ảnh/tài liệu đầu vào và xử lý ngoại lệ tài chính. A00–A17 tự kiểm tra, bàn giao và theo dõi theo vai trò. Xuất bản tự động vẫn khóa cho đến khi kiểm thử quyền nền tảng và giao dịch dữ liệu.</p></header>
 <section class="panel" id="loginPanel">
 <h2>1. Xác thực email</h2>
 <label for="email">Email đã đăng ký Supabase Staging</label>
@@ -38,7 +38,7 @@
 <div class="status-tile"><span>Danh tính Auth</span><strong id="authState">Chờ kiểm tra</strong></div>
 <div class="status-tile"><span>Quyền CEO</span><strong id="ceoState">Chờ kiểm tra</strong></div>
 <div class="status-tile"><span>MFA phiên hiện tại</span><strong id="mfaState">Chờ kiểm tra</strong></div>
-<div class="status-tile"><span>Quyền CEO duyệt đăng G2</span><strong id="gateState">Chưa kích hoạt</strong></div>
+<div class="status-tile"><span>Đăng bài tự động bởi A07</span><strong id="gateState">Chưa kích hoạt</strong></div>
 </div>
 <div class="actions"><button type="button" id="checkReadinessBtn" class="secondary">Làm mới trạng thái quyền CEO</button></div>
 <p id="readinessStatus" role="status" aria-live="polite">Chờ đọc trạng thái bảo mật từ server.</p>
@@ -56,9 +56,9 @@
 </div>
 </section>
 <section class="readiness-box" id="gateReviewPanel" hidden>
-<h2>4. Danh sách bài chờ CEO duyệt đăng — G2</h2>
-<p class="muted small">G1 là cổng nội bộ tự kiểm duyệt của A00/A02/A08/A09/A11. Tại đây CEO chỉ cần xem gói G2: video/ảnh/caption, kênh, lịch, phiên bản và QC. Hiện chỉ đọc; chưa cho phép đăng hoặc duyệt thật.</p>
-<div class="actions"><button type="button" class="secondary" id="loadGateQueueBtn">Tải danh sách bài chờ duyệt đăng G2</button></div>
+<h2>4. Hồ sơ phê duyệt cũ G2 — chỉ đọc</h2>
+<p class="muted small">V5.5 chuyển nội dung sang Agent tự kiểm duyệt trong phạm vi được ủy quyền. Danh sách này chỉ kiểm tra hồ sơ G2 legacy; CEO không cần duyệt từng bài. Không thể đăng từ trang này.</p>
+<div class="actions"><button type="button" class="secondary" id="loadGateQueueBtn">Kiểm tra hồ sơ G2 lịch sử</button></div>
 <label for="gateApprovalSelect">Chọn bài G2 cần xem</label>
 <select id="gateApprovalSelect"><option value="">Chưa tải danh sách</option></select>
 <p id="gateQueueStatus" class="muted small" role="status" aria-live="polite">Chỉ hiện yêu cầu thuộc tenant đã xác minh.</p>
@@ -66,6 +66,23 @@
 <input id="gateApprovalId" type="text" inputmode="text" maxlength="36" placeholder="UUID của yêu cầu G1/G2">
 <button type="button" id="gateReviewBtn" class="secondary">Xem điều kiện đăng bài (chỉ đọc)</button>
 <p id="gateReviewStatus" role="status" aria-live="polite">Chưa kiểm tra. Không thay đổi quyết định.</p>
+</section>
+<section class="readiness-box" id="agentWorklistPanel">
+<h2>5. Sổ theo dõi công việc 18 AI Agent</h2>
+<p class="muted small">Đọc trực tiếp từ Supabase staging. Phân biệt trạng thái công việc đã ghi trong DB với kết quả AI Agent thực thi thật; chưa có kết quả AI auto-duyệt.</p>
+<div class="actions"><button id="loadAgentWorklistBtn" type="button" class="secondary">Tải danh sách công việc theo Agent</button></div>
+<div class="worklist-filters">
+<label for="worklistAgentFilter">Agent
+<select id="worklistAgentFilter"><option value="">Tất cả Agent</option></select></label>
+<label for="worklistStatusFilter">Trạng thái
+<select id="worklistStatusFilter"><option value="">Tất cả trạng thái</option></select></label>
+</div>
+<p id="worklistSummary" class="muted small" role="status" aria-live="polite">Chưa tải dữ liệu từ server.</p>
+<div class="worklist-overflow"><table class="worklist-table">
+<thead><tr><th>Mã lệnh / Nhiệm vụ</th><th>Agent phụ trách</th><th>Trạng thái DB</th><th>QC / Bằng chứng</th><th>Cập nhật</th></tr></thead>
+<tbody id="worklistBody"><tr><td colspan="5">Chưa tải công việc</td></tr></tbody>
+</table></div>
+<p class="muted small">Việc tài chính ngoài hạn mức sẽ được A11 trình CEO sau khi quy chế và ledger được triển khai. Các việc chưa có bằng chứng không được đánh dấu PASS.</p>
 </section>
 <div class="actions"><button id="logoutBtn" class="secondary" type="button">Đăng xuất &amp; xóa phiên</button></div>
 </section>
