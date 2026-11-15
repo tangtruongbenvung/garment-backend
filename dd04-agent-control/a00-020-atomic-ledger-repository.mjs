@@ -148,6 +148,13 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
     ensure(HEX.test(task.output_sha256||'')&&task.output_sha256===request.evidence_sha256,'REVIEW_INPUT_HASH_MISMATCH');
     ensure(actor.agent_id!==task.last_reviewer_agent||request.action==='REVIEW_FAIL','REPEATED_REVIEWER_DENIED');
     ensure(request.report_sha256!==request.evidence_sha256,'REPORT_MUST_BE_INDEPENDENT');
+    const savedReport=rows(await client.query(`SELECT EXISTS(
+      SELECT 1 FROM dd04_stage.artifacts WHERE tenant_id=$1::uuid
+       AND command_id=$2 AND task_id=$3 AND sha256=$4
+       AND kind=$5) AS artifact_found`,
+       [actor.tenant_id,request.command_id,request.task_id,
+        request.report_sha256,'REVIEW_REPORT_'+actor.agent_id]))[0];
+    ensure(savedReport?.artifact_found===true,'REVIEW_REPORT_ARTIFACT_NOT_REGISTERED');
     // REVIEW_PASS is only an internal acknowledgement after two distinct QC records.
     // This is NOT G2 authorization or permission to publish.
     if(request.action==='REVIEW_PASS'){
