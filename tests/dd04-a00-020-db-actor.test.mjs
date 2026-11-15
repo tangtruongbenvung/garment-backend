@@ -9,7 +9,7 @@ function db({status='ACTIVE',not_expired=true,agent_id='A03'}={}){
  const calls=[];
  return {calls,client:{async query(sql,args){calls.push({sql,args});
   return {rows:status==='NONE'?[]:[{tenant_id:tenant,subject_id:'be8c9e62-fe68-448a-8822-bffbbb96f937',
-   agent_id,status,not_expired,allowed_actions:['START','SUBMIT']}]}};
+   agent_id,status,not_expired,allowed_actions:['START','SUBMIT']}]};
  }}};
 }
 test('requires server-only opaque worker credential',async()=>{
