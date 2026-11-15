@@ -67,6 +67,13 @@
 <button type="button" id="gateReviewBtn" class="secondary">Kiểm tra hồ sơ duyệt (chỉ đọc)</button>
 <p id="gateReviewStatus" role="status" aria-live="polite">Chưa kiểm tra. Không thay đổi quyết định.</p>
 </section>
+<section class="readiness-box" id="worklistPanel" hidden>
+<h2>5. Master Task Ledger — dữ liệu staging thật</h2>
+<p class="muted small">Danh sách đọc từ Supabase sau khi xác minh CEO và MFA AAL2. Chưa có chức năng ghi, phê duyệt hay đăng bài.</p>
+<div class="actions"><button type="button" id="refreshWorklistBtn" class="secondary">Tải danh sách nhiệm vụ từ staging</button></div>
+<p id="worklistStatus" role="status" aria-live="polite">Chưa tải dữ liệu.</p>
+<div style="overflow-x:auto"><table id="worklistTable"><thead><tr><th>Nhiệm vụ</th><th>Agent</th><th>Trạng thái</th><th>Phiên bản</th></tr></thead><tbody id="worklistRows"></tbody></table></div>
+</section>
 <div class="actions"><button id="logoutBtn" class="secondary" type="button">Đăng xuất &amp; xóa phiên</button></div>
 </section>
 <section class="panel"><h2>Trạng thái kiểm thử</h2><p id="message" role="status" aria-live="polite">Chưa đăng nhập.</p>
