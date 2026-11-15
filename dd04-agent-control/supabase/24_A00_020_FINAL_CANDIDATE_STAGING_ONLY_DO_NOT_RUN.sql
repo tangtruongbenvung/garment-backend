@@ -194,6 +194,119 @@ CREATE POLICY a00_rt_transition_insert ON dd04_stage.a00_transition_events FOR I
   WITH CHECK(dd04_stage.a00_authorized(tenant_id,action,agent_id)
     AND agent_id=dd04_stage.a00_current_agent());
 
+-- Defense in depth: the runtime login cannot directly forge approval or state.
+-- These guard triggers run as the restricted invoker, not SECURITY DEFINER.
+CREATE FUNCTION dd04_stage.a00_guard_transition_event()
+RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER
+SET search_path=pg_catalog,dd04_stage AS $guard_event$
+DECLARE owner text;
+BEGIN
+  IF NEW.agent_id IS DISTINCT FROM dd04_stage.a00_current_agent() THEN
+    RAISE EXCEPTION 'A00_AGENT_EVENT_SPOOF';
+  END IF;
+  SELECT t.owner_agent INTO owner FROM dd04_stage.tasks t
+   WHERE t.tenant_id=NEW.tenant_id AND t.command_id=NEW.command_id AND t.task_id=NEW.task_id;
+  IF owner IS NULL THEN RAISE EXCEPTION 'A00_TASK_NOT_FOUND'; END IF;
+  IF NEW.action IN ('START','SUBMIT','REWORK') AND owner<>NEW.agent_id THEN
+    RAISE EXCEPTION 'A00_OWNER_REQUIRED';
+  END IF;
+  IF NEW.action IN ('QC_PASS','REVIEW_PASS','REVIEW_FAIL') AND owner=NEW.agent_id THEN
+    RAISE EXCEPTION 'A00_SELF_APPROVAL_DENIED';
+  END IF;
+  IF NEW.action='SUBMIT' AND NOT EXISTS (
+    SELECT 1 FROM dd04_stage.artifacts a WHERE a.tenant_id=NEW.tenant_id
+      AND a.command_id=NEW.command_id AND a.task_id=NEW.task_id
+      AND a.sha256=NEW.evidence_sha256
+  ) THEN RAISE EXCEPTION 'A00_OUTPUT_NOT_REGISTERED'; END IF;
+  IF NEW.action='QC_PASS' THEN
+    IF NEW.agent_id NOT IN ('A08','A09')
+      OR NEW.from_state<>'INTERNAL_REVIEW' OR NEW.to_state<>'INTERNAL_REVIEW'
+      OR NEW.report_sha256 IS NULL
+      OR NEW.report_sha256=NEW.evidence_sha256
+      OR NOT EXISTS (SELECT 1 FROM dd04_stage.artifacts a
+         WHERE a.tenant_id=NEW.tenant_id AND a.command_id=NEW.command_id
+           AND a.task_id=NEW.task_id
+           AND a.kind='QC_REPORT_'||NEW.agent_id
+           AND a.sha256=NEW.report_sha256)
+    THEN RAISE EXCEPTION 'A00_QC_REPORT_NOT_VERIFIED'; END IF;
+  END IF;
+  IF NEW.action='REVIEW_PASS' AND (
+    NOT EXISTS (SELECT 1 FROM dd04_stage.a00_transition_events e
+       WHERE e.tenant_id=NEW.tenant_id AND e.command_id=NEW.command_id
+       AND e.task_id=NEW.task_id AND e.action='QC_PASS'
+       AND e.agent_id='A08' AND e.evidence_sha256=NEW.evidence_sha256)
+    OR NOT EXISTS (SELECT 1 FROM dd04_stage.a00_transition_events e
+       WHERE e.tenant_id=NEW.tenant_id AND e.command_id=NEW.command_id
+       AND e.task_id=NEW.task_id AND e.action='QC_PASS'
+       AND e.agent_id='A09' AND e.evidence_sha256=NEW.evidence_sha256)
+  ) THEN RAISE EXCEPTION 'A00_DUAL_QC_MISSING'; END IF;
+  RETURN NEW;
+END;
+$guard_event$;
+
+CREATE FUNCTION dd04_stage.a00_guard_context_transition()
+RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER
+SET search_path=pg_catalog,dd04_stage AS $guard_context$
+DECLARE expected_action text;
+DECLARE legacy_status text;
+DECLARE owner text;
+BEGIN
+  IF TG_OP<>'UPDATE' THEN RETURN NEW; END IF;
+  IF (NEW.tenant_id,NEW.command_id,NEW.task_id,NEW.workflow_id,NEW.campaign_id,
+      NEW.channel_id,NEW.profile_version,NEW.profile_sha256,NEW.dependency_task_ids,
+      NEW.output_refs) IS DISTINCT FROM
+     (OLD.tenant_id,OLD.command_id,OLD.task_id,OLD.workflow_id,OLD.campaign_id,
+      OLD.channel_id,OLD.profile_version,OLD.profile_sha256,OLD.dependency_task_ids,
+      OLD.output_refs)
+    OR NEW.revision<>OLD.revision+1
+  THEN RAISE EXCEPTION 'A00_CONTEXT_IDENTITY_REVISION_IMMUTABLE'; END IF;
+  expected_action:=CASE
+    WHEN OLD.state='READY' AND NEW.state='IN_PROGRESS' THEN 'START'
+    WHEN OLD.state='IN_PROGRESS' AND NEW.state='INTERNAL_REVIEW' THEN 'SUBMIT'
+    WHEN OLD.state='INTERNAL_REVIEW' AND NEW.state='APPROVED_INTERNAL' THEN 'REVIEW_PASS'
+    WHEN OLD.state='INTERNAL_REVIEW' AND NEW.state='NEEDS_FIX' THEN 'REVIEW_FAIL'
+    WHEN OLD.state='NEEDS_FIX' AND NEW.state='IN_PROGRESS' THEN 'REWORK'
+    WHEN OLD.state='BLOCKED' AND NEW.state='READY' THEN 'AUTO_READY'
+    ELSE NULL END;
+  IF expected_action IS NULL OR
+    NOT dd04_stage.a00_authorized(NEW.tenant_id,expected_action,dd04_stage.a00_current_agent())
+  THEN RAISE EXCEPTION 'A00_CONTEXT_TRANSITION_DENIED'; END IF;
+  SELECT status,owner_agent INTO legacy_status,owner FROM dd04_stage.tasks
+   WHERE tenant_id=NEW.tenant_id AND command_id=NEW.command_id AND task_id=NEW.task_id;
+  IF legacy_status NOT IN ('READY','IN_PROGRESS','REVIEW','DONE')
+    OR NOT EXISTS(SELECT 1 FROM dd04_stage.approvals
+      WHERE tenant_id=NEW.tenant_id AND command_id=NEW.command_id
+        AND gate='G1' AND decision='APPROVED')
+  THEN RAISE EXCEPTION 'A00_CANONICAL_G1_LOCKED'; END IF;
+  IF expected_action IN ('START','SUBMIT','REWORK') AND owner<>dd04_stage.a00_current_agent()
+  THEN RAISE EXCEPTION 'A00_OWNER_REQUIRED'; END IF;
+  IF expected_action IN ('REVIEW_PASS','REVIEW_FAIL') AND owner=dd04_stage.a00_current_agent()
+  THEN RAISE EXCEPTION 'A00_SELF_APPROVAL_DENIED'; END IF;
+  IF NOT EXISTS(SELECT 1 FROM dd04_stage.a00_transition_events e
+    WHERE e.tenant_id=NEW.tenant_id AND e.command_id=NEW.command_id
+      AND e.task_id=NEW.task_id AND e.from_state=OLD.state
+      AND e.to_state=NEW.state AND e.expected_revision=OLD.revision
+      AND e.action=expected_action AND e.agent_id=dd04_stage.a00_current_agent())
+  THEN RAISE EXCEPTION 'A00_ATOMIC_AUDIT_REQUIRED'; END IF;
+  IF expected_action='AUTO_READY' AND EXISTS(
+    SELECT 1 FROM unnest(NEW.dependency_task_ids) AS dependency(id)
+    LEFT JOIN dd04_stage.a00_task_contexts dep ON dep.tenant_id=NEW.tenant_id
+      AND dep.command_id=NEW.command_id AND dep.task_id=dependency.id
+    WHERE dep.state IS DISTINCT FROM 'APPROVED_INTERNAL'
+  ) THEN RAISE EXCEPTION 'A00_DEPENDENCIES_NOT_APPROVED'; END IF;
+  RETURN NEW;
+END;
+$guard_context$;
+
+REVOKE ALL ON FUNCTION dd04_stage.a00_guard_transition_event() FROM PUBLIC,anon,authenticated,service_role;
+REVOKE ALL ON FUNCTION dd04_stage.a00_guard_context_transition() FROM PUBLIC,anon,authenticated,service_role;
+CREATE TRIGGER a00_transition_event_guard
+  BEFORE INSERT ON dd04_stage.a00_transition_events
+  FOR EACH ROW EXECUTE FUNCTION dd04_stage.a00_guard_transition_event();
+CREATE TRIGGER a00_context_transition_guard
+  BEFORE UPDATE ON dd04_stage.a00_task_contexts
+  FOR EACH ROW EXECUTE FUNCTION dd04_stage.a00_guard_context_transition();
+
 -- Preserve all existing production-like gate triggers; NO worker records are activated.
 -- No backfill or legacy task updates, no approval changes, no publish/write API.
 COMMIT;
