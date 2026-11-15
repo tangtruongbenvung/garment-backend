@@ -105,6 +105,8 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f dd04-agent-control/supabase/24_A00_020_FINAL_CANDIDATE_STAGING_ONLY_DO_NOT_RUN.sql
       - name: Test runtime RLS denial, triggers and locked G1
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/dd04-a00-020-ephemeral-pg17-verify.sql
+      - name: Record exact final-candidate SHA-256 for separate CEO staging approval
+        run: sha256sum dd04-agent-control/supabase/27_A00_022_INTEGRATED_G1_A11_STAGING_REVIEW_ONLY_DO_NOT_RUN.sql
       - name: Parse and test A00-022 integrated final candidate on EPHEMERAL PostgreSQL only
         run: psql -v ON_ERROR_STOP=1 -f dd04-agent-control/supabase/27_A00_022_INTEGRATED_G1_A11_STAGING_REVIEW_ONLY_DO_NOT_RUN.sql
       - name: Verify A00-022 integrated schema and legacy lock unchanged
