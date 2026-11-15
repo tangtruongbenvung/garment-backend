@@ -195,10 +195,11 @@ CREATE POLICY a00_rt_context_insert ON dd04_stage.a00_task_contexts FOR INSERT T
   WITH CHECK(dd04_stage.a00_authorized(tenant_id,'SAVE_PLAN','A00') AND (
     state='BLOCKED'
     OR (state='READY' AND cardinality(dependency_task_ids)=0
-      AND EXISTS(SELECT 1 FROM dd04_stage.tasks t WHERE t.tenant_id=tenant_id
-        AND t.command_id=command_id AND t.task_id=task_id AND t.status='READY')
-      AND EXISTS(SELECT 1 FROM dd04_stage.approvals a WHERE a.tenant_id=tenant_id
-        AND a.command_id=command_id AND a.gate='G1' AND a.decision='APPROVED'))
+      AND EXISTS(SELECT 1 FROM dd04_stage.tasks t WHERE t.tenant_id=a00_task_contexts.tenant_id
+        AND t.command_id=a00_task_contexts.command_id
+        AND t.task_id=a00_task_contexts.task_id AND t.status='READY')
+      AND EXISTS(SELECT 1 FROM dd04_stage.approvals a WHERE a.tenant_id=a00_task_contexts.tenant_id
+        AND a.command_id=a00_task_contexts.command_id AND a.gate='G1' AND a.decision='APPROVED'))
   ));
 CREATE POLICY a00_rt_context_update ON dd04_stage.a00_task_contexts FOR UPDATE TO dd04_a00_runtime
   USING(dd04_stage.a00_authorized(tenant_id,'START') OR dd04_stage.a00_authorized(tenant_id,'ATTACH') OR dd04_stage.a00_authorized(tenant_id,'SUBMIT')
