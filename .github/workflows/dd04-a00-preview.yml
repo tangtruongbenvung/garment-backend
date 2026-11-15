@@ -67,3 +67,38 @@ jobs:
             exit 1
           }
           Write-Host 'PASS - Windows PowerShell 5.1 parsed script, zero syntax errors; script NOT executed.'
+
+  validate-sql-ephemeral:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres_ci_only
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGDATABASE: postgres
+      PGPASSWORD: postgres_ci_only
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ephemeral PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      - name: Prepare isolated baseline (NOT Supabase staging)
+        run: psql -v ON_ERROR_STOP=1 -f tests/sql/dd04-a00-020-ephemeral-pg17-fixture.sql
+      - name: Parse and apply final SQL to isolated PostgreSQL 17 CI database ONLY
+        run: psql -v ON_ERROR_STOP=1 -f dd04-agent-control/supabase/24_A00_020_FINAL_CANDIDATE_STAGING_ONLY_DO_NOT_RUN.sql
+      - name: Test runtime RLS denial, triggers and locked G1
+        run: psql -v ON_ERROR_STOP=1 -f tests/sql/dd04-a00-020-ephemeral-pg17-verify.sql
