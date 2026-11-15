@@ -20,6 +20,8 @@ function resetReadiness(){
  tile("mfaState","Chờ xác minh");
  tile("gateState","Đang khóa");
  $("gateReviewPanel").hidden=true;
+ $("gateApprovalSelect").replaceChildren(new Option("Chưa tải danh sách",""));
+ $("gateApprovalId").value="";
  $("mfaHelp").hidden=true;
  $("sessionGuidance").textContent="Đang kiểm tra danh tính và quyền CEO từ server. Mỗi phiên cần MFA riêng.";
 }
@@ -220,6 +222,7 @@ async function checkCeoReadiness(){
   tile("gateState","Chưa mở giao dịch G1/G2","blocked");
   $("gateReviewPanel").hidden=!(result.mfa_aal2&&result.enrollment_verified&&result.identity_verified);
   $("mfaHelp").hidden=result.mfa_aal2===true;
+  if(!$("gateReviewPanel").hidden && $("gateApprovalSelect").options.length===1 && !$("gateApprovalSelect").value)await loadGateQueue();
   $("sessionGuidance").textContent=result.enrollment_verified
    ? "Quyền CEO đã ACTIVE trong cơ sở dữ liệu. Phê duyệt G1/G2 vẫn khóa độc lập; bạn cần MFA AAL2 trong từng phiên."
    : "Tài khoản Auth đã xác minh; quyền CEO chưa được server xác nhận. Không có quyền duyệt G1/G2.";
@@ -231,6 +234,34 @@ async function checkCeoReadiness(){
  }catch{
   resetReadiness();
   $("readinessStatus").textContent="Không kiểm tra được server staging. Mọi quyết định vẫn khóa.";
+ }
+}
+async function loadGateQueue(){
+ const $queue=$("gateApprovalSelect");
+ $queue.replaceChildren(new Option("Đang tải...", ""));
+ $("gateQueueStatus").textContent="Đang kiểm tra Auth, MFA và danh sách chờ duyệt...";
+ if(currentReadiness?.mfa_aal2!==true||currentReadiness?.enrollment_verified!==true){
+  $queue.replaceChildren(new Option("Chưa đủ điều kiện MFA/CEO", ""));
+  $("gateQueueStatus").textContent="Phải xác minh MFA AAL2 và quyền CEO trước khi tải danh sách.";return;
+ }
+ try{
+  const r=await fetch("/api/dd04-ceo-gate-list",{
+   method:"POST",headers:{"authorization":"Bearer "+accessToken,"accept":"application/json"},
+   cache:"no-store",referrerPolicy:"no-referrer",signal:AbortSignal.timeout(12000)
+  });
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(data.error||"HTTP "+r.status);
+  const items=Array.isArray(data.items)?data.items:[];
+  $queue.replaceChildren(new Option(items.length?"Chọn yêu cầu để xem hồ sơ":"Chưa có yêu cầu chờ duyệt",""));
+  for(const a of items){
+   if(!/^[0-9a-f-]{36}$/i.test(a?.approval_id||""))continue;
+   const label=a.gate+" · "+a.command_id+" · V"+a.revision+" · "+a.command_status;
+   $queue.add(new Option(label,a.approval_id));
+  }
+  $("gateQueueStatus").textContent="Đã tải "+items.length+" yêu cầu PENDING. Chọn một dòng rồi xem hồ sơ; chưa thể ghi quyết định.";
+ }catch(e){
+  $queue.replaceChildren(new Option("Không tải được danh sách",""));
+  $("gateQueueStatus").textContent="Không tải được danh sách: "+e.message+". Không có quyết định được ghi.";
  }
 }
 async function reviewGate(){
@@ -264,7 +295,8 @@ if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
  void parseCallback();
  bind("passwordBtn",passwordSignIn);bind("magicBtn",magicSignIn);
  bind("recoveryBtn",requestPasswordRecovery);bind("savePasswordBtn",savePassword);bind("cancelRecoveryBtn",logout);
- bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);bind("gateReviewBtn",reviewGate);
+ bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);bind("gateReviewBtn",reviewGate);bind("loadGateQueueBtn",loadGateQueue);
+ $("gateApprovalSelect").addEventListener("change",()=>{$("gateApprovalId").value=$("gateApprovalSelect").value;});
  bind("showSecret",()=>{$("secret").type=$("secret").type==="password"?"text":"password"});
  window.addEventListener("pagehide",()=>{accessToken="";refreshToken="";recoveryMode=false;clearSecret();$("newPassword").value="";$("confirmPassword").value="";});
  // parseCallback handles token_hash verification asynchronously; fragment path needs a session check.
