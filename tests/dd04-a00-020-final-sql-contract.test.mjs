@@ -1,0 +1,47 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+
+const filename=new URL('../dd04-agent-control/supabase/24_A00_020_FINAL_CANDIDATE_STAGING_ONLY_DO_NOT_RUN.sql',import.meta.url);
+const s=readFileSync(filename,'utf8');
+const sha=createHash('sha256').update(s).digest('hex');
+console.log('DD04_A00_020_FINAL_SQL_SHA256='+sha);
+const count=(pattern)=>(s.match(pattern)||[]).length;
+test('one complete atomic transaction, four unique new tables, no corrupted duplicated statements',()=>{
+ assert.match(s,/^BEGIN;[\s\S]*COMMIT;\s*$/);
+ assert.equal(count(/^BEGIN;/gm),1);assert.equal(count(/^COMMIT;/gm),1);
+ for(const t of ['a00_worker_identities','a00_workflow_instances','a00_task_contexts','a00_transition_events'])
+  assert.equal(count(new RegExp('^CREATE TABLE dd04_stage\\.'+t+' \\(','gm')),1,t);
+});
+test('runtime DB role has no login and no RLS bypass',()=>{
+ assert.match(s,/CREATE ROLE dd04_a00_runtime NOLOGIN NOBYPASSRLS/);
+ assert.match(s,/AND \(rolcanlogin OR rolbypassrls OR rolsuper\)/);
+ assert.match(s,/GRANT USAGE ON SCHEMA dd04_stage TO dd04_a00_runtime/);
+ assert.doesNotMatch(s,/GRANT ALL\s+ON\s+ALL TABLES/i);
+});
+test('all four new tables enable RLS, and public, anon and authenticated have no direct grants',()=>{
+ for(const t of ['a00_worker_identities','a00_workflow_instances','a00_task_contexts','a00_transition_events'])
+  assert.match(s,new RegExp('ALTER TABLE dd04_stage\\.'+t+' ENABLE ROW LEVEL SECURITY;'));
+ assert.match(s,/FROM PUBLIC,anon,authenticated,service_role/);
+});
+test('no unscoped public policies and no release to A07 or production',()=>{
+ assert.doesNotMatch(s,/TO\s+PUBLIC\s+USING\s*\(true\)/i);
+ assert.doesNotMatch(s,/GRANT\s+.+\s+TO\s+anon\b/i);
+ assert.doesNotMatch(s,/UPDATE\s+dd04_stage\.approvals\s+SET/i);
+ assert.doesNotMatch(s,/ALTER\s+TABLE\s+dd04_stage\.tasks\s+DISABLE\s+TRIGGER/i);
+ assert.doesNotMatch(s,/dd04_stage\.v55_publish_jobs\s+FOR INSERT/i);
+});
+test('credential verification, tenant restriction and append-only audit in SQL',()=>{
+ assert.match(s,/pg_catalog\.sha256\(pg_catalog\.convert_to/);
+ assert.match(s,/p_action=ANY\(w\.allowed_actions\)/);
+ assert.match(s,/w\.tenant_id=p_tenant/);
+ assert.match(s,/a00_transition_events_immutable/);
+ assert.match(s,/dd04_stage\.deny_audit_mutation\(\)/);
+ assert.match(s,/UNIQUE\(tenant_id,idempotency_key\)/);
+});
+test('candidate does not create worker secret, enable workers or change G1/G2',()=>{
+ assert.doesNotMatch(s,/INSERT INTO dd04_stage\.a00_worker_identities/i);
+ assert.doesNotMatch(s,/UPDATE dd04_stage\.approvals/i);
+ assert.doesNotMatch(s,/INSERT INTO dd04_stage\.v55_publish_jobs/i);
+});
