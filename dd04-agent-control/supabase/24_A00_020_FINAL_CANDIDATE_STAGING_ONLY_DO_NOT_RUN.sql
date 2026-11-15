@@ -340,6 +340,29 @@ CREATE TRIGGER a00_context_transition_guard
   BEFORE UPDATE ON dd04_stage.a00_task_contexts
   FOR EACH ROW EXECUTE FUNCTION dd04_stage.a00_guard_context_transition();
 
+-- Validate the existing V5.5 append-only handoff insert without relaxing its immutability.
+CREATE FUNCTION dd04_stage.a00_guard_handoff_insert()
+RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER
+SET search_path=pg_catalog,dd04_stage AS $handoff$
+BEGIN
+  IF NEW.verdict<>'PENDING'
+    OR NEW.from_agent IS DISTINCT FROM dd04_stage.a00_current_agent()
+    OR NEW.to_agent IS DISTINCT FROM
+       (CASE WHEN NEW.from_agent='A08' THEN 'A09' ELSE 'A08' END)
+    OR NOT EXISTS(SELECT 1 FROM dd04_stage.a00_transition_events e
+      WHERE e.tenant_id=NEW.tenant_id AND e.command_id=NEW.command_id
+        AND e.task_id=NEW.task_id AND e.action='SUBMIT'
+        AND e.agent_id=NEW.from_agent AND e.evidence_sha256=NEW.input_sha256)
+  THEN RAISE EXCEPTION 'A00_HANDOFF_UNVERIFIED'; END IF;
+  RETURN NEW;
+END;
+$handoff$;
+REVOKE ALL ON FUNCTION dd04_stage.a00_guard_handoff_insert() FROM PUBLIC,anon,authenticated,service_role;
+GRANT EXECUTE ON FUNCTION dd04_stage.a00_guard_handoff_insert() TO dd04_a00_runtime;
+CREATE TRIGGER a00_v55_handoff_insert_guard
+  BEFORE INSERT ON dd04_stage.v55_agent_handoff_events
+  FOR EACH ROW EXECUTE FUNCTION dd04_stage.a00_guard_handoff_insert();
+
 -- Preserve all existing production-like gate triggers; NO worker records are activated.
 -- No backfill or legacy task updates, no approval changes, no publish/write API.
 COMMIT;
