@@ -2,6 +2,7 @@
 // NO HTTP entrypoint. NO bypass of G1/G2, finance controls, task guards or publish lock.
 // Requires reviewed staging schema 22_A00_020 and a separately trusted, DB-backed actor resolver.
 import {createHash} from 'node:crypto';
+import {requireAgentCapability} from './a00-020-db-actor-resolver.mjs';
 const HEX=/^[a-f0-9]{64}$/;
 const AGENT=/^A(0[0-9]|1[0-7])$/;
 const COMMAND=/^cmd_[a-f0-9]{20}$/;
@@ -63,6 +64,7 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
    await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');begun=true;
    await client.query("SET LOCAL statement_timeout='8000ms'");
    const actor=validateActor(await resolveVerifiedActor(client,serverCredential));
+   requireAgentCapability(actor,request.action);
    // per-tenant idempotency serialization; keys across tenants are independent.
    await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1::text,0))',[actor.tenant_id+':'+request.idempotency_key]);
    const prior=rows(await client.query(`SELECT event_id,request_sha256,from_state,to_state
@@ -84,6 +86,8 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
    ensure(task.revision===request.expected_revision,'STALE_REVISION');
    ensure(STATES.has(task.state),'STATE_INVALID');
    ensure(task.owner_agent!=='A07','A07_PUBLISH_LOCKED');
+   // Never use context state as a substitute for the protected canonical legacy task state.
+   ensure(task.legacy_status==='READY'||task.legacy_status==='IN_PROGRESS'||task.legacy_status==='REVIEW'||task.legacy_status==='DONE', 'CANONICAL_TASK_STILL_LOCKED');
    const spec=MAP[request.action];
    ensure(spec.from.includes(task.state),'TRANSITION_NOT_ALLOWED');
    allowAction(actor,task,request.action);
@@ -108,6 +112,15 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
     ensure(HEX.test(task.output_sha256||'')&&task.output_sha256===request.evidence_sha256,'REVIEW_INPUT_HASH_MISMATCH');
     ensure(actor.agent_id!==task.last_reviewer_agent||request.action==='REVIEW_FAIL','REPEATED_REVIEWER_DENIED');
     ensure(request.report_sha256!==request.evidence_sha256,'REPORT_MUST_BE_INDEPENDENT');
+    // REVIEW_PASS is only an internal acknowledgement after two distinct QC records.
+    // This is NOT G2 authorization or permission to publish.
+    if(request.action==='REVIEW_PASS'){
+      const qc=rows(await client.query(`SELECT DISTINCT agent_id FROM dd04_stage.a00_transition_events
+       WHERE tenant_id=$1::uuid AND command_id=$2 AND task_id=$3 AND action='QC_PASS'
+        AND evidence_sha256=$4 AND report_sha256 IS NOT NULL`,
+        [actor.tenant_id,request.command_id,request.task_id,request.evidence_sha256]));
+      ensure(qc.some(x=>x.agent_id==='A08')&&qc.some(x=>x.agent_id==='A09'),'A08_A09_QC_EVIDENCE_REQUIRED');
+    }
    }
    const event=rows(await client.query(`INSERT INTO dd04_stage.a00_transition_events
  (tenant_id,command_id,task_id,actor_user_id,agent_id,action,from_state,to_state,
@@ -144,6 +157,8 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
  SET state='READY',revision=target.revision+1,updated_at=now()
  WHERE target.tenant_id=$1::uuid AND target.command_id=$2 AND target.state='BLOCKED'
  AND $3=ANY(target.dependency_task_ids)
+ AND EXISTS (SELECT 1 FROM dd04_stage.tasks lt WHERE lt.tenant_id=target.tenant_id
+  AND lt.command_id=target.command_id AND lt.task_id=target.task_id AND lt.status='READY')
  AND NOT EXISTS (
  SELECT 1 FROM unnest(target.dependency_task_ids) AS dep(id)
  LEFT JOIN dd04_stage.a00_task_contexts src
