@@ -19,7 +19,7 @@ function resetReadiness(){
  tile("ceoState","Chờ xác minh");
  tile("mfaState","Chờ xác minh");
  tile("gateState","Đang khóa");
- $("gateReviewPanel").hidden=true;
+ $("gateReviewPanel").hidden=true;$("worklistPanel").hidden=true;$("worklistRows").replaceChildren();
  $("gateApprovalSelect").replaceChildren(new Option("Chưa tải danh sách",""));
  $("gateApprovalId").value="";
  $("mfaHelp").hidden=true;
@@ -221,6 +221,7 @@ async function checkCeoReadiness(){
   tile("mfaState",result.mfa_aal2?"AAL2 đạt":"Cần xác minh MFA",result.mfa_aal2?"ok":"warn");
   tile("gateState","Chưa mở giao dịch G1/G2","blocked");
   $("gateReviewPanel").hidden=!(result.mfa_aal2&&result.enrollment_verified&&result.identity_verified);
+  $("worklistPanel").hidden=$("gateReviewPanel").hidden;
   $("mfaHelp").hidden=result.mfa_aal2===true;
   if(!$("gateReviewPanel").hidden && $("gateApprovalSelect").options.length===1 && !$("gateApprovalSelect").value)await loadGateQueue();
   $("sessionGuidance").textContent=result.enrollment_verified
@@ -288,6 +289,30 @@ async function reviewGate(){
    ". QUYỀN DUYỆT: KHÓA. Không tạo công việc xuất bản.";
  }catch{$("gateReviewStatus").textContent="Không đọc được hồ sơ staging. G1/G2 vẫn khóa.";}
 }
+async function loadMasterTaskLedger(){
+ if(!accessToken||currentReadiness?.mfa_aal2!==true||currentReadiness?.enrollment_verified!==true){
+  $("worklistStatus").textContent="Cần CEO ACTIVE và MFA AAL2 trong phiên hiện tại.";return;
+ }
+ $("worklistStatus").textContent="Đang đọc danh sách nhiệm vụ Supabase staging...";
+ try{
+  const response=await fetch("/api/dd04-a00-020-worklist",{
+   method:"POST",headers:{"authorization":"Bearer "+accessToken,"accept":"application/json"},
+   cache:"no-store",referrerPolicy:"no-referrer",signal:AbortSignal.timeout(12000)});
+  const body=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(body.error||"HTTP "+response.status);
+  const rows=Array.isArray(body.rows)?body.rows:[];
+  const dest=$("worklistRows");dest.replaceChildren();
+  for(const task of rows){
+   const tr=document.createElement("tr");
+   for(const value of [task.task_id,task.owner_agent,task.status,task.revision]){
+    const td=document.createElement("td");td.textContent=String(value??"");tr.append(td);
+   }dest.append(tr);
+  }
+  const c=body.counts||{};
+  $("worklistStatus").textContent="Dữ liệu staging: "+Number(c.commands||0)+" lệnh, "+Number(c.tasks||0)+
+   " nhiệm vụ, "+Number(c.handoffs||0)+" bàn giao. Giao dịch A00-020 chưa kích hoạt; không thể tự đăng.";
+ }catch(e){$("worklistRows").replaceChildren();$("worklistStatus").textContent="Chưa tải được worklist: "+e.message;}
+}
 function bind(id,fn){$(id).addEventListener("click",()=>void Promise.resolve(fn()).catch(e=>message("Yêu cầu chưa hoàn thành: "+e.message)));}
 if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
  document.body.textContent="Chỉ dùng trang này trên HTTPS Deploy Preview #1 của Đức Duy.";
@@ -295,7 +320,7 @@ if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
  void parseCallback();
  bind("passwordBtn",passwordSignIn);bind("magicBtn",magicSignIn);
  bind("recoveryBtn",requestPasswordRecovery);bind("savePasswordBtn",savePassword);bind("cancelRecoveryBtn",logout);
- bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);bind("gateReviewBtn",reviewGate);bind("loadGateQueueBtn",loadGateQueue);
+ bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);bind("gateReviewBtn",reviewGate);bind("loadGateQueueBtn",loadGateQueue);bind("refreshWorklistBtn",loadMasterTaskLedger);
  $("gateApprovalSelect").addEventListener("change",()=>{$("gateApprovalId").value=$("gateApprovalSelect").value;});
  bind("showSecret",()=>{$("secret").type=$("secret").type==="password"?"text":"password"});
  window.addEventListener("pagehide",()=>{accessToken="";refreshToken="";recoveryMode=false;clearSecret();$("newPassword").value="";$("confirmPassword").value="";});
