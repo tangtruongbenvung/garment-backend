@@ -105,10 +105,10 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
        SELECT 1 FROM dd04_stage.artifacts WHERE tenant_id=$1::uuid
        AND command_id=$2 AND task_id=$3
        AND kind=$4 AND sha256=$5
-       AND length(storage_ref)>3) AS exists`,
+       AND length(storage_ref)>3) AS artifact_found`,
        [actor.tenant_id,request.command_id,request.task_id,
         'QC_REPORT_'+actor.agent_id,request.report_sha256]))[0];
-     ensure(report?.exists===true,'QC_REPORT_ARTIFACT_NOT_REGISTERED');
+     ensure(report?.artifact_found===true,'QC_REPORT_ARTIFACT_NOT_REGISTERED');
 
      const qc=rows(await client.query(`INSERT INTO dd04_stage.a00_transition_events
       (tenant_id,command_id,task_id,actor_user_id,agent_id,action,from_state,to_state,
@@ -133,9 +133,9 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
      ensure(Array.isArray(task.output_refs)&&task.output_refs.length>0,'ARTIFACT_REFS_REQUIRED');
      const file=rows(await client.query(`SELECT EXISTS(
        SELECT 1 FROM dd04_stage.artifacts WHERE tenant_id=$1::uuid
-       AND command_id=$2 AND task_id=$3 AND sha256=$4) AS exists`,
+       AND command_id=$2 AND task_id=$3 AND sha256=$4) AS artifact_found`,
        [actor.tenant_id,request.command_id,request.task_id,request.evidence_sha256]))[0];
-     ensure(file?.exists===true,'OUTPUT_ARTIFACT_NOT_REGISTERED');
+     ensure(file?.artifact_found===true,'OUTPUT_ARTIFACT_NOT_REGISTERED');
 
      ensure(HEX.test(task.profile_sha256||'')||task.channel_id===null,'CHANNEL_PROFILE_UNVERIFIED');
    }
