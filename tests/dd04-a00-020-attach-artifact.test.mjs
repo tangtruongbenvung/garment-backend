@@ -14,7 +14,7 @@ function mock({g1=true,registered=true,status='IN_PROGRESS',actor='A03',fail=fal
   if(s.includes('FROM dd04_stage.a00_transition_events')&&s.includes('idempotency_key'))return {rows:[]};
   if(s.includes('SELECT t.owner_agent'))return {rows:[{owner_agent:'A03',canonical_status:status,
    state:'IN_PROGRESS',revision:2}]};
-  if(s.includes('FROM dd04_stage.approvals'))return {rows:[{passed:g1}]};
+  if(s.includes('dd04_stage.a00_022_effective_g1'))return {rows:[{passed:g1}]};
   if(s.includes('FROM dd04_stage.artifacts'))return {rows:registered?[{
    artifact_id:'13d8d96d-8cf3-4342-b151-b5bd2fda1572',
    storage_ref:'private://output.mp4',sha256:'a'.repeat(64)}]:[]};
