@@ -10,7 +10,7 @@
 </head><body>
 <main>
 <header><span class="eyebrow">ĐỨC DUY AI OS · DD04-A00-014</span><h1>Đăng nhập &amp; MFA — Staging</h1>
-<p class="muted">Quyền CEO được kiểm tra từ Supabase staging. Đăng nhập và xác minh MFA trong từng phiên; G1/G2 chỉ mở khi giao dịch, kế hoạch và bằng chứng QC được nghiệm thu.</p></header>
+<p class="muted">Chính sách V5.4: AI Agent xử lý kiểm tra nội bộ G1; CEO chỉ phê duyệt đăng bài G2 sau khi xem bản cuối, kênh và lịch. Mọi quyết định vẫn khóa cho đến khi giao dịch được nghiệm thu.</p></header>
 <section class="panel" id="loginPanel">
 <h2>1. Xác thực email</h2>
 <label for="email">Email đã đăng ký Supabase Staging</label>
@@ -38,7 +38,7 @@
 <div class="status-tile"><span>Danh tính Auth</span><strong id="authState">Chờ kiểm tra</strong></div>
 <div class="status-tile"><span>Quyền CEO</span><strong id="ceoState">Chờ kiểm tra</strong></div>
 <div class="status-tile"><span>MFA phiên hiện tại</span><strong id="mfaState">Chờ kiểm tra</strong></div>
-<div class="status-tile"><span>Quyết định G1/G2</span><strong id="gateState">Chưa kích hoạt</strong></div>
+<div class="status-tile"><span>Quyền CEO duyệt đăng G2</span><strong id="gateState">Chưa kích hoạt</strong></div>
 </div>
 <div class="actions"><button type="button" id="checkReadinessBtn" class="secondary">Làm mới trạng thái quyền CEO</button></div>
 <p id="readinessStatus" role="status" aria-live="polite">Chờ đọc trạng thái bảo mật từ server.</p>
@@ -56,15 +56,15 @@
 </div>
 </section>
 <section class="readiness-box" id="gateReviewPanel" hidden>
-<h2>4. Xem hồ sơ G1/G2 — chỉ đọc</h2>
-<p class="muted small">Chỉ mở phần xem hồ sơ sau khi xác minh MFA phiên hiện tại và quyền CEO ACTIVE. Thiếu kế hoạch/ngân sách hoặc bằng chứng QC sẽ được liệt kê rõ. Đây không phải thao tác phê duyệt.</p>
-<div class="actions"><button type="button" class="secondary" id="loadGateQueueBtn">Tải danh sách yêu cầu đang chờ</button></div>
-<label for="gateApprovalSelect">Chọn yêu cầu G1/G2</label>
+<h2>4. Danh sách bài chờ CEO duyệt đăng — G2</h2>
+<p class="muted small">G1 là cổng nội bộ tự kiểm duyệt của A00/A02/A08/A09/A11. Tại đây CEO chỉ cần xem gói G2: video/ảnh/caption, kênh, lịch, phiên bản và QC. Hiện chỉ đọc; chưa cho phép đăng hoặc duyệt thật.</p>
+<div class="actions"><button type="button" class="secondary" id="loadGateQueueBtn">Tải danh sách bài chờ duyệt đăng G2</button></div>
+<label for="gateApprovalSelect">Chọn bài G2 cần xem</label>
 <select id="gateApprovalSelect"><option value="">Chưa tải danh sách</option></select>
 <p id="gateQueueStatus" class="muted small" role="status" aria-live="polite">Chỉ hiện yêu cầu thuộc tenant đã xác minh.</p>
-<label for="gateApprovalId">Approval ID (có thể chọn từ danh sách hoặc nhập trực tiếp)</label>
+<label for="gateApprovalId">Mã yêu cầu G2 (có thể chọn từ danh sách)</label>
 <input id="gateApprovalId" type="text" inputmode="text" maxlength="36" placeholder="UUID của yêu cầu G1/G2">
-<button type="button" id="gateReviewBtn" class="secondary">Kiểm tra hồ sơ duyệt (chỉ đọc)</button>
+<button type="button" id="gateReviewBtn" class="secondary">Xem điều kiện đăng bài (chỉ đọc)</button>
 <p id="gateReviewStatus" role="status" aria-live="polite">Chưa kiểm tra. Không thay đổi quyết định.</p>
 </section>
 <div class="actions"><button id="logoutBtn" class="secondary" type="button">Đăng xuất &amp; xóa phiên</button></div>
