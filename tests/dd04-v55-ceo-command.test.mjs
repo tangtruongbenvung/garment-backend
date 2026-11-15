@@ -45,7 +45,7 @@ test('staging endpoint authenticates CEO and submits only atomic legacy draft; n
  assert.match(fn,/await client\.query\('ROLLBACK'\)/);
  assert.match(fn,/dd04_stage\.task_events/);
  assert.match(fn,/CEO_COMMAND_RECEIVED/);
- assert.match(fn,/\b'G1',1,/);
+ assert.match(fn,/'G1',1,/);
  assert.match(fn,/autonomous_execution:false,publishing_enabled:false/);
  assert.doesNotMatch(fn,/\b(?:UPDATE dd04_stage\.approvals|decision='APPROVED'|DISABLE TRIGGER|PUBLISHED)\b/);
  assert.match(html,/id="ceoSubmitCommandBtn"/);
