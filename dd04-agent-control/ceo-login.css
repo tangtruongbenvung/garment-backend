@@ -11,3 +11,5 @@
 #readinessStatus,#gateReviewStatus{line-height:1.6;overflow-wrap:anywhere}
 #sessionGuidance{line-height:1.5}
 @media(max-width:480px){.status-grid{grid-template-columns:1fr}.status-tile{padding:10px 12px}}
+
+select{background:#081a2b;border:1px solid #53738b;border-radius:8px;color:#fff;width:100%;padding:13px;font:inherit;min-width:0}
