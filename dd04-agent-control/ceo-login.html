@@ -67,8 +67,17 @@
 <button type="button" id="gateReviewBtn" class="secondary">Xem điều kiện đăng bài (chỉ đọc)</button>
 <p id="gateReviewStatus" role="status" aria-live="polite">Chưa kiểm tra. Không thay đổi quyết định.</p>
 </section>
+<section class="readiness-box" id="ceoCommandPanel">
+<h2>5. CEO giao việc cho A00 — Staging</h2>
+<p class="muted small">Gửi lệnh bằng phiên đăng nhập CEO có MFA AAL2. Hệ thống ghi lệnh và phân công nháp trong Supabase. Chưa chạy AI thật, chưa có quyền tự đăng, chưa hỗ trợ tải ảnh/file trực tiếp. Khi có file hãy mô tả trong lệnh, không nhập đường dẫn chứa token.</p>
+<label for="ceoCommandText">Nội dung chỉ đạo của CEO</label>
+<textarea id="ceoCommandText" maxlength="2000" rows="4" placeholder="Ví dụ: A00 lập kế hoạch 5 kênh, A03 mỗi kênh một kịch bản khác nhau, A11 kiểm tra chi phí theo hạn mức..." style="width:100%;min-height:115px;padding:12px;border-radius:9px;border:1px solid #44657c;background:#081a2b;color:white;font:inherit"></textarea>
+<p class="muted small">Mã yêu cầu được tạo trong trình duyệt và chỉ dùng để chống gửi lặp. Nội dung không được ghi vào bộ nhớ dài hạn của trình duyệt.</p>
+<div class="actions"><button type="button" id="ceoSubmitCommandBtn" class="secondary">Gửi lệnh vào danh sách staging</button><button type="button" id="ceoNewCommandBtn" class="secondary">Lệnh mới</button></div>
+<p id="ceoCommandStatus" role="status" aria-live="polite">Chưa gửi lệnh.</p>
+</section>
 <section class="readiness-box" id="agentWorklistPanel">
-<h2>5. Sổ theo dõi công việc 18 AI Agent</h2>
+<h2>6. Sổ theo dõi công việc 18 AI Agent</h2>
 <p class="muted small">Đọc trực tiếp từ Supabase staging. Phân biệt trạng thái công việc đã ghi trong DB với kết quả AI Agent thực thi thật; chưa có kết quả AI auto-duyệt.</p>
 <div class="actions"><button id="loadAgentWorklistBtn" type="button" class="secondary">Tải danh sách công việc theo Agent</button></div>
 <div class="worklist-filters">
