@@ -4,9 +4,15 @@ import {assertA0021BackendDbUrl,createA0021Runtime}
  from '../dd04-agent-control/a00-021-backend-runtime.mjs';
 const host='db.wbvkqfnrlasmtizjszab.supabase.co';
 const good=`postgresql://dd04_a00_backend:fake-fixture-password@${host}:5432/postgres`;
+const pooler='postgresql://dd04_a00_backend.wbvkqfnrlasmtizjszab:fixture-secret@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres';
 test('pins isolated staging backend login without any privileged database user',()=>{
  assert.deepEqual(assertA0021BackendDbUrl(good),{
   target:'A00_STAGING_ONLY',role:'dd04_a00_backend'});
+});
+test('accepts tenant-bound IPv4 session pooler for serverless, rejects transaction pooler',()=>{
+ assert.deepEqual(assertA0021BackendDbUrl(pooler),{target:'A00_STAGING_ONLY',role:'dd04_a00_backend'});
+ assert.throws(()=>assertA0021BackendDbUrl(pooler.replace(':5432/',':6543/')),/A00_BACKEND_LOGIN_OR_STAGING_TARGET_INVALID/);
+ assert.throws(()=>assertA0021BackendDbUrl(pooler.replace('wbvkqfnrlasmtizjszab','ykhrtrvstymfjnzdgzna')),/A00_BACKEND_LOGIN_OR_STAGING_TARGET_INVALID/);
 });
 test('rejects production, postgres/service_role, wrong schema, unsafe SSL and missing secret',()=>{
  const bad=[
