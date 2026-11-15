@@ -2,7 +2,7 @@
 // Preview UI only. No storage or agent execution, no production use.
 const $=id=>document.getElementById(id);
 let last=null,lastProduction=null;
-const host=/^deploy-preview-(?:1|6|7)--ducduy-ai-os-test\\.netlify\\.app$/;
+const host=/^deploy-preview-(?:1|6|7)--ducduy-ai-os-test\.netlify\.app$/;
 const t=(tag,value,klass)=>{
  const e=document.createElement(tag);
  if(value!==undefined)e.textContent=String(value);
