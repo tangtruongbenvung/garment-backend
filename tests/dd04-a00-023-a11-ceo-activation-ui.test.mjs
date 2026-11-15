@@ -19,5 +19,6 @@ test('A11 approval UX cannot change policy caps, API spend or production',()=>{
  assert.ok(js.includes('PUBLISHABLE_KEY'));
  assert.ok(!js.includes('SUPABASE_SERVICE_ROLE_KEY'));
  assert.ok(!js.includes('p_decision:"APPROVED"'));
- assert.ok(html.includes('0 đồng/lần và 0 đồng/chiến dịch'));
+ assert.ok(html.includes('0 đồng/lần'));
+ assert.ok(html.includes('0 đồng/chiến dịch'));
 });
