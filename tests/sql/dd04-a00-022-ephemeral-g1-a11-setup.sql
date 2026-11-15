@@ -11,7 +11,7 @@ CREATE TABLE dd04_stage.ceo_enrollments (
 );
 INSERT INTO dd04_stage.ceo_enrollments VALUES(
  '6bc73b49-a396-4c7d-b390-ab6339d547cd',
- '55555555-5555-4555-8555-555555555555','ceo','ACTIVE',true);
+ '55555555-5555-4555-8555-555555555555','CEO','ACTIVE',true);
 CREATE ROLE dd04_a00_backend LOGIN PASSWORD 'ci_ephemeral_only_not_production' NOINHERIT NOBYPASSRLS;
 GRANT dd04_a00_runtime TO dd04_a00_backend WITH INHERIT FALSE, SET TRUE, ADMIN FALSE;
 INSERT INTO dd04_stage.a00_022_delegation_policies (
