@@ -15,7 +15,7 @@ export function assertA0021BackendDbUrl(raw){
  const direct=url.hostname==='db.'+PROJECT+'.supabase.co'
    &&(!url.port||url.port==='5432')
    &&decodeURIComponent(url.username)==='dd04_a00_backend';
- const sessionPooler=/^aws-[0-9]+-ap-northeast-1\\.pooler\\.supabase\\.com$/.test(url.hostname)
+ const sessionPooler=/^aws-[0-9]+-ap-northeast-1\.pooler\.supabase\.com$/.test(url.hostname)
    &&url.port==='5432'
    &&decodeURIComponent(url.username)==='dd04_a00_backend.'+PROJECT;
  if(!['postgres:','postgresql:'].includes(url.protocol)||
