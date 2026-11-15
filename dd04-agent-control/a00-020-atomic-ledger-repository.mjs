@@ -133,7 +133,8 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
  VALUES ($1::uuid,$2,$3,$4,$5,$6,$7,$8,'PENDING')`,
  [actor.tenant_id,request.command_id,request.task_id,task.owner_agent,
  task.owner_agent==='A08'?'A09':'A08',updated.revision,request.evidence_sha256,
- request.evidence_sha256]);
+ hash({kind:'HANDOFF_PENDING_ONLY',task_id:request.task_id,revision:updated.revision,
+   input_sha256:request.evidence_sha256})]);
    }
    // Auto-unblock dependent task contexts after verified independent review.
    // This does not modify protected legacy tasks and does not authorize execution.
