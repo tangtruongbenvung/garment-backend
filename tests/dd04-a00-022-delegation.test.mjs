@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {evaluateA0022InternalG1,evaluateA0022Handoff} from '../dd04-agent-control/a00-022-delegated-transaction-preflight.mjs';
+import {evaluateA0022InternalG1,evaluateA0022Handoff,evaluateA0022FinalQC} from '../dd04-agent-control/a00-022-delegated-transaction-preflight.mjs';
 const tenant='6bc73b49-a396-4c7d-b390-ab6339d547cd';
 const command='cmd_1234567890abcdef1234';
 const packet='a'.repeat(64),policy='b'.repeat(64);
@@ -56,8 +56,8 @@ function handoff(){
   context:{provenance:'DB_SERIALIZABLE_READ',environment:'STAGING',tenant_id:tenant,
    command_id:command,g1_authority:'DB_VERIFIED_APPROVED_INTERNAL',
    finance_clearance:'DB_A11_RESERVED_OR_ZERO_COST',
-   storage_verified_output_sha256:'e'.repeat(64),a08_qc:true,a09_qc:true,
-   qc_actor_subject_ids:[actors[0],actors[1]]}};
+   storage_verified_output_sha256:'e'.repeat(64),
+   independent_a00_review:true,a00_reviewer_subject_id:actors[0]}};
 }
 test('A03 to A04 can only become atomic DB handoff candidate',()=>{
  const result=evaluateA0022Handoff(handoff());
@@ -71,8 +71,30 @@ test('handoff blocks missing G1/A11, wrong order, unverified media and fake QC',
  assert.equal(evaluateA0022Handoff(y).reason,'HANDOFF_ORDER_DENIED');
  const z=handoff();z.context.storage_verified_output_sha256='f'.repeat(64);
  assert.equal(evaluateA0022Handoff(z).reason,'OUTPUT_BYTES_NOT_VERIFIED');
- const qc=handoff();qc.context.qc_actor_subject_ids=[actors[0],actors[0]];
- assert.equal(evaluateA0022Handoff(qc).reason,'A08_A09_INDEPENDENT_QC_REQUIRED');
+ const qc=handoff();qc.context.independent_a00_review=false;
+ assert.equal(evaluateA0022Handoff(qc).reason,'A00_INDEPENDENT_STAGE_REVIEW_REQUIRED');
  const cross=handoff();cross.destination_task.tenant_id='11111111-1111-4111-8111-111111111111';
  assert.equal(evaluateA0022Handoff(cross).reason,'TASK_SCOPE_MISMATCH');
+});
+
+test('A05 can deliver finished media TO A08 before QC; A08 then hands to A09',()=>{
+ const stage=handoff();stage.source_task=task('A05','INTERNAL_REVIEW');
+ stage.destination_task=task('A08','BLOCKED');
+ assert.equal(evaluateA0022Handoff(stage).ok,true);
+ const next=handoff();next.source_task=task('A08','APPROVED_INTERNAL');
+ next.destination_task=task('A09','BLOCKED');
+ next.context.a08_qc=true;next.context.a08_actor_subject_id=actors[0];
+ assert.equal(evaluateA0022Handoff(next).ok,true);
+ next.context.a08_qc=false;
+ assert.equal(evaluateA0022Handoff(next).reason,'A08_INDEPENDENT_QC_REQUIRED');
+});
+test('only independent A08 + A09 QC of same asset is eligible for CEO G2 review',()=>{
+ const stage=handoff();
+ const input={task:task('A05','INTERNAL_REVIEW'),context:{
+  ...stage.context,a08_qc:true,a09_qc:true,
+  qc_actor_subject_ids:[actors[0],actors[1]],qc_asset_sha256:'e'.repeat(64)}};
+ const result=evaluateA0022FinalQC(input);
+ assert.equal(result.ok,true);assert.equal(result.publish_allowed,false);
+ input.context.qc_actor_subject_ids=[actors[0],actors[0]];
+ assert.equal(evaluateA0022FinalQC(input).reason,'A08_A09_INDEPENDENT_QC_REQUIRED');
 });
