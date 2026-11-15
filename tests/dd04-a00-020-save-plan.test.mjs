@@ -16,7 +16,7 @@ function fixture({prior=false,count=0,dbError=false,active=true,agent='A00'}={})
   return {rows:[]};
  },release(){released++;}};
  return {pool:{async connect(){return client}},calls,released:()=>released,
-  actor:{verified_by_db:true,active,agent_id:agent,runtime_environment:'STAGING',tenant_id:tenant,subject_id:'be8c9e62-fe68-448a-8822-bffbbb96f937'}};
+  actor:{verified_by_db:true,active,agent_id:agent,allowed_actions:['SAVE_PLAN'],runtime_environment:'STAGING',tenant_id:tenant,subject_id:'be8c9e62-fe68-448a-8822-bffbbb96f937'}};
 }
 test('creates DAG task plan in one transaction and keeps G1 locked',async()=>{
  const f=fixture();const w=createA0020TaskPlanWriter(f.pool,async()=>f.actor);
