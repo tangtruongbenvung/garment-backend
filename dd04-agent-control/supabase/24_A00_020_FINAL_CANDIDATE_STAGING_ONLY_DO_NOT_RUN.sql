@@ -28,7 +28,7 @@ CREATE TABLE dd04_stage.a00_worker_identities (
   expires_at timestamptz NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY(tenant_id,subject_id,agent_id),
-  CHECK(allowed_actions <@ ARRAY['READ','SAVE_PLAN','START','SUBMIT','QC_PASS','REVIEW_PASS','REVIEW_FAIL','REWORK','AUTO_READY']::text[])
+  CHECK(allowed_actions <@ ARRAY['READ','SAVE_PLAN','START','ATTACH','SUBMIT','QC_PASS','REVIEW_PASS','REVIEW_FAIL','REWORK','AUTO_READY']::text[])
 );
 
 CREATE TABLE dd04_stage.a00_workflow_instances (
@@ -72,7 +72,7 @@ CREATE TABLE dd04_stage.a00_transition_events (
   command_id text NOT NULL, task_id text NOT NULL,
   actor_user_id uuid NOT NULL,
   agent_id text NOT NULL CHECK(agent_id ~ '^A(0[0-9]|1[0-7])$'),
-  action text NOT NULL CHECK(action IN ('START','SUBMIT','QC_PASS','REVIEW_PASS','REVIEW_FAIL','REWORK','AUTO_READY')),
+  action text NOT NULL CHECK(action IN ('START','ATTACH','SUBMIT','QC_PASS','REVIEW_PASS','REVIEW_FAIL','REWORK','AUTO_READY')),
   from_state text NOT NULL, to_state text NOT NULL,
   evidence_sha256 text NOT NULL CHECK(evidence_sha256 ~ '^[a-f0-9]{64}$'),
   report_sha256 text CHECK(report_sha256 ~ '^[a-f0-9]{64}$'),
@@ -180,7 +180,7 @@ CREATE POLICY a00_rt_context_select ON dd04_stage.a00_task_contexts FOR SELECT T
 CREATE POLICY a00_rt_context_insert ON dd04_stage.a00_task_contexts FOR INSERT TO dd04_a00_runtime
   WITH CHECK(dd04_stage.a00_authorized(tenant_id,'SAVE_PLAN','A00') AND state='BLOCKED');
 CREATE POLICY a00_rt_context_update ON dd04_stage.a00_task_contexts FOR UPDATE TO dd04_a00_runtime
-  USING(dd04_stage.a00_authorized(tenant_id,'START') OR dd04_stage.a00_authorized(tenant_id,'SUBMIT')
+  USING(dd04_stage.a00_authorized(tenant_id,'START') OR dd04_stage.a00_authorized(tenant_id,'ATTACH') OR dd04_stage.a00_authorized(tenant_id,'SUBMIT')
     OR dd04_stage.a00_authorized(tenant_id,'REVIEW_PASS')
     OR dd04_stage.a00_authorized(tenant_id,'REVIEW_FAIL')
     OR dd04_stage.a00_authorized(tenant_id,'REWORK'))
@@ -207,13 +207,13 @@ BEGIN
   SELECT t.owner_agent INTO owner FROM dd04_stage.tasks t
    WHERE t.tenant_id=NEW.tenant_id AND t.command_id=NEW.command_id AND t.task_id=NEW.task_id;
   IF owner IS NULL THEN RAISE EXCEPTION 'A00_TASK_NOT_FOUND'; END IF;
-  IF NEW.action IN ('START','SUBMIT','REWORK') AND owner<>NEW.agent_id THEN
+  IF NEW.action IN ('START','ATTACH','SUBMIT','REWORK') AND owner<>NEW.agent_id THEN
     RAISE EXCEPTION 'A00_OWNER_REQUIRED';
   END IF;
   IF NEW.action IN ('QC_PASS','REVIEW_PASS','REVIEW_FAIL') AND owner=NEW.agent_id THEN
     RAISE EXCEPTION 'A00_SELF_APPROVAL_DENIED';
   END IF;
-  IF NEW.action='SUBMIT' AND NOT EXISTS (
+  IF NEW.action IN ('ATTACH','SUBMIT') AND NOT EXISTS (
     SELECT 1 FROM dd04_stage.artifacts a WHERE a.tenant_id=NEW.tenant_id
       AND a.command_id=NEW.command_id AND a.task_id=NEW.task_id
       AND a.sha256=NEW.evidence_sha256
@@ -253,15 +253,14 @@ DECLARE owner text;
 BEGIN
   IF TG_OP<>'UPDATE' THEN RETURN NEW; END IF;
   IF (NEW.tenant_id,NEW.command_id,NEW.task_id,NEW.workflow_id,NEW.campaign_id,
-      NEW.channel_id,NEW.profile_version,NEW.profile_sha256,NEW.dependency_task_ids,
-      NEW.output_refs) IS DISTINCT FROM
+      NEW.channel_id,NEW.profile_version,NEW.profile_sha256,NEW.dependency_task_ids) IS DISTINCT FROM
      (OLD.tenant_id,OLD.command_id,OLD.task_id,OLD.workflow_id,OLD.campaign_id,
-      OLD.channel_id,OLD.profile_version,OLD.profile_sha256,OLD.dependency_task_ids,
-      OLD.output_refs)
+      OLD.channel_id,OLD.profile_version,OLD.profile_sha256,OLD.dependency_task_ids)
     OR NEW.revision<>OLD.revision+1
   THEN RAISE EXCEPTION 'A00_CONTEXT_IDENTITY_REVISION_IMMUTABLE'; END IF;
   expected_action:=CASE
     WHEN OLD.state='READY' AND NEW.state='IN_PROGRESS' THEN 'START'
+    WHEN OLD.state='IN_PROGRESS' AND NEW.state='IN_PROGRESS' THEN 'ATTACH'
     WHEN OLD.state='IN_PROGRESS' AND NEW.state='INTERNAL_REVIEW' THEN 'SUBMIT'
     WHEN OLD.state='INTERNAL_REVIEW' AND NEW.state='APPROVED_INTERNAL' THEN 'REVIEW_PASS'
     WHEN OLD.state='INTERNAL_REVIEW' AND NEW.state='NEEDS_FIX' THEN 'REVIEW_FAIL'
@@ -278,10 +277,18 @@ BEGIN
       WHERE tenant_id=NEW.tenant_id AND command_id=NEW.command_id
         AND gate='G1' AND decision='APPROVED')
   THEN RAISE EXCEPTION 'A00_CANONICAL_G1_LOCKED'; END IF;
-  IF expected_action IN ('START','SUBMIT','REWORK') AND owner<>dd04_stage.a00_current_agent()
+  IF expected_action IN ('START','ATTACH','SUBMIT','REWORK') AND owner<>dd04_stage.a00_current_agent()
   THEN RAISE EXCEPTION 'A00_OWNER_REQUIRED'; END IF;
   IF expected_action IN ('REVIEW_PASS','REVIEW_FAIL') AND owner=dd04_stage.a00_current_agent()
   THEN RAISE EXCEPTION 'A00_SELF_APPROVAL_DENIED'; END IF;
+  IF expected_action<>'ATTACH' AND NEW.output_refs IS DISTINCT FROM OLD.output_refs
+  THEN RAISE EXCEPTION 'A00_OUTPUT_REFS_IMMUTABLE'; END IF;
+  IF expected_action='ATTACH' AND (
+       NEW.output_sha256 IS NULL OR jsonb_array_length(NEW.output_refs)=0
+       OR NOT EXISTS(SELECT 1 FROM dd04_stage.artifacts a
+          WHERE a.tenant_id=NEW.tenant_id AND a.command_id=NEW.command_id
+          AND a.task_id=NEW.task_id AND a.sha256=NEW.output_sha256)
+  ) THEN RAISE EXCEPTION 'A00_OUTPUT_ATTACH_NOT_REGISTERED'; END IF;
   IF NOT EXISTS(SELECT 1 FROM dd04_stage.a00_transition_events e
     WHERE e.tenant_id=NEW.tenant_id AND e.command_id=NEW.command_id
       AND e.task_id=NEW.task_id AND e.from_state=OLD.state
