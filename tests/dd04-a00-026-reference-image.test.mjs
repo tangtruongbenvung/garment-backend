@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {deflateSync} from 'node:zlib';
 import {makeChannelIdentity} from '../dd04-agent-control/a00-025-channel-identity-lock.mjs';
+import {buildContentFactoryDraft} from '../dd04-agent-control/a00-024-content-factory-draft.mjs';
+import {acceptSceneImage,evaluateA05Input} from '../dd04-agent-control/a00-026-scene-image-handoff.mjs';
 import {prepareReferenceImage,storeAndVerifyReference,collectReferencePair,evaluateReferenceReview,checkTrustedReferenceReview} from '../dd04-agent-control/a00-026-reference-image-core.mjs';
 const tenant='6bc73b49-a396-4c7d-b390-ab6339d547cd';
 const identity=makeChannelIdentity({channel_id:'FB001',platform:'FANPAGE',name:'Mẹ bé FB001'});
@@ -107,4 +109,34 @@ test('actual A05 scene staging requires server-verified immutable A08/A09 eviden
  assert.equal(accepted.ready_for_A05_scene_generation,true);
  assert.equal(accepted.render_allowed,false);
  assert.equal(accepted.publish_allowed,false);
+});
+
+test('A04 storyboard frames bind to locked channel reference pair and A08/A09 review before A05',async()=>{
+ const db=store();
+ const m=await storeAndVerifyReference({asset:make('MOTHER',mother),bytes:mother,storage:db});
+ const b=await storeAndVerifyReference({asset:make('BABY',baby),bytes:baby,storage:db});
+ const pair=collectReferencePair(identity,[m,b]);
+ const draft=buildContentFactoryDraft({campaign_id:'TEST-026',
+  channels:[{channel_id:'FB001',platform:'FANPAGE',name:'Mẹ bé FB001'}]}).packets[0];
+ await assert.rejects(acceptSceneImage({tenant_id:tenant,identity,packet:draft,
+  scene_id:draft.A04.image_shots[0].scene_id,bytes:mother,mime:'image/png',
+  reference_pair:pair,reference_review:evaluateReferenceReview(pair,{}),storage:db}),/REFERENCE_VISUAL_QC_NOT_PASSED/);
+ const syntheticDbApproved={ok:true,ready_for_A05_scene_generation:true,publish_allowed:false};
+ const frames=[];
+ for(let i=0;i<draft.A04.image_shots.length;i++){
+  frames.push(await acceptSceneImage({tenant_id:tenant,identity,packet:draft,
+   scene_id:draft.A04.image_shots[i].scene_id,bytes:png(256+i,256),mime:'image/png',
+   reference_pair:pair,reference_review:syntheticDbApproved,storage:db}));
+ }
+ const review=frames.map(x=>({scene_id:x.scene_id,frame_bytes_sha256:x.bytes_sha256,
+  reference_pair_sha256:pair.manifest_sha256,a08:'PASS',a09:'PASS'}));
+ const gate=evaluateA05Input({packet:draft,reference_pair:pair,
+  reference_review:syntheticDbApproved,scene_images:frames,frame_reviews:review});
+ assert.equal(gate.ok,true);
+ assert.equal(gate.render_allowed,false);
+ assert.equal(gate.publish_allowed,false);
+ review[1].frame_bytes_sha256='a'.repeat(64);
+ assert.equal(evaluateA05Input({packet:draft,reference_pair:pair,
+  reference_review:syntheticDbApproved,scene_images:frames,frame_reviews:review}).reason,
+  'A08_A09_FRAME_REVIEW_REQUIRED');
 });
