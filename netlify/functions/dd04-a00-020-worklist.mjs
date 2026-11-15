@@ -46,11 +46,27 @@ export default async request=>{
   if(s.rows[0]?.valid_session!==true||s.rows[0]?.valid_ceo!==true){
    await client.query('COMMIT');begin=false;return deny('CEO_AAL2_ENROLLMENT_REQUIRED');
   }
+  const schema=await client.query(`SELECT
+   to_regclass('dd04_stage.a00_task_contexts') IS NOT NULL AS context_installed`);
+  const contextInstalled=schema.rows[0]?.context_installed===true;
+  const runtimeColumns=contextInstalled?
+    'x.state AS runtime_status,x.revision AS runtime_revision,':
+    'NULL::text AS runtime_status,NULL::integer AS runtime_revision,';
+  const runtimeJoin=contextInstalled?
+    `LEFT JOIN dd04_stage.a00_task_contexts x
+      ON x.tenant_id=t.tenant_id AND x.command_id=t.command_id AND x.task_id=t.task_id`:'';
   const result=await client.query(`SELECT t.command_id,t.task_id,t.owner_agent,
-   t.dependency_task_id,t.status,t.revision,t.updated_at,
+   t.dependency_task_id,t.status AS legacy_status,t.revision,t.updated_at,
+   ${runtimeColumns} g.decision AS g1_decision,
    c.source AS command_source
    FROM dd04_stage.tasks t JOIN dd04_stage.commands c
    ON c.tenant_id=t.tenant_id AND c.command_id=t.command_id
+   ${runtimeJoin}
+   LEFT JOIN LATERAL (
+    SELECT decision FROM dd04_stage.approvals a
+    WHERE a.tenant_id=t.tenant_id AND a.command_id=t.command_id AND gate='G1'
+    ORDER BY revision DESC LIMIT 1
+   ) g ON true
    WHERE t.tenant_id=$1::uuid ORDER BY t.updated_at DESC,t.task_id LIMIT 100`,[tenantId]);
   const counts=await client.query(`SELECT
    (SELECT count(*)::int FROM dd04_stage.commands WHERE tenant_id=$1::uuid) AS commands,
@@ -60,8 +76,9 @@ export default async request=>{
    (SELECT count(*)::int FROM dd04_stage.v55_publish_jobs WHERE tenant_id=$1::uuid) AS publish_jobs`,[tenantId]);
   await client.query('COMMIT');begin=false;
   return json({ok:true,source:'DD04_STAGING_SUPABASE',read_only:true,persistent:true,
-   rows:result.rows,counts:counts.rows[0],write_enabled:false,publish_allowed:false,
-   status:'LEGACY_TASKS_G1_LOCKED_A00_020_PENDING_MIGRATION',
+   rows:result.rows,counts:counts.rows[0],context_installed:contextInstalled,
+   write_enabled:false,publish_allowed:false,
+   status:contextInstalled?'CONTEXT_READ_ONLY_GATE_ENFORCED':'LEGACY_TASKS_G1_LOCKED_A00_020_PENDING_MIGRATION',
    note:'Danh sách đọc từ DB staging; giao dịch A00-020 chưa kích hoạt khi thiếu migration và server actor authorization.'});
  }catch{
   if(begin)await client.query('ROLLBACK').catch(()=>{});
