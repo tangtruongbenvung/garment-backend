@@ -1,3 +1,4 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- DD04 A00-020: EPHEMERAL POSTGRES 17 CI FIXTURE; NEVER RUN AGAINST STAGING.
 -- Minimal stand-in for pre-existing protected dd04_stage tables.
 CREATE ROLE anon NOLOGIN;
