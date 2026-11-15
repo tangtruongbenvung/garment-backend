@@ -127,3 +127,7 @@ jobs:
         run: PGUSER=dd04_a00_backend PGPASSWORD=ci_ephemeral_only_not_production psql -v ON_ERROR_STOP=1 -f tests/sql/dd04-a00-022-ephemeral-g1-a11-transaction.sql
       - name: Audit transaction ROLLBACK as isolated database owner
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/dd04-a00-022-ephemeral-rollback-verify.sql
+      - name: Parse A00-026 media registry proposal only on disposable PostgreSQL
+        run: psql -v ON_ERROR_STOP=1 -f dd04-agent-control/supabase/30_A00_026_REFERENCE_MEDIA_REGISTRY_STAGING_REVIEW_ONLY_DO_NOT_RUN.sql
+      - name: Verify A00-026 private RLS and immutable audit schema
+        run: psql -v ON_ERROR_STOP=1 -f tests/sql/dd04-a00-026-ephemeral-verify.sql
