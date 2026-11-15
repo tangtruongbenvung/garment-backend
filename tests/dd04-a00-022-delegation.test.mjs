@@ -29,12 +29,13 @@ test('G1 preflight eligible is never an authorization to execute, spend or publi
 });
 test('no policy, no locked A11 ledger or over budget fail closed',()=>{
  const noPolicy=g1();noPolicy.finance_policy=null;
- assert.equal(evaluateA0022InternalG1(noPolicy).reason,'A11_ACTIVE_FINANCE_POLICY_REQUIRED');
+ assert.equal(evaluateA0022InternalG1(noPolicy).reason,'A11_INACTIVE_POLICY_HOLD_NO_SPEND');
  const noLedger=g1();noLedger.finance_ledger=null;
  assert.equal(evaluateA0022InternalG1(noLedger).reason,'A11_SERIALIZABLE_FINANCE_RESERVATION_REQUIRED');
  const overspend=g1();overspend.finance_ledger.requested_vnd=100001;
- assert.equal(evaluateA0022InternalG1(overspend).reason,'CEO_FINANCE_EXCEPTION_REQUIRED');
- assert.equal(evaluateA0022InternalG1(overspend).requires_ceo_finance,true);
+ assert.equal(evaluateA0022InternalG1(overspend).reason,'A11_LIMIT_EXCEEDED_HARD_DENY');
+ assert.equal(evaluateA0022InternalG1(overspend).requires_ceo_finance,false);
+ assert.equal(evaluateA0022InternalG1(overspend).finance_limit_approval_enabled,false);
  const split=g1();split.finance_ledger.campaign_committed_vnd=299999;
  assert.equal(evaluateA0022InternalG1(split).reason,'CEO_FINANCE_EXCEPTION_REQUIRED');
 });
@@ -97,4 +98,21 @@ test('only independent A08 + A09 QC of same asset is eligible for CEO G2 review'
  assert.equal(result.ok,true);assert.equal(result.publish_allowed,false);
  input.context.qc_actor_subject_ids=[actors[0],actors[0]];
  assert.equal(evaluateA0022FinalQC(input).reason,'A08_A09_INDEPENDENT_QC_REQUIRED');
+});
+
+test('A11 v1 zero VND policy rejects even one dong and requests no limit approval',()=>{
+ const sample=g1();
+ sample.finance_policy.max_single_spend_vnd=0;
+ sample.finance_policy.max_campaign_spend_vnd=0;
+ sample.finance_ledger.requested_vnd=0;
+ sample.finance_ledger.campaign_committed_vnd=0;
+ const eligible=evaluateA0022InternalG1(sample);
+ assert.equal(eligible.ok,true);
+ assert.equal(eligible.spend_allowed,false);
+ assert.equal(eligible.finance_limit_approval_enabled,false);
+ sample.finance_ledger.requested_vnd=1;
+ const denied=evaluateA0022InternalG1(sample);
+ assert.equal(denied.reason,'A11_LIMIT_EXCEEDED_HARD_DENY');
+ assert.equal(denied.requires_ceo_finance,false);
+ assert.equal(denied.spend_allowed,false);
 });
