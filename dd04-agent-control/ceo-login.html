@@ -9,8 +9,8 @@
 <script type="module" src="./ceo-login.js"></script>
 </head><body>
 <main>
-<header><span class="eyebrow">ĐỨC DUY AI OS · DD04-A00-009</span><h1>Đăng nhập &amp; MFA — Staging</h1>
-<p class="muted">Tài khoản Supabase Auth chưa đồng nghĩa quyền CEO. G1/G2 vẫn khóa cho đến khi được nghiệm thu và phê duyệt migration riêng.</p></header>
+<header><span class="eyebrow">ĐỨC DUY AI OS · DD04-A00-014</span><h1>Đăng nhập &amp; MFA — Staging</h1>
+<p class="muted">Quyền CEO được kiểm tra từ Supabase staging. Đăng nhập và xác minh MFA trong từng phiên; G1/G2 chỉ mở khi giao dịch, kế hoạch và bằng chứng QC được nghiệm thu.</p></header>
 <section class="panel" id="loginPanel">
 <h2>1. Xác thực email</h2>
 <label for="email">Email đã đăng ký Supabase Staging</label>
@@ -30,31 +30,44 @@
 <section class="panel" id="sessionPanel" hidden>
 <h2>2. Phiên đăng nhập Supabase</h2>
 <p id="identity" class="status" aria-live="polite"></p>
-<p class="warning">Đây mới là xác minh danh tính Auth. Chưa có quyền CEO và chưa thể duyệt G1/G2.</p>
-<section class="readiness-box" id="readinessPanel"><h2>3. Kiểm tra điều kiện quyền CEO và G1/G2</h2><p class="muted small">Chỉ đọc phiên Auth và trạng thái quyền CEO trên staging. Không cấp quyền, không duyệt và không đổi dữ liệu.</p><button type="button" id="checkReadinessBtn" class="secondary">Kiểm tra quyền CEO · MFA · G1/G2</button><p id="readinessStatus" role="status" aria-live="polite">Chưa kiểm tra điều kiện phê duyệt.</p></section>
-<section class="readiness-box" id="gateReviewPanel">
+<p class="warning" id="sessionGuidance">Đang xác minh quyền CEO và MFA phiên hiện tại. Không có quyết định G1/G2 nào được ghi tại màn hình này.</p>
+<section class="readiness-box" id="readinessPanel">
+<h2>3. Xác minh điều kiện phê duyệt</h2>
+<p class="muted small">Thông tin đọc trực tiếp từ Auth và cơ sở dữ liệu staging, không cấp quyền hoặc ghi quyết định.</p>
+<div class="status-grid" aria-label="Trạng thái điều kiện">
+<div class="status-tile"><span>Danh tính Auth</span><strong id="authState">Chờ kiểm tra</strong></div>
+<div class="status-tile"><span>Quyền CEO</span><strong id="ceoState">Chờ kiểm tra</strong></div>
+<div class="status-tile"><span>MFA phiên hiện tại</span><strong id="mfaState">Chờ kiểm tra</strong></div>
+<div class="status-tile"><span>Quyết định G1/G2</span><strong id="gateState">Chưa kích hoạt</strong></div>
+</div>
+<div class="actions"><button type="button" id="checkReadinessBtn" class="secondary">Làm mới trạng thái quyền CEO</button></div>
+<p id="readinessStatus" role="status" aria-live="polite">Chờ đọc trạng thái bảo mật từ server.</p>
+<p id="mfaHelp" class="warning" hidden>MFA đã đăng ký không tự xác minh phiên đăng nhập mới. Hãy kiểm tra MFA đã đăng ký, nhập mã 6 chữ số và xác minh; không tạo lại MFA.</p>
+<div class="actions"><button id="factorBtn" type="button" class="secondary">1. Kiểm tra MFA đã đăng ký</button><button id="enrollBtn" type="button" class="secondary" hidden>Đăng ký MFA lần đầu</button></div>
+<div id="totpEnroll" hidden>
+<p class="muted">Đây là mã bí mật MFA; tuyệt đối không chụp hoặc chia sẻ. Chỉ cần dùng khi tạo MFA lần đầu.</p>
+<label for="secret">Mã bí mật MFA (giữ kín)</label><input id="secret" readonly type="password">
+<button type="button" id="showSecret" class="secondary">Hiện / ẩn mã</button>
+</div>
+<div id="verifyPanel" hidden>
+<label for="totpCode">Mã xác thực từ Authenticator (6 chữ số)</label>
+<input id="totpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000">
+<button type="button" id="verifyBtn">2. Xác minh MFA của phiên này</button>
+</div>
+</section>
+<section class="readiness-box" id="gateReviewPanel" hidden>
 <h2>4. Xem hồ sơ G1/G2 — chỉ đọc</h2>
-<p class="muted small">Cần phiên MFA AAL2 và quyền CEO ACTIVE. Bản G1 hiện tại chưa có đầy đủ hồ sơ kế hoạch và ngân sách. G2 chưa có video/QC thật. Không có nút duyệt trong giai đoạn này.</p>
+<p class="muted small">Chỉ mở phần xem hồ sơ sau khi xác minh MFA phiên hiện tại và quyền CEO ACTIVE. Thiếu kế hoạch/ngân sách hoặc bằng chứng QC sẽ được liệt kê rõ. Đây không phải thao tác phê duyệt.</p>
 <label for="gateApprovalId">Mã approval_id từ DD04</label>
 <input id="gateApprovalId" type="text" inputmode="text" maxlength="36" placeholder="UUID của yêu cầu G1/G2">
 <button type="button" id="gateReviewBtn" class="secondary">Kiểm tra hồ sơ duyệt (chỉ đọc)</button>
 <p id="gateReviewStatus" role="status" aria-live="polite">Chưa kiểm tra. Không thay đổi quyết định.</p>
 </section>
-<div class="actions"><button id="enrollBtn" type="button">Tạo MFA bằng ứng dụng Authenticator</button><button id="factorBtn" type="button" class="secondary">Kiểm tra MFA đã đăng ký</button></div>
-<div id="totpEnroll" hidden>
-<p class="muted">Thêm mã bí mật bên dưới vào ứng dụng Authenticator. Không chia sẻ hoặc chụp ảnh mã này. Sau đó nhập mã 6 chữ số để hoàn tất.</p>
-<label for="secret">Mã thiết lập TOTP (giữ kín)</label><input id="secret" readonly type="password">
-<button type="button" id="showSecret" class="secondary">Hiện / ẩn mã để nhập trên điện thoại</button>
-</div>
-<div id="verifyPanel" hidden>
-<label for="totpCode">Mã xác thực 6 chữ số</label><input id="totpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000">
-<button type="button" id="verifyBtn">Xác minh MFA</button>
-</div>
 <div class="actions"><button id="logoutBtn" class="secondary" type="button">Đăng xuất &amp; xóa phiên</button></div>
 </section>
 <section class="panel"><h2>Trạng thái kiểm thử</h2><p id="message" role="status" aria-live="polite">Chưa đăng nhập.</p>
 <p class="muted small" id="callbackDiagnostics" aria-live="polite">Chẩn đoán callback: chưa có dữ liệu xác thực.</p>
-<p class="muted small">Phiên và token chỉ nằm trong bộ nhớ tab hiện tại, không lưu localStorage. Khi tải lại trang cần đăng nhập lại. Không có API phê duyệt CEO trên trang này.</p>
+<p class="muted small">Token chỉ lưu trong bộ nhớ tab hiện tại. Tải lại trang cần đăng nhập và xác minh MFA lại. Màn hình này không có API ghi quyết định G1/G2.</p>
 <a href="./">Trở về Dashboard 3D</a></section>
 </main>
 </body></html>
