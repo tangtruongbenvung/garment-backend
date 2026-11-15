@@ -1,5 +1,5 @@
 "use strict";
-// DD04-A00-014. Staging-only Auth UI and MFA step-up; no grants/approval decisions.
+// DD04-A00-017 V5.5: CEO observes Agent work, only financial exceptions need CEO decisions.
 // The API key is explicitly publishable, never a service_role key.
 const API="https://wbvkqfnrlasmtizjszab.supabase.co";
 const PUBLISHABLE_KEY="sb_publishable_eYGZHWqLAvhuFjIU3ej3Zg_eQdL5lrU";
@@ -8,6 +8,7 @@ const EXPECTED_HOST="deploy-preview-1--ducduy-ai-os-test.netlify.app";
 const $=id=>document.getElementById(id);
 let accessToken="",refreshToken="",factorId="",recoveryMode=false;
 let currentReadiness=null;
+let worklistRows=[];
 function message(text,ok=false){$("message").textContent=text;$("message").className=ok?"pass":"fail";}
 function diagnostic(code){$("callbackDiagnostics").textContent="Chẩn đoán callback: "+code+". Không ghi/lưu token.";}
 function tile(id,value,kind="neutral"){
@@ -22,6 +23,9 @@ function resetReadiness(){
  $("gateReviewPanel").hidden=true;
  $("gateApprovalSelect").replaceChildren(new Option("Chưa tải danh sách",""));
  $("gateApprovalId").value="";
+ worklistRows=[];
+ $("worklistSummary").textContent="Chưa tải dữ liệu từ server.";
+ $("worklistBody").replaceChildren();
  $("mfaHelp").hidden=true;
  $("sessionGuidance").textContent="Đang kiểm tra danh tính và quyền CEO từ server. Mỗi phiên cần MFA riêng.";
 }
@@ -219,18 +223,18 @@ async function checkCeoReadiness(){
   tile("authState",result.identity_verified?"Đã xác minh":"Chưa xác minh",result.identity_verified?"ok":"warn");
   tile("ceoState",result.enrollment_verified?"CEO ACTIVE":"Chưa xác minh",result.enrollment_verified?"ok":"warn");
   tile("mfaState",result.mfa_aal2?"AAL2 đạt":"Cần xác minh MFA",result.mfa_aal2?"ok":"warn");
-  tile("gateState","G2 CEO: đang khóa","blocked");
+  tile("gateState","A07: đang khóa","blocked");
   $("gateReviewPanel").hidden=!(result.mfa_aal2&&result.enrollment_verified&&result.identity_verified);
   $("mfaHelp").hidden=result.mfa_aal2===true;
   if(!$("gateReviewPanel").hidden && $("gateApprovalSelect").options.length===1 && !$("gateApprovalSelect").value)await loadGateQueue();
   $("sessionGuidance").textContent=result.enrollment_verified
-   ? "Quyền CEO đã ACTIVE. Theo V5.4, G1 do Agent xử lý nội bộ; CEO chỉ duyệt đăng G2 sau MFA AAL2."
+   ? "Quyền CEO ACTIVE. V5.5: CEO gửi lệnh/tài liệu và quản lý ngoại lệ tài chính; nội bộ Agent tự kiểm tra khi hệ thống được nghiệm thu."
    : "Tài khoản Auth đã xác minh; quyền CEO chưa được server xác nhận. Không có quyền duyệt G1/G2.";
   const missing=Array.isArray(result.missing)?result.missing:[];
   $("readinessStatus").textContent=
    result.mfa_aal2&&result.enrollment_verified
-    ? "Đã xác minh Auth, CEO và MFA. CEO có thể xem bài chờ G2; chức năng ghi quyết định vẫn khóa. Mã: "+missing.join(", ")
-    : "Thiếu điều kiện: "+missing.join(", ")+". Chưa thể xem bài chờ G2 bằng phiên này.";
+    ? "Đã xác minh Auth, CEO và MFA. Các cổng legacy vẫn khóa; công việc Agent xem tại mục 5. Mã: "+missing.join(", ")
+    : "Thiếu điều kiện: "+missing.join(", ")+". Sổ công việc chỉ đọc; không tự phê duyệt từ trang này.";
  }catch{
   resetReadiness();
   $("readinessStatus").textContent="Không kiểm tra được server staging. Mọi quyết định vẫn khóa.";
@@ -290,6 +294,50 @@ async function reviewGate(){
    ". QUYỀN DUYỆT: KHÓA. Không tạo công việc xuất bản.";
  }catch{$("gateReviewStatus").textContent="Không đọc được hồ sơ staging. G1/G2 vẫn khóa.";}
 }
+function showWorklist(){
+ const selectedAgent=$("worklistAgentFilter").value;
+ const selectedStatus=$("worklistStatusFilter").value;
+ const displayed=worklistRows.filter(r=>(!selectedAgent||r.owner_agent===selectedAgent)&&
+  (!selectedStatus||r.status===selectedStatus));
+ const body=$("worklistBody");body.replaceChildren();
+ for(const r of displayed){
+  const tr=document.createElement("tr");
+  const cells=[
+   r.command_id+" / "+r.task_id,
+   r.owner_agent+" · "+r.role,
+   r.status+" (dữ liệu DB)",
+   r.evidence_sha256?"Có hash · cần xem QC":"Chưa có hash QC",
+   r.tracked_at?new Date(r.tracked_at).toLocaleString("vi-VN"):"Chưa ghi thời gian"
+  ];
+  for(const value of cells){const td=document.createElement("td");td.textContent=value;tr.append(td);}
+  body.append(tr);
+ }
+ if(!displayed.length){const tr=document.createElement("tr"),td=document.createElement("td");
+  td.colSpan=5;td.textContent="Không có công việc phù hợp hoặc dữ liệu chưa được tải.";tr.append(td);body.append(tr);}
+ $("worklistSummary").textContent="Hiển thị "+displayed.length+"/"+worklistRows.length+
+  " nhiệm vụ thật trong staging. Chưa xác nhận Agent LLM vận hành hay tự phê duyệt. Không thay đổi dữ liệu.";
+}
+async function loadAgentWorklist(){
+ if(!accessToken){$("worklistSummary").textContent="Đăng nhập CEO staging trước khi tải danh sách.";return;}
+ $("worklistSummary").textContent="Đang đối chiếu phiên Auth và đọc dữ liệu Supabase...";
+ try{
+  const res=await fetch("/api/dd04-ceo-agent-worklist",{
+   method:"POST",headers:{"authorization":"Bearer "+accessToken,"accept":"application/json"},
+   cache:"no-store",referrerPolicy:"no-referrer",signal:AbortSignal.timeout(12000)
+  });
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok){$("worklistSummary").textContent="Không tải được: "+(data.error||"HTTP "+res.status);return;}
+  worklistRows=Array.isArray(data.rows)?data.rows.filter(x=>/^A(0[0-9]|1[0-7])$/.test(x.owner_agent||"")):[];
+  const agents=[...new Set(worklistRows.map(x=>x.owner_agent))].sort();
+  const statuses=[...new Set(worklistRows.map(x=>x.status))].sort();
+  $("worklistAgentFilter").replaceChildren(new Option("Tất cả Agent",""));
+  for(const a of agents)$("worklistAgentFilter").add(new Option(a,a));
+  $("worklistStatusFilter").replaceChildren(new Option("Tất cả trạng thái",""));
+  for(const state of statuses)$("worklistStatusFilter").add(new Option(state,state));
+  showWorklist();
+  if(data.truncated)$("worklistSummary").textContent+=" Danh sách giới hạn 200 nhiệm vụ gần nhất.";
+ }catch{$("worklistSummary").textContent="Không kết nối được dịch vụ theo dõi trên staging.";}
+}
 function bind(id,fn){$(id).addEventListener("click",()=>void Promise.resolve(fn()).catch(e=>message("Yêu cầu chưa hoàn thành: "+e.message)));}
 if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
  document.body.textContent="Chỉ dùng trang này trên HTTPS Deploy Preview #1 của Đức Duy.";
@@ -297,7 +345,9 @@ if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
  void parseCallback();
  bind("passwordBtn",passwordSignIn);bind("magicBtn",magicSignIn);
  bind("recoveryBtn",requestPasswordRecovery);bind("savePasswordBtn",savePassword);bind("cancelRecoveryBtn",logout);
- bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);bind("gateReviewBtn",reviewGate);bind("loadGateQueueBtn",loadGateQueue);
+ bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);bind("gateReviewBtn",reviewGate);bind("loadGateQueueBtn",loadGateQueue);bind("loadAgentWorklistBtn",loadAgentWorklist);
+ $("worklistAgentFilter").addEventListener("change",showWorklist);
+ $("worklistStatusFilter").addEventListener("change",showWorklist);
  $("gateApprovalSelect").addEventListener("change",()=>{$("gateApprovalId").value=$("gateApprovalSelect").value;});
  bind("showSecret",()=>{$("secret").type=$("secret").type==="password"?"text":"password"});
  window.addEventListener("pagehide",()=>{accessToken="";refreshToken="";recoveryMode=false;clearSecret();$("newPassword").value="";$("confirmPassword").value="";});
