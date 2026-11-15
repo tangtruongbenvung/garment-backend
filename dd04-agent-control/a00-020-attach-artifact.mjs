@@ -52,11 +52,10 @@ export function createA0020ArtifactAttacher(pool,resolveVerifiedActor){
      WHERE t.tenant_id=$1::uuid AND t.command_id=$2 AND t.task_id=$3
      FOR UPDATE OF c`,[actor.tenant_id,command_id,task_id]))[0];
    need(task&&task.owner_agent===actor.agent_id,'TASK_OWNER_REQUIRED');
-   need(task.state==='IN_PROGRESS'&&task.canonical_status==='IN_PROGRESS'&&
+   need(task.state==='IN_PROGRESS'&&['PLANNED_WAIT_G1','READY','IN_PROGRESS'].includes(task.canonical_status)&&
     task.revision===expected_revision,'TASK_NOT_READY_OR_STALE');
-   const gate=rows(await client.query(`SELECT EXISTS(SELECT 1 FROM dd04_stage.approvals
-    WHERE tenant_id=$1::uuid AND command_id=$2 AND gate='G1'
-      AND decision='APPROVED') AS passed`,[actor.tenant_id,command_id]))[0];
+   const gate=rows(await client.query(`SELECT dd04_stage.a00_022_effective_g1(
+    $1::uuid,$2::text) AS passed`,[actor.tenant_id,command_id]))[0];
    need(gate?.passed===true,'G1_STILL_LOCKED');
    const artifact=rows(await client.query(`SELECT artifact_id,storage_ref,sha256
     FROM dd04_stage.artifacts WHERE tenant_id=$1::uuid AND command_id=$2
