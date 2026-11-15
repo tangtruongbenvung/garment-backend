@@ -21,9 +21,12 @@ BEGIN
  IF EXISTS(SELECT 1 FROM dd04_stage.a00_022_delegation_policies
       WHERE status='ACTIVE') THEN
    RAISE EXCEPTION 'A00_022_POLICY_ACTIVATED_WITHOUT_CEO'; END IF;
+ -- The temporary fixture does NOT model all legacy DD04 triggers.
+ -- Verify the A00-020 context guard is preserved here; inspect real legacy
+ -- triggers separately with Supabase staging read-only SQL.
  IF (SELECT count(*) FROM pg_trigger
-     WHERE tgname IN ('dd04_tasks_guard','dd04_approval_guard','a00_context_transition_guard')
-     AND tgenabled='O')<>3 THEN
-   RAISE EXCEPTION 'A00_022_EXISTING_GUARD_MISSING'; END IF;
+     WHERE tgname='a00_context_transition_guard'
+       AND tgenabled='O')<>1 THEN
+   RAISE EXCEPTION 'A00_022_CONTEXT_GUARD_MISSING'; END IF;
  RAISE NOTICE 'PASS_A00_022_REVIEW_SCHEMA_RLS_AND_G1_UNCHANGED';
 END $checks$;
