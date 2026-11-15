@@ -57,3 +57,12 @@ A05: actual 20-60s video with technical output evidence.
 A08: independent video/linguistic QC evidence.
 A09: compliance + privacy + platform policy QC evidence.
 No spending without finance-approved limits, no publication without CEO G2 and valid platform rights.
+
+## 2026-11-15 code remediation follow-up
+- Added `a00-020-db-actor-resolver.mjs`: opaque server worker credential (SHA-256 lookup), DB row tenant/agent/expiry/status/capability verification, revocation fail closed. **No workers provisioned and no secrets generated or exposed.**
+- Updated SQL 22 review draft: `a00_worker_identities` table, RLS enabled by default and revoked browser grants, QC_PASS event action. **This is a revised unapproved SQL version; old SHA is superseded.**
+- `a00-020-save-task-plan.mjs` now requires explicit A00 SAVE_PLAN capability.
+- `a00-020-atomic-ledger-repository.mjs` requires runtime action capability, canonical legacy task gate, A08+A09 QC_PASS evidence before internal REVIEW_PASS, and logs QC passes without publication permissions. Auto-ready checks canonical task status.
+- Added tests for expired/revoked/forged workers, tenant isolation, denied action capability, QC evidence and pending G1. Initial CI caught a syntax error in the new test fixture; fixed in follow-up commit. **Only the latest CI workflow result can certify test PASS.**
+- Remaining blockers: dedicated least-privilege DB writer role + full audit provisioning/revocation, connection between locked legacy task states and new context with authoritative authorization, safe backfill/reconciliation, real Supabase writes and rollback tests, actual CEO read API preview proof, independent verified QC artifacts, staging migration CEO authorization. A03/A04/A05 remain disabled.
+- Security note: all RLS policies absent on existing 14 tables; enabling production-like runtime requires reviewed grants and policies, not merely `verified_by_db` boolean in a test double.
