@@ -346,20 +346,13 @@ async function activateA11ZeroV1(){
   target.textContent="Đã hủy, chính sách không thay đổi.";return;
  }
  target.textContent="Đang xác nhận chính sách bằng phiên CEO AAL2 với Supabase staging...";
- const key="DD04_A00_023_A11_POLICY";
  try{
-  const response=await fetch(API+"/rest/v1/rpc/a00_022_ceo_policy_decision",{
+  const response=await fetch(API+"/rest/v1/rpc/dd04_a00_023_activate_a11_v1",{
    method:"POST",headers:{
     "apikey":PUBLISHABLE_KEY,"authorization":"Bearer "+accessToken,
-    "content-type":"application/json","accept":"application/json",
-    "Content-Profile":"dd04_stage"
+    "content-type":"application/json","accept":"application/json"
    },
-   body:JSON.stringify({
-    p_tenant:"6bc73b49-a396-4c7d-b390-ab6339d547cd",
-    p_policy:"0c42f63e-6484-4519-8811-7c66b8e9d852",
-    p_expected_hash:"8f206452d6338b282b59b6aa368747157de52dca4349946b874a201b8de25e94",
-    p_decision:"ACTIVE"
-   }),cache:"no-store",referrerPolicy:"no-referrer",
+   body:"{}",cache:"no-store",referrerPolicy:"no-referrer",
    signal:AbortSignal.timeout(12000)});
   const result=await response.json().catch(()=>null);
   if(response.ok&&result==="CEO_POLICY_ACTIVE"){
@@ -368,7 +361,7 @@ async function activateA11ZeroV1(){
    const code=typeof result?.code==="string"&&/^[A-Za-z0-9_]{2,24}$/.test(result.code)
      ?result.code:"HTTP_"+response.status;
    target.textContent="CHƯA KÍCH HOẠT: "+code+
-    ". Nếu schema staging không được mở qua Data API, không tự mở rộng quyền; báo cho A00 cấu hình một đường phê duyệt riêng.";
+    ". Nếu RPC công khai tối thiểu chưa được triển khai, không mở schema riêng và không bỏ qua MFA; cần nghiệm thu SQL 29 riêng.";
   }
  }catch{target.textContent="CHƯA KÍCH HOẠT: Không truy cập được kênh xác thực chính sách. Không thay đổi G1/G2.";}
 }
