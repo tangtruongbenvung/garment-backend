@@ -382,6 +382,26 @@ BEGIN
  RETURN id;
 END $queue$;
 
+-- Read-only manifest builder for A00; workers cannot SELECT review table
+-- directly. The commit function recomputes the same hash under DB authority.
+CREATE FUNCTION dd04_stage.a00_022_review_manifest(
+ p_tenant uuid,p_command text,p_policy uuid,p_packet text)
+RETURNS text LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,dd04_stage,pg_temp AS $manifest$
+DECLARE computed text;
+BEGIN
+ PERFORM dd04_stage.a00_022_check_worker(p_tenant,'READ','A00');
+ SELECT encode(sha256(convert_to(string_agg(
+  agent_id||':'||actor_subject_id::text||':'||review_sha256,
+  '|' ORDER BY agent_id),'UTF8')),'hex')
+ INTO computed
+ FROM dd04_stage.a00_022_review_events
+ WHERE tenant_id=p_tenant AND command_id=p_command
+  AND policy_id=p_policy AND packet_sha256=p_packet
+  AND verdict='PASS' AND expires_at>now();
+ RETURN computed;
+END $manifest$;
+
 -- Only complete four-agent independent evidence + reserved finance amount
 -- can create the immutable internal G1 authorization. No legacy G1/G2 writes.
 CREATE OR REPLACE FUNCTION dd04_stage.a00_022_guard_internal_g1()
@@ -474,12 +494,15 @@ REVOKE ALL ON FUNCTION dd04_stage.a00_022_reserve_finance(uuid,text,uuid,text,te
  FROM PUBLIC,anon,authenticated,service_role;
 REVOKE ALL ON FUNCTION dd04_stage.a00_022_queue_finance_exception(uuid,text,uuid,text,bigint,text)
  FROM PUBLIC,anon,authenticated,service_role;
+REVOKE ALL ON FUNCTION dd04_stage.a00_022_review_manifest(uuid,text,uuid,text)
+ FROM PUBLIC,anon,authenticated,service_role;
 REVOKE ALL ON FUNCTION dd04_stage.a00_022_commit_g1(uuid,text,uuid,text,uuid,text,text)
  FROM PUBLIC,anon,authenticated,service_role;
 GRANT EXECUTE ON FUNCTION dd04_stage.a00_022_check_worker(uuid,text,text),
  dd04_stage.a00_022_effective_g1(uuid,text),
  dd04_stage.a00_022_record_review(uuid,text,uuid,text,text,text,timestamptz),
  dd04_stage.a00_022_reserve_finance(uuid,text,uuid,text,text,text,bigint),
+ dd04_stage.a00_022_review_manifest(uuid,text,uuid,text),
  dd04_stage.a00_022_commit_g1(uuid,text,uuid,text,uuid,text,text),
  dd04_stage.a00_022_queue_finance_exception(uuid,text,uuid,text,bigint,text)
  TO dd04_a00_runtime;
