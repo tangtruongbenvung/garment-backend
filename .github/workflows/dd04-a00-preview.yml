@@ -113,6 +113,8 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/dd04-a00-022-integration-postcheck.sql
       - name: Exercise isolated A00 worker insert and denied handoff with rollback
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/dd04-a00-021-ephemeral-agent-write-and-handoff.sql
+      - name: SHA256 exact A00-023 CEO guard patch for separate staging approval
+        run: sha256sum dd04-agent-control/supabase/28_A00_023_CEO_ROLE_CASE_FIX_STAGING_REVIEW_ONLY_DO_NOT_RUN.sql
       - name: Validate A00-023 CEO uppercase role patch on isolated PostgreSQL ONLY
         run: psql -v ON_ERROR_STOP=1 -f dd04-agent-control/supabase/28_A00_023_CEO_ROLE_CASE_FIX_STAGING_REVIEW_ONLY_DO_NOT_RUN.sql
       - name: Provision disposable CEO and worker fixture
