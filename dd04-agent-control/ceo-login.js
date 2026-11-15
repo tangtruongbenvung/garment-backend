@@ -219,18 +219,18 @@ async function checkCeoReadiness(){
   tile("authState",result.identity_verified?"Đã xác minh":"Chưa xác minh",result.identity_verified?"ok":"warn");
   tile("ceoState",result.enrollment_verified?"CEO ACTIVE":"Chưa xác minh",result.enrollment_verified?"ok":"warn");
   tile("mfaState",result.mfa_aal2?"AAL2 đạt":"Cần xác minh MFA",result.mfa_aal2?"ok":"warn");
-  tile("gateState","Chưa mở giao dịch G1/G2","blocked");
+  tile("gateState","G2 CEO: đang khóa","blocked");
   $("gateReviewPanel").hidden=!(result.mfa_aal2&&result.enrollment_verified&&result.identity_verified);
   $("mfaHelp").hidden=result.mfa_aal2===true;
   if(!$("gateReviewPanel").hidden && $("gateApprovalSelect").options.length===1 && !$("gateApprovalSelect").value)await loadGateQueue();
   $("sessionGuidance").textContent=result.enrollment_verified
-   ? "Quyền CEO đã ACTIVE trong cơ sở dữ liệu. Phê duyệt G1/G2 vẫn khóa độc lập; bạn cần MFA AAL2 trong từng phiên."
+   ? "Quyền CEO đã ACTIVE. Theo V5.4, G1 do Agent xử lý nội bộ; CEO chỉ duyệt đăng G2 sau MFA AAL2."
    : "Tài khoản Auth đã xác minh; quyền CEO chưa được server xác nhận. Không có quyền duyệt G1/G2.";
   const missing=Array.isArray(result.missing)?result.missing:[];
   $("readinessStatus").textContent=
    result.mfa_aal2&&result.enrollment_verified
-    ? "Đã xác minh danh tính, CEO và MFA. Đọc hồ sơ G1/G2 được phép; quyết định vẫn bị khóa. Mã: "+missing.join(", ")
-    : "Thiếu điều kiện: "+missing.join(", ")+". Chưa thể xem hồ sơ G1/G2 bằng phiên này.";
+    ? "Đã xác minh Auth, CEO và MFA. CEO có thể xem bài chờ G2; chức năng ghi quyết định vẫn khóa. Mã: "+missing.join(", ")
+    : "Thiếu điều kiện: "+missing.join(", ")+". Chưa thể xem bài chờ G2 bằng phiên này.";
  }catch{
   resetReadiness();
   $("readinessStatus").textContent="Không kiểm tra được server staging. Mọi quyết định vẫn khóa.";
@@ -255,10 +255,11 @@ async function loadGateQueue(){
   $queue.replaceChildren(new Option(items.length?"Chọn yêu cầu để xem hồ sơ":"Chưa có yêu cầu chờ duyệt",""));
   for(const a of items){
    if(!/^[0-9a-f-]{36}$/i.test(a?.approval_id||""))continue;
-   const label=a.gate+" · "+a.command_id+" · V"+a.revision+" · "+a.command_status;
+   if(a.gate!=="G2")continue;
+   const label="G2 đăng bài · "+a.command_id+" · V"+a.revision+" · "+a.command_status;
    $queue.add(new Option(label,a.approval_id));
   }
-  $("gateQueueStatus").textContent="Đã tải "+items.length+" yêu cầu PENDING. Chọn một dòng rồi xem hồ sơ; chưa thể ghi quyết định.";
+  $("gateQueueStatus").textContent="Đã tải "+items.length+" bài G2 đang chờ CEO. Kế hoạch G1 được Agent kiểm tra nội bộ; chưa thể ghi quyết định đăng.";
  }catch(e){
   $queue.replaceChildren(new Option("Không tải được danh sách",""));
   $("gateQueueStatus").textContent="Không tải được danh sách: "+e.message+". Không có quyết định được ghi.";
@@ -282,6 +283,7 @@ async function reviewGate(){
   if(!r.ok){$("gateReviewStatus").textContent="KHÓA: "+(data.error||"HTTP "+r.status)+". Không có quyết định được ghi.";
    if([401,403].includes(r.status))await checkCeoReadiness();return;}
   const a=data.approval;
+  if(a.gate!=="G2"){$("gateReviewStatus").textContent="G1 được chuyển thành kiểm tra nội bộ AI Agent theo V5.4, không nằm trong hàng duyệt CEO.";return;}
   $("gateReviewStatus").textContent=
    "Hồ sơ "+a.gate+" · "+a.command_id+" · V"+a.revision+" · "+a.decision+
    ". Bằng chứng còn thiếu: "+(data.missing||[]).join(", ")+
