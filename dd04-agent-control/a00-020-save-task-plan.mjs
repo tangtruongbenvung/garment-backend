@@ -43,6 +43,8 @@ export function createA0020TaskPlanWriter(pool,resolveVerifiedA00){
   let begun=false;
   try{
    await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');begun=true;
+   // Role membership is provisioned separately; refuses privileged/owner-only runtime.
+   await client.query('SET LOCAL ROLE dd04_a00_runtime');
    await client.query("SET LOCAL statement_timeout='8000ms'");
    // RLS authorization binds each statement to the verified opaque worker secret.
    // Never place this secret into a browser payload, audit log or response.
