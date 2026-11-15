@@ -66,3 +66,11 @@ No spending without finance-approved limits, no publication without CEO G2 and v
 - Added tests for expired/revoked/forged workers, tenant isolation, denied action capability, QC evidence and pending G1. Initial CI caught a syntax error in the new test fixture; fixed in follow-up commit. **Only the latest CI workflow result can certify test PASS.**
 - Remaining blockers: dedicated least-privilege DB writer role + full audit provisioning/revocation, connection between locked legacy task states and new context with authoritative authorization, safe backfill/reconciliation, real Supabase writes and rollback tests, actual CEO read API preview proof, independent verified QC artifacts, staging migration CEO authorization. A03/A04/A05 remain disabled.
 - Security note: all RLS policies absent on existing 14 tables; enabling production-like runtime requires reviewed grants and policies, not merely `verified_by_db` boolean in a test double.
+
+## Security hardening addendum — same day
+- A03/A04/A05 output `SUBMIT` now checks the provided SHA256 against a registered `dd04_stage.artifacts` record bound to tenant + command + task. A bare user-supplied hash cannot pass.
+- A08/A09 `QC_PASS` now requires `kind=QC_REPORT_A08` or `QC_REPORT_A09` with matching `sha256` under that same task context and tenant; different report and production hashes required. A08 and A09 recorded QC events are both mandatory before an internal REVIEW_PASS.
+- GitHub Actions run `43668287971`: `test-a00` PASS, `validate-windows-powershell` PASS, corresponding commit `192816adcb960e0c3fe25753227bb471a02c7c47` (unit tests / syntax only; not a production-like integration test).
+- This does NOT prove remote storage object bytes were checked or generated media exists: registered records still require a trusted server-side writer with storage hash reconciliation. Staging `artifacts` contains zero records at the time of audit.
+- The actor resolver is a deployable code contract but has not been provisioned with dedicated DB credentials, and no secured runtime write API has been deployed. SQL 22 remains an unapproved draft. No migration has run.
+- Release decision: A00-020 code security regression PASS; **staging operational acceptance FAIL / NOT STARTED**, A03/A04/A05 not yet activated.
