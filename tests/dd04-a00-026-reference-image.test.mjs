@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {deflateSync} from 'node:zlib';
 import {makeChannelIdentity} from '../dd04-agent-control/a00-025-channel-identity-lock.mjs';
-import {prepareReferenceImage,storeAndVerifyReference,collectReferencePair,evaluateReferenceReview} from '../dd04-agent-control/a00-026-reference-image-core.mjs';
+import {prepareReferenceImage,storeAndVerifyReference,collectReferencePair,evaluateReferenceReview,checkTrustedReferenceReview} from '../dd04-agent-control/a00-026-reference-image-core.mjs';
 const tenant='6bc73b49-a396-4c7d-b390-ab6339d547cd';
 const identity=makeChannelIdentity({channel_id:'FB001',platform:'FANPAGE',name:'Mẹ bé FB001'});
 // Unit fixture: only PNG container and 256x256 header, NOT proof of visual validity.
@@ -68,7 +68,8 @@ test('A08 and A09 cannot PASS from file metadata alone or shared actor',async()=
  assert.equal(evaluateReferenceReview(pair,{a08:first,a09:{...second,manifest_sha256:'0'.repeat(64)}}).reason,'INDEPENDENT_IMAGE_QC_REQUIRED');
  const pass=evaluateReferenceReview(pair,{a08:first,a09:second});
  assert.equal(pass.ok,true);
- assert.equal(pass.ready_for_A05_scene_generation,true);
+ assert.equal(pass.ready_for_A05_scene_generation,false);
+ assert.equal(pass.authenticated_review_verified,false);
  assert.equal(pass.publish_allowed,false);
  assert.equal(pass.ceo_G2,'NOT_APPROVED');
 });
@@ -80,4 +81,30 @@ test('invalid dimensions, unsigned media and unsafe roles fail closed',()=>{
  assert.equal(incorrect.source,'LOCAL_AUTHORIZED_UPLOAD');
  assert.throws(()=>prepareReferenceImage({tenant_id:tenant,identity,role:'BABY',
    bytes:baby,mime:'image/png',provider:'PAID_API_PROVIDER'}),/PROVIDER_EXECUTION_NOT_AUTHORIZED/);
+});
+
+test('actual A05 scene staging requires server-verified immutable A08/A09 evidence, not spoofable review JSON',async()=>{
+ const db=store();
+ const m=await storeAndVerifyReference({asset:make('MOTHER',mother),bytes:mother,storage:db});
+ const b=await storeAndVerifyReference({asset:make('BABY',baby),bytes:baby,storage:db});
+ const pair=collectReferencePair(identity,[m,b]);
+ const events={source:'AUTHENTICATED_IMMUTABLE_STAGING_DB',
+  manifest_sha256:pair.manifest_sha256,
+  media_bytes_verified:true,visual_inspection_confirmed:true,
+  a08:{role:'A08',verdict:'PASS',manifest_sha256:pair.manifest_sha256,
+   actor_subject_id:'11111111-1111-4111-8111-111111111111',
+   provenance:'INDEPENDENT_HUMAN_OR_AUTHENTICATED_AGENT_REVIEW',
+   checked_image_sha256:pair.assets.map(a=>a.bytes_sha256)},
+  a09:{role:'A09',verdict:'PASS',manifest_sha256:pair.manifest_sha256,
+   actor_subject_id:'22222222-2222-4222-8222-222222222222',
+   provenance:'INDEPENDENT_HUMAN_OR_AUTHENTICATED_AGENT_REVIEW',
+   checked_image_sha256:pair.assets.map(a=>a.bytes_sha256)}
+ };
+ assert.equal((await checkTrustedReferenceReview(pair,null)).ok,false);
+ assert.equal((await checkTrustedReferenceReview(pair,{readImmutableQcEvents:async()=>({...events,media_bytes_verified:false})})).ok,false);
+ const accepted=await checkTrustedReferenceReview(pair,{readImmutableQcEvents:async()=>events});
+ assert.equal(accepted.ok,true);
+ assert.equal(accepted.ready_for_A05_scene_generation,true);
+ assert.equal(accepted.render_allowed,false);
+ assert.equal(accepted.publish_allowed,false);
 });
