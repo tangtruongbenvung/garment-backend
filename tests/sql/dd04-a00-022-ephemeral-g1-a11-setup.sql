@@ -6,7 +6,7 @@ CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS
 CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS
  $f$ SELECT jsonb_build_object('aal',current_setting('dd04.test_aal',true)) $f$;
 CREATE TABLE dd04_stage.ceo_enrollments (
- tenant_id uuid NOT NULL,user_id uuid NOT NULL,role text NOT NULL,
+ tenant_id uuid NOT NULL,user_id uuid NOT NULL,role text NOT NULL CHECK(role='CEO'),
  status text NOT NULL,verified_by_admin boolean NOT NULL
 );
 INSERT INTO dd04_stage.ceo_enrollments VALUES(
