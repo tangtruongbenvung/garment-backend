@@ -1,8 +1,8 @@
 "use strict";
 // Preview UI only. No storage or agent execution, no production use.
 const $=id=>document.getElementById(id);
-let last=null;
-const host="deploy-preview-1--ducduy-ai-os-test.netlify.app";
+let last=null,lastProduction=null;
+const host=/^deploy-preview-(?:1|6|7)--ducduy-ai-os-test\\.netlify\\.app$/;
 const t=(tag,value,klass)=>{
  const e=document.createElement(tag);
  if(value!==undefined)e.textContent=String(value);
@@ -50,7 +50,7 @@ function print(result){
  }
 }
 async function generate(){
- if(location.protocol!=="https:"||location.hostname!==host){show("Chỉ cho phép trên Deploy Preview staging.");return;}
+ if(location.protocol!=="https:"||!host.test(location.hostname)){show("Chỉ cho phép trên Deploy Preview staging.");return;}
  const token=$("token").value;
  if(token.length<32){show("Cần khóa staging hợp lệ, không dùng token CEO hay mật khẩu.");return;}
  const channels=Array.from($("channels").children).map(e=>({
@@ -76,6 +76,72 @@ async function generate(){
  }catch(e){last=null;$("download").disabled=true;show("Chưa tạo được: "+e.message);}
  finally{$("generate").disabled=false;}
 }
+function selectedPlan(){
+ const channels=Array.from($("channels").children).map(e=>({
+  channel_id:e.querySelector('[data-role="id"]').value.trim(),
+  name:e.querySelector('[data-role="name"]').value.trim(),
+  platform:e.querySelector('[data-role="platform"]').value
+ }));
+ if(channels.length!==Number($("count").value))throw Error("Số kênh không đúng.");
+ return {campaign_id:$("campaign").value.trim(),channels};
+}
+async function makeVideoPackets(){
+ if(location.protocol!=="https:"||!host.test(location.hostname)){
+  show("Chỉ chạy trên Netlify Deploy Preview staging.");return;
+ }
+ const token=$("token").value;
+ if(token.length<32){show("Cần khóa preview của server, không gửi mật khẩu CEO.");return;}
+ const plan=selectedPlan();
+ $("videoPlan").disabled=true;
+ $("videoSummary").textContent="Đang xây dựng hồ sơ hình ảnh và dựng video thử nghiệm...";
+ try{
+  const response=await fetch("/api/dd04-a00/content-factory-preview",{
+   method:"POST",headers:{"content-type":"application/json","authorization":"Bearer "+token},
+   body:JSON.stringify(plan),cache:"no-store",referrerPolicy:"no-referrer"
+  });
+  const data=await response.json();
+  if(!response.ok||data.ok!==true||data.status!=="STAGING_STORYBOARD_READY_NOT_RENDERED"
+     ||data.packets?.length!==plan.channels.length
+     ||data.counts?.videos_rendered!==0||data.controls?.permission_to_publish!==false)
+   throw Error(String(data.error||"CONTENT_PACK_NOT_VERIFIED"));
+  lastProduction=data;
+  $("downloadVideoPlan").disabled=false;
+  $("videoSummary").textContent="Đã lập "+data.packets.length+" gói video theo kênh; "+
+   data.counts.a04_image_shot_prompts+" prompt hình và "+
+   data.counts.a05_video_shot_plans+" cảnh dựng. Đã render: 0, đăng: 0, chi phí API: 0.";
+  $("videoResults").replaceChildren();
+  for(const p of data.packets){
+   const card=t("article",undefined,"panel");
+   card.append(t("h3",p.channel_name+" · "+p.title),
+    t("p",p.duration_seconds+" giây · 9:16 · A04 "+p.A04.image_shots.length+
+     " prompt hình · A05 "+p.A05.video_shots.length+" cảnh dựng"));
+   const ol=t("ol");
+   for(const shot of p.A05.video_shots){
+    const li=t("li",shot.from+"–"+shot.to+"s: "+shot.animation_prompt_vi+
+     (shot.voiceover_vi?" Lời thoại: "+shot.voiceover_vi:""));
+    ol.append(li);
+   }
+   card.append(ol,t("p","A08: "+p.quality.A08.status+
+    " · A09: "+p.quality.A09.status+
+    " · CEO G2: CHƯA DUYỆT · KHÔNG ĐĂNG.","warning"));
+   $("videoResults").append(card);
+  }
+  show("PASS: Đã chuẩn bị hồ sơ dựng video, chưa gọi API AI và chưa xuất bản.",true);
+ }catch(e){
+  lastProduction=null;$("downloadVideoPlan").disabled=true;
+  $("videoResults").replaceChildren();
+  $("videoSummary").textContent="Không tạo được hồ sơ: "+e.message;
+  show("Chưa tạo được hồ sơ: "+e.message);
+ }finally{$("videoPlan").disabled=false;}
+}
+function downloadVideoPack(){
+ if(!lastProduction)return;
+ const file=new Blob([JSON.stringify(lastProduction,null,2)],
+  {type:"application/json;charset=utf-8"});
+ const url=URL.createObjectURL(file),a=document.createElement("a");
+ a.href=url;a.download="DD04_A03_A04_A05_"+lastProduction.campaign_id+"_video_briefs.json";
+ document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
 function download(){
  if(!last)return;
  const blob=new Blob([JSON.stringify(last,null,2)],{type:"application/json;charset=utf-8"});
@@ -85,7 +151,9 @@ function download(){
 }
 $("count").addEventListener("change",channelRows);
 $("generate").addEventListener("click",()=>void generate());
+$("videoPlan").addEventListener("click",()=>void makeVideoPackets());
+$("downloadVideoPlan").addEventListener("click",downloadVideoPack);
 $("download").addEventListener("click",download);
-$("clear").addEventListener("click",()=>{last=null;$("token").value="";$("results").replaceChildren();$("download").disabled=true;$("totals").textContent="Đã xóa kết quả.";show("Đã xóa khóa khỏi giao diện.",true);});
+$("clear").addEventListener("click",()=>{last=null;lastProduction=null;$("downloadVideoPlan").disabled=true;$("videoResults").replaceChildren();$("videoSummary").textContent="Chưa tạo hồ sơ dựng video.";$("token").value="";$("results").replaceChildren();$("download").disabled=true;$("totals").textContent="Đã xóa kết quả.";show("Đã xóa khóa khỏi giao diện.",true);});
 window.addEventListener("pagehide",()=>{last=null;$("token").value="";});
 channelRows();
