@@ -19,7 +19,7 @@ function fixture({g1=true,prior=false,dbError=false,state='READY',owner='A03',ag
     dependency_task_ids:[],output_refs:[{uri:'private://test'}],output_sha256:'a'.repeat(64),profile_sha256:null,channel_id:null,last_reviewer_agent:null}]};
   if(q.includes("action='qc_pass'"))return {rows:[{agent_id:'A08'},{agent_id:'A09'}]};
   if(q.includes('from dd04_stage.artifacts'))return {rows:[{artifact_found:true}]};
-  if(q.includes('from dd04_stage.approvals'))return {rows:[{passed:g1}]};
+  if(q.includes('dd04_stage.a00_022_effective_g1'))return {rows:[{passed:g1}]};
   if(q.includes('from dd04_stage.a00_task_contexts')&&q.includes('for share'))return {rows:[]};
   if(q.includes('insert into dd04_stage.a00_transition_events'))return {rows:[{event_id:5}]};
   if(q.includes('update dd04_stage.a00_task_contexts')&&q.includes('returning revision'))return {rows:[{revision:2}]};
@@ -62,7 +62,7 @@ test('review must come from different agent and match the output hash',async()=>
  await assert.rejects(r.transact(input({action:'REVIEW_PASS'}),{}),/INDEPENDENT_REVIEW_REQUIRED/);
 });
 test('independent A08 review can PASS internal only, never publishes',async()=>{
- const f=fixture({state:'INTERNAL_REVIEW',agent:'A08'});
+ const f=fixture({state:'INTERNAL_REVIEW',agent:'A08',owner:'A05'});
  const r=createA0020LedgerRepository(f.pool,async()=>f.actor);
  const res=await r.transact(input({action:'REVIEW_PASS'}),{});
  assert.equal(res.state,'APPROVED_INTERNAL');assert.equal(res.publish_allowed,false);
@@ -110,7 +110,7 @@ test('QC evidence can only be recorded by an independent A08/A09 reviewer',async
 });
 
 test('unregistered QC report cannot be used for approval',async()=>{
- const f=fixture({state:'INTERNAL_REVIEW',agent:'A09'}); const prior=f.pool.connect;
+ const f=fixture({state:'INTERNAL_REVIEW',agent:'A09',owner:'A05'}); const prior=f.pool.connect;
  f.pool.connect=async()=>{const c=await prior();const q=c.query;
   c.query=async(sql,args)=>String(sql).includes('FROM dd04_stage.artifacts')?{rows:[{artifact_found:false}]}:q(sql,args);
   return c;};
@@ -136,20 +136,29 @@ test('automatic handoff writes audit BEFORE moving dependent task and commits bo
    const q=String(sql);
    if(q.includes('SELECT target.task_id,target.revision')){
     await query(sql,args);
-    return {rows:[{task_id:command+'_A04',revision:1}]};
+    return {rows:[{task_id:command+'_A08',revision:1}]};
    }
    if(q.includes("SET state='READY',revision=revision+1")&&q.includes("RETURNING task_id")){
     await query(sql,args);
-    return {rows:[{task_id:command+'_A04'}]};
+    return {rows:[{task_id:command+'_A08'}]};
    }
    return query(sql,args);
   };return c;
  };
  const repo=createA0020LedgerRepository(f.pool,async()=>f.actor);
  const result=await repo.transact(input({action:'REVIEW_PASS'}),{});
- assert.deepEqual(result.unblocked,[command+'_A04']);
+ assert.deepEqual(result.unblocked,[command+'_A08']);
  const auditIdx=f.calls.findIndex(x=>x.sql.includes("'AUTO_READY','BLOCKED','READY'"));
  const updateIdx=f.calls.findIndex(x=>x.sql.includes("SET state='READY',revision=revision+1"));
  assert.ok(auditIdx>=0&&updateIdx>auditIdx);
  assert.equal(f.calls.at(-1).sql,'COMMIT');
+});
+
+test('internal A03 review can be accepted by independent A00 without premature A08/A09 QC',async()=>{
+ const f=fixture({state:'INTERNAL_REVIEW',agent:'A00',owner:'A03'});
+ const repo=createA0020LedgerRepository(f.pool,async()=>f.actor);
+ const result=await repo.transact(input({action:'REVIEW_PASS'}),{});
+ assert.equal(result.state,'APPROVED_INTERNAL');
+ assert.equal(result.publish_allowed,false);
+ assert.ok(!f.calls.some(c=>c.sql.includes("action='QC_PASS'")));
 });
