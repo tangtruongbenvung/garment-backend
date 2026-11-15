@@ -1,5 +1,5 @@
 "use strict";
-// DD04-A00-009. Staging-only Auth UI. No database writes, CEO grants or approvals.
+// DD04-A00-014. Staging-only Auth UI and MFA step-up; no grants/approval decisions.
 // The API key is explicitly publishable, never a service_role key.
 const API="https://wbvkqfnrlasmtizjszab.supabase.co";
 const PUBLISHABLE_KEY="sb_publishable_eYGZHWqLAvhuFjIU3ej3Zg_eQdL5lrU";
@@ -7,16 +7,30 @@ const CALLBACK="https://deploy-preview-1--ducduy-ai-os-test.netlify.app/dd04-age
 const EXPECTED_HOST="deploy-preview-1--ducduy-ai-os-test.netlify.app";
 const $=id=>document.getElementById(id);
 let accessToken="",refreshToken="",factorId="",recoveryMode=false;
+let currentReadiness=null;
 function message(text,ok=false){$("message").textContent=text;$("message").className=ok?"pass":"fail";}
 function diagnostic(code){$("callbackDiagnostics").textContent="Chẩn đoán callback: "+code+". Không ghi/lưu token.";}
+function tile(id,value,kind="neutral"){
+ const el=$(id);el.textContent=value;el.dataset.state=kind;
+}
+function resetReadiness(){
+ currentReadiness=null;
+ tile("authState","Chờ xác minh");
+ tile("ceoState","Chờ xác minh");
+ tile("mfaState","Chờ xác minh");
+ tile("gateState","Đang khóa");
+ $("gateReviewPanel").hidden=true;
+ $("mfaHelp").hidden=true;
+ $("sessionGuidance").textContent="Đang kiểm tra danh tính và quyền CEO từ server. Mỗi phiên cần MFA riêng.";
+}
 function clearSecret(){$("secret").value="";$("totpCode").value="";$("totpEnroll").hidden=true;$("verifyPanel").hidden=true;}
 function logout(){
- accessToken="";refreshToken="";factorId="";recoveryMode=false;clearSecret();$("password").value="";
+ accessToken="";refreshToken="";factorId="";recoveryMode=false;clearSecret();resetReadiness();$("password").value="";
  $("newPassword").value="";$("confirmPassword").value="";$("passwordRecoveryPanel").hidden=true;
  $("sessionPanel").hidden=true;$("loginPanel").hidden=false;$("identity").textContent="";
  $("readinessStatus").textContent="Phiên đã đăng xuất; điều kiện G1/G2 chưa xác minh.";
  $("gateReviewStatus").textContent="Đã đăng xuất. Không có quyết định được ghi.";
- message("Đã xóa phiên khỏi bộ nhớ tab. Không có quyền CEO được cấp.",true);
+ message("Đã xóa phiên khỏi tab hiện tại. Hồ sơ CEO trong cơ sở dữ liệu không thay đổi.",true);
 }
 // Callback handles fragment sessions and safe recovery token hashes; no token is ever logged.
 // Immediately delete fragment and query parameters before rendering or making HTTP requests.
@@ -94,8 +108,9 @@ async function checkSession(){
    return;
   }
   $("passwordRecoveryPanel").hidden=true;$("sessionPanel").hidden=false;
-  message("Đăng nhập Supabase thành công. Chưa xác định quyền CEO; G1/G2 vẫn khóa.",true);
+  message("Đã đăng nhập Auth; đang kiểm tra quyền CEO và MFA phiên này.",true);
   await loadFactors();
+  await checkCeoReadiness();
  }catch(e){diagnostic("AUTH_USER_VERIFICATION_FAILED");logout();message("Không xác minh được phiên Supabase: "+e.message);}
 }
 async function passwordSignIn(){
@@ -148,11 +163,13 @@ async function loadFactors(){
  const verified=factors.find(x=>x.factor_type==="totp"&&x.status==="verified");
  if(verified){
   factorId=verified.id;
+  $("enrollBtn").hidden=true;
   $("verifyPanel").hidden=false;$("totpEnroll").hidden=true;
   message("Đã tìm thấy MFA TOTP. Hãy nhập mã Authenticator để nâng mức xác thực.",true);
  }else{
   factorId="";
-  message("Chưa có MFA TOTP đã xác nhận. Bấm Tạo MFA để đăng ký mới. Không có quyền CEO được cấp.",true);
+  $("enrollBtn").hidden=false;
+  message("Chưa tìm thấy TOTP đã xác minh ở phiên Auth. Chỉ tạo MFA mới nếu bạn thực sự chưa đăng ký.",true);
  }
 }
 async function enroll(){
@@ -177,29 +194,43 @@ async function verify(){
   accessToken=data.access_token;refreshToken=data.refresh_token||"";
   clearSecret();
   await auth("/user",{authorized:true});
-  message("Mã MFA được Supabase xác minh thành công. Chưa có phân quyền CEO hoặc G1/G2; không có quyết định nào được ghi.",true);
+  message("Đã xác minh MFA với Supabase. Đang kiểm tra lại quyền CEO và phiên AAL2...",true);
+  await checkCeoReadiness();
  }catch(e){message("Xác minh MFA chưa đạt: "+e.message);}
  finally{$("totpCode").value="";}
 }
 async function checkCeoReadiness(){
  if(!accessToken){message("Đăng nhập và xác minh phiên trước khi kiểm tra quyền CEO.");return;}
- $("readinessStatus").textContent="Đang kiểm tra danh tính và điều kiện quyền, không thay đổi dữ liệu...";
+ $("readinessStatus").textContent="Đang đối chiếu Auth, MFA và quyền CEO với Supabase staging...";
  try{
   const response=await fetch("/api/dd04-ceo-readiness",{
    method:"POST",headers:{"authorization":"Bearer "+accessToken,"accept":"application/json"},
    cache:"no-store",referrerPolicy:"no-referrer",signal:AbortSignal.timeout(12000)
   });
   const result=await response.json().catch(()=>({}));
-  if(!response.ok){$("readinessStatus").textContent="Chưa xác minh được: "+(result.error||"HTTP "+response.status)+". G1/G2 tiếp tục khóa.";return;}
-  const status=[
-   result.identity_verified?"Auth: đã xác minh":"Auth: chưa xác minh",
-   result.mfa_aal2?"MFA: AAL2 đã xác minh":"MFA: chưa đạt AAL2",
-   result.enrollment_verified?"Enrollment: đã xác minh":"Enrollment: chưa cấp quyền CEO",
-   "G1/G2: vẫn khóa"
-  ];
-  $("readinessStatus").textContent=status.join(" · ")+". Mã điều kiện: "+(result.missing||[]).join(", ");
+  if(!response.ok){
+   resetReadiness();
+   $("readinessStatus").textContent="Không xác minh được: "+(result.error||"HTTP "+response.status)+". G1/G2 tiếp tục khóa.";
+   return;
+  }
+  currentReadiness=result;
+  tile("authState",result.identity_verified?"Đã xác minh":"Chưa xác minh",result.identity_verified?"ok":"warn");
+  tile("ceoState",result.enrollment_verified?"CEO ACTIVE":"Chưa xác minh",result.enrollment_verified?"ok":"warn");
+  tile("mfaState",result.mfa_aal2?"AAL2 đạt":"Cần xác minh MFA",result.mfa_aal2?"ok":"warn");
+  tile("gateState","Chưa mở giao dịch G1/G2","blocked");
+  $("gateReviewPanel").hidden=!(result.mfa_aal2&&result.enrollment_verified&&result.identity_verified);
+  $("mfaHelp").hidden=result.mfa_aal2===true;
+  $("sessionGuidance").textContent=result.enrollment_verified
+   ? "Quyền CEO đã ACTIVE trong cơ sở dữ liệu. Phê duyệt G1/G2 vẫn khóa độc lập; bạn cần MFA AAL2 trong từng phiên."
+   : "Tài khoản Auth đã xác minh; quyền CEO chưa được server xác nhận. Không có quyền duyệt G1/G2.";
+  const missing=Array.isArray(result.missing)?result.missing:[];
+  $("readinessStatus").textContent=
+   result.mfa_aal2&&result.enrollment_verified
+    ? "Đã xác minh danh tính, CEO và MFA. Đọc hồ sơ G1/G2 được phép; quyết định vẫn bị khóa. Mã: "+missing.join(", ")
+    : "Thiếu điều kiện: "+missing.join(", ")+". Chưa thể xem hồ sơ G1/G2 bằng phiên này.";
  }catch{
-  $("readinessStatus").textContent="Không kiểm tra được dịch vụ staging. G1/G2 vẫn khóa.";
+  resetReadiness();
+  $("readinessStatus").textContent="Không kiểm tra được server staging. Mọi quyết định vẫn khóa.";
  }
 }
 async function reviewGate(){
@@ -207,7 +238,7 @@ async function reviewGate(){
  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)){
   $("gateReviewStatus").textContent="Cần approval_id UUID hợp lệ từ A00. Không thay đổi quyết định.";return;
  }
- if(!accessToken){$("gateReviewStatus").textContent="Đăng nhập và xác minh MFA trước.";return;}
+ if(!accessToken||currentReadiness?.mfa_aal2!==true||currentReadiness?.enrollment_verified!==true){$("gateReviewStatus").textContent="Cần xác minh Auth, CEO ACTIVE và MFA AAL2 trong phiên này.";return;}
  $("gateReviewStatus").textContent="Đang kiểm tra hồ sơ G1/G2 chỉ đọc...";
  try{
   const r=await fetch("/api/dd04-ceo-gate-review",{
@@ -217,7 +248,8 @@ async function reviewGate(){
    referrerPolicy:"no-referrer",signal:AbortSignal.timeout(12000)
   });
   const data=await r.json().catch(()=>({}));
-  if(!r.ok){$("gateReviewStatus").textContent="KHÓA: "+(data.error||"HTTP "+r.status)+". Không có quyết định được ghi.";return;}
+  if(!r.ok){$("gateReviewStatus").textContent="KHÓA: "+(data.error||"HTTP "+r.status)+". Không có quyết định được ghi.";
+   if([401,403].includes(r.status))await checkCeoReadiness();return;}
   const a=data.approval;
   $("gateReviewStatus").textContent=
    "Hồ sơ "+a.gate+" · "+a.command_id+" · V"+a.revision+" · "+a.decision+
