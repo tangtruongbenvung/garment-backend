@@ -31,7 +31,7 @@ test('Pending approval list UI uses server data, no hardcoded approvals, and rem
 
 test('V5.4 filters out internal G1 and displays only CEO-final publication G2',()=>{
  assert.match(fn,/queue_scope:'G2_FINAL_CEO_ONLY'/);
- assert.match(html,/Danh sách bài chờ CEO duyệt đăng/);
+ assert.match(html,/Hồ sơ phê duyệt cũ G2 — chỉ đọc/);
  assert.match(client,/if\(a\.gate!=="G2"\)continue/);
  assert.match(client,/G1 được chuyển thành kiểm tra nội bộ AI Agent/);
 });
