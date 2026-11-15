@@ -2,6 +2,7 @@
 // No HTTP endpoint; requires a separately reviewed, authenticated A00 service identity.
 // Only creates PLANNED_WAIT_G1 tasks; never grants G1/G2 or starts agent execution.
 import {createHash} from 'node:crypto';
+import {requireAgentCapability} from './a00-020-db-actor-resolver.mjs';
 const CMD=/^cmd_[a-f0-9]{20}$/, AGENT=/^A(0[0-9]|1[0-7])$/, KEY=/^[A-Za-z0-9:_-]{8,120}$/;
 const sha=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const err=code=>{throw new Error(code)};
@@ -47,6 +48,7 @@ export function createA0020TaskPlanWriter(pool,resolveVerifiedA00){
    check(actor?.verified_by_db===true&&actor.active===true&&actor.agent_id==='A00'&&
      actor.runtime_environment==='STAGING'&&/^[0-9a-f-]{36}$/i.test(actor.tenant_id||'')&&
      /^[0-9a-f-]{36}$/i.test(actor.subject_id||''),'A00_DB_AUTH_REQUIRED');
+   requireAgentCapability(actor,'SAVE_PLAN');
    await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1::text,0))',
     [actor.tenant_id+':'+plan.command_id]);
    const command=resultRows(await client.query(`SELECT status,input_sha256 FROM dd04_stage.commands
