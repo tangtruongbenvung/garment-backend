@@ -19,6 +19,7 @@ const allowAction=(actor,task,action)=>{
   }else{
     ensure(actor.agent_id!==task.owner_agent,'INDEPENDENT_REVIEW_REQUIRED');
     // A08/A09 can check production; reviews of either QC agent are handled by A00.
+    ensure(action!=='QC_PASS'||['A08','A09'].includes(actor.agent_id),'QC_AGENT_REQUIRED');
     ensure(actor.agent_id==='A08'||actor.agent_id==='A09'||actor.agent_id==='A00','REVIEWER_CAPABILITY_REQUIRED');
   }
 };
@@ -26,11 +27,11 @@ function validateRequest(input){
  ensure(input&&typeof input==='object'&&!Array.isArray(input),'REQUEST_INVALID');
  const {command_id,task_id,action,expected_revision,idempotency_key,evidence_sha256,report_sha256}=input;
  ensure(COMMAND.test(command_id)&&typeof task_id==='string'&&task_id.startsWith(command_id+'_')&&task_id.length<=150,'TASK_ID_INVALID');
- ensure(['START','SUBMIT','REVIEW_PASS','REVIEW_FAIL','REWORK'].includes(action),'ACTION_INVALID');
+ ensure(['START','SUBMIT','QC_PASS','REVIEW_PASS','REVIEW_FAIL','REWORK'].includes(action),'ACTION_INVALID');
  ensure(Number.isSafeInteger(expected_revision)&&expected_revision>=1,'REVISION_INVALID');
  ensure(KEY.test(idempotency_key),'IDEMPOTENCY_KEY_INVALID');
  ensure(HEX.test(evidence_sha256),'EVIDENCE_HASH_REQUIRED');
- ensure(action!=='REVIEW_PASS'&&action!=='REVIEW_FAIL'||HEX.test(report_sha256),'REVIEW_REPORT_REQUIRED');
+ ensure(!['QC_PASS','REVIEW_PASS','REVIEW_FAIL'].includes(action)||HEX.test(report_sha256),'REVIEW_REPORT_REQUIRED');
  // Do not accept user/client-supplied tenant, actor, reviewer, role, gate or spend flags.
  for(const field of ['tenant_id','actor_id','actor_kind','agent_id','reviewer','approved','publish_allowed','finance_approved']){
    ensure(!Object.hasOwn(input,field),'CLIENT_AUTHORITY_FIELD_FORBIDDEN');
@@ -88,7 +89,7 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
    ensure(task.owner_agent!=='A07','A07_PUBLISH_LOCKED');
    // Never use context state as a substitute for the protected canonical legacy task state.
    ensure(task.legacy_status==='READY'||task.legacy_status==='IN_PROGRESS'||task.legacy_status==='REVIEW'||task.legacy_status==='DONE', 'CANONICAL_TASK_STILL_LOCKED');
-   const spec=MAP[request.action];
+   const spec=request.action==='QC_PASS'?{from:['INTERNAL_REVIEW'],to:'INTERNAL_REVIEW'}:MAP[request.action];
    ensure(spec.from.includes(task.state),'TRANSITION_NOT_ALLOWED');
    allowAction(actor,task,request.action);
    // The original DB gate remains authoritative. A pending G1 never starts content.
@@ -97,6 +98,21 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
  WHERE tenant_id=$1::uuid AND command_id=$2 AND gate='G1' AND decision='APPROVED'
  ) AS passed`,[actor.tenant_id,request.command_id]))[0];
    ensure(gate?.passed===true,'G1_STILL_LOCKED');
+   if(request.action==='QC_PASS'){
+     ensure(task.output_sha256===request.evidence_sha256,'QC_INPUT_HASH_MISMATCH');
+     ensure(request.report_sha256!==request.evidence_sha256,'QC_INDEPENDENT_REPORT_REQUIRED');
+     const qc=rows(await client.query(`INSERT INTO dd04_stage.a00_transition_events
+      (tenant_id,command_id,task_id,actor_user_id,agent_id,action,from_state,to_state,
+       evidence_sha256,report_sha256,request_sha256,expected_revision,idempotency_key)
+      VALUES ($1::uuid,$2,$3,$4::uuid,$5,'QC_PASS','INTERNAL_REVIEW','INTERNAL_REVIEW',
+       $6,$7,$8,$9,$10) RETURNING event_id`,
+      [actor.tenant_id,request.command_id,request.task_id,actor.subject_id,
+       actor.agent_id,request.evidence_sha256,request.report_sha256,request_hash,
+       request.expected_revision,request.idempotency_key]))[0];
+     await client.query('COMMIT');begun=false;
+     return {ok:true,state:'INTERNAL_REVIEW',qc_agent:actor.agent_id,
+       event_id:qc.event_id,persistent:true,publish_allowed:false};
+   }
    if(request.action==='START'){
     const deps=Array.isArray(task.dependency_task_ids)?task.dependency_task_ids:[];
     const validated=rows(await client.query(`SELECT task_id,state FROM dd04_stage.a00_task_contexts
