@@ -46,7 +46,8 @@ export function makeA0029PrivateStorageAdapter(options={}){
   if(decision!==true)throw Error('STORAGE_WORKER_NOT_AUTHORIZED');
  }
  async function run({method,key,data,mime}){
-  const requestUrl=c.url+'/storage/v1/object/'+encodeURIComponent(c.bucket)+'/'+key.split('/').map(encodeURIComponent).join('/');
+  const route=method==='GET'?'/storage/v1/object/authenticated/':'/storage/v1/object/';
+  const requestUrl=c.url+route+encodeURIComponent(c.bucket)+'/'+key.split('/').map(encodeURIComponent).join('/');
   const headers={...authHeader(c.token)};
   if(method==='POST'){headers['content-type']=mime;headers['x-upsert']='false';headers['cache-control']='private, no-store';}
   const resp=await c.fetch_impl(requestUrl,{method,headers,
