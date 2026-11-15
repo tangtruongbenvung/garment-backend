@@ -44,6 +44,9 @@ export function createA0020TaskPlanWriter(pool,resolveVerifiedA00){
   try{
    await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');begun=true;
    await client.query("SET LOCAL statement_timeout='8000ms'");
+   // RLS authorization binds each statement to the verified opaque worker secret.
+   // Never place this secret into a browser payload, audit log or response.
+   await client.query("SELECT pg_catalog.set_config('dd04.worker_credential',$1,true)",[credential]);
    const actor=await resolveVerifiedA00(client,credential);
    check(actor?.verified_by_db===true&&actor.active===true&&actor.agent_id==='A00'&&
      actor.runtime_environment==='STAGING'&&/^[0-9a-f-]{36}$/i.test(actor.tenant_id||'')&&
