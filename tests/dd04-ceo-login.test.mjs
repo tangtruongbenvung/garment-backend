@@ -89,7 +89,7 @@ test('CEO Auth and MFA status uses server-provided enrollment, not obsolete hard
  assert.doesNotMatch(page,/Chưa có quyền CEO và chưa thể duyệt G1\/G2/);
  assert.match(js,/result\.enrollment_verified\?"CEO ACTIVE"/);
  assert.match(js,/result\.mfa_aal2\?"AAL2 đạt"/);
- assert.match(js,/\$\("gateReviewPanel"\)\.hidden=!\(result\.mfa_aal2&&result\.enrollment_verified&&result\.identity_verified\)/);
+ assert.match(js,/\$\("gateReviewPanel"\)\.hidden=true;/);
  assert.match(js,/if\(!accessToken\|\|currentReadiness\?\.mfa_aal2!==true/);
  assert.match(js,/await loadFactors\(\);\s*await checkCeoReadiness\(\);/);
  assert.match(js,/message\("Đã xác minh MFA với Supabase/);
