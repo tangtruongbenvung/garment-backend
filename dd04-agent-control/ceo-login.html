@@ -58,7 +58,11 @@
 <section class="readiness-box" id="gateReviewPanel" hidden>
 <h2>4. Xem hồ sơ G1/G2 — chỉ đọc</h2>
 <p class="muted small">Chỉ mở phần xem hồ sơ sau khi xác minh MFA phiên hiện tại và quyền CEO ACTIVE. Thiếu kế hoạch/ngân sách hoặc bằng chứng QC sẽ được liệt kê rõ. Đây không phải thao tác phê duyệt.</p>
-<label for="gateApprovalId">Mã approval_id từ DD04</label>
+<div class="actions"><button type="button" class="secondary" id="loadGateQueueBtn">Tải danh sách yêu cầu đang chờ</button></div>
+<label for="gateApprovalSelect">Chọn yêu cầu G1/G2</label>
+<select id="gateApprovalSelect"><option value="">Chưa tải danh sách</option></select>
+<p id="gateQueueStatus" class="muted small" role="status" aria-live="polite">Chỉ hiện yêu cầu thuộc tenant đã xác minh.</p>
+<label for="gateApprovalId">Approval ID (có thể chọn từ danh sách hoặc nhập trực tiếp)</label>
 <input id="gateApprovalId" type="text" inputmode="text" maxlength="36" placeholder="UUID của yêu cầu G1/G2">
 <button type="button" id="gateReviewBtn" class="secondary">Kiểm tra hồ sơ duyệt (chỉ đọc)</button>
 <p id="gateReviewStatus" role="status" aria-live="polite">Chưa kiểm tra. Không thay đổi quyết định.</p>
