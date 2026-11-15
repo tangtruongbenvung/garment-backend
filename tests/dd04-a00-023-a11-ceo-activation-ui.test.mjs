@@ -13,7 +13,7 @@ test('A11 v1 activation stays CEO-only: active session and AAL2 required',()=>{
  assert.ok(html.includes('id="activateA11V1Btn"'));
 });
 test('A11 approval UX cannot change policy caps, API spend or production',()=>{
- assert.ok(js.includes('0c42f63e-6484-4519-8811-7c66b8e9d852'));
+ assert.ok(html.includes('0c42f63e-6484-4519-8811-7c66b8e9d852'));
  assert.ok(html.includes('8f206452d6338b282b59b6aa368747157de52dca4349946b874a201b8de25e94'));
  assert.ok(js.includes('"/rest/v1/rpc/dd04_a00_023_activate_a11_v1"'));
  assert.ok(js.includes('PUBLISHABLE_KEY'));
