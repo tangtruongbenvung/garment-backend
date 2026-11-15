@@ -149,7 +149,19 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
  ON src.tenant_id=target.tenant_id AND src.command_id=target.command_id AND src.task_id=dep.id
  WHERE src.state IS DISTINCT FROM 'APPROVED_INTERNAL'
  ) AND target.task_id<>$3
- RETURNING target.task_id`,[actor.tenant_id,request.command_id,request.task_id]));
+ RETURNING target.task_id,target.revision`,[actor.tenant_id,request.command_id,request.task_id]));
+    // Preserve append-only evidence for every automatically unblocked dependent task.
+    // All writes share the same SERIALIZABLE transaction and rollback together.
+    for(const t of next){
+      const autoKey='auto:'+hash([actor.tenant_id,request.command_id,t.task_id,event.event_id]).slice(0,48);
+      const autoHash=hash({source_event_id:event.event_id,task_id:t.task_id,to:'READY'});
+      await client.query(`INSERT INTO dd04_stage.a00_transition_events
+       (tenant_id,command_id,task_id,actor_user_id,agent_id,action,from_state,to_state,
+        evidence_sha256,report_sha256,request_sha256,expected_revision,idempotency_key)
+       VALUES ($1::uuid,$2,$3,$4::uuid,$5,'AUTO_READY','BLOCKED','READY',$6,$7,$8,$9,$10)`,
+       [actor.tenant_id,request.command_id,t.task_id,actor.subject_id,actor.agent_id,
+        request.evidence_sha256,request.report_sha256,autoHash,t.revision-1,autoKey]);
+    }
     unblocked=next.map(r=>r.task_id);
    }
    await client.query('COMMIT');begun=false;
