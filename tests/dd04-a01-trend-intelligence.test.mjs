@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildA01ResearchPack,validateA01Handoff} from '../dd04-agent-control/a01-trend-intelligence.mjs';
-import {createDemoChannelProfiles} from '../dd04-agent-control/channel-context-core.mjs';
 const base=()=>({
  campaign_id:'CAMP_A01_01', research_id:'R_A01_01',
  research_question:'Ý tưởng hài mẹ bé hư cấu nào cần nghiên cứu?',research_window:'2026-11-01/2026-11-15',
