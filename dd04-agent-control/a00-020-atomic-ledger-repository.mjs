@@ -189,8 +189,8 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
    // This does not modify protected legacy tasks and does not authorize execution.
    let unblocked=[];
    if(request.action==='REVIEW_PASS'){
-    const next=rows(await client.query(`UPDATE dd04_stage.a00_task_contexts target
- SET state='READY',revision=target.revision+1,updated_at=now()
+    const next=rows(await client.query(`SELECT target.task_id,target.revision
+ FROM dd04_stage.a00_task_contexts target
  WHERE target.tenant_id=$1::uuid AND target.command_id=$2 AND target.state='BLOCKED'
  AND $3=ANY(target.dependency_task_ids)
  AND EXISTS (SELECT 1 FROM dd04_stage.tasks lt WHERE lt.tenant_id=target.tenant_id
@@ -201,9 +201,9 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
  ON src.tenant_id=target.tenant_id AND src.command_id=target.command_id AND src.task_id=dep.id
  WHERE src.state IS DISTINCT FROM 'APPROVED_INTERNAL'
  ) AND target.task_id<>$3
- RETURNING target.task_id,target.revision`,[actor.tenant_id,request.command_id,request.task_id]));
-    // Preserve append-only evidence for every automatically unblocked dependent task.
-    // All writes share the same SERIALIZABLE transaction and rollback together.
+ FOR UPDATE OF target`,[actor.tenant_id,request.command_id,request.task_id]));
+    // Write immutable AUTO_READY evidence BEFORE changing each task. The DB
+    // transition trigger verifies the evidence and CAS revision in this transaction.
     for(const t of next){
       const autoKey='auto:'+hash([actor.tenant_id,request.command_id,t.task_id,event.event_id]).slice(0,48);
       const autoHash=hash({source_event_id:event.event_id,task_id:t.task_id,to:'READY'});
@@ -212,7 +212,13 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
         evidence_sha256,report_sha256,request_sha256,expected_revision,idempotency_key)
        VALUES ($1::uuid,$2,$3,$4::uuid,$5,'AUTO_READY','BLOCKED','READY',$6,$7,$8,$9,$10)`,
        [actor.tenant_id,request.command_id,t.task_id,actor.subject_id,actor.agent_id,
-        request.evidence_sha256,request.report_sha256,autoHash,t.revision-1,autoKey]);
+        request.evidence_sha256,request.report_sha256,autoHash,t.revision,autoKey]);
+      const moved=rows(await client.query(`UPDATE dd04_stage.a00_task_contexts
+       SET state='READY',revision=revision+1,updated_at=now()
+       WHERE tenant_id=$1::uuid AND command_id=$2 AND task_id=$3
+       AND state='BLOCKED' AND revision=$4 RETURNING task_id`,
+       [actor.tenant_id,request.command_id,t.task_id,t.revision]));
+      ensure(moved.length===1,'AUTO_READY_CAS_CONFLICT');
     }
     unblocked=next.map(r=>r.task_id);
    }
