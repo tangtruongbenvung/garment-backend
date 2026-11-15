@@ -37,7 +37,7 @@ test('no policy, no locked A11 ledger or over budget fail closed',()=>{
  assert.equal(evaluateA0022InternalG1(overspend).requires_ceo_finance,false);
  assert.equal(evaluateA0022InternalG1(overspend).finance_limit_approval_enabled,false);
  const split=g1();split.finance_ledger.campaign_committed_vnd=299999;
- assert.equal(evaluateA0022InternalG1(split).reason,'CEO_FINANCE_EXCEPTION_REQUIRED');
+ assert.equal(evaluateA0022InternalG1(split).reason,'A11_LIMIT_EXCEEDED_HARD_DENY');
 });
 test('no independent actor, expired evidence, forged source or unexpected G1 cannot pass',()=>{
  const duplicate=g1();duplicate.checks[3].actor_subject_id=duplicate.checks[0].actor_subject_id;
