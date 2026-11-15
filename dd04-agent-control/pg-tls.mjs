@@ -4,8 +4,9 @@
 import { X509Certificate } from 'node:crypto';
 import { assertStagingDatabaseUrl } from './supabase-pg-repository.mjs';
 
-export function createVerifiedPgTlsConfig(connectionString,tenantId,caPem){
- assertStagingDatabaseUrl(connectionString,tenantId);
+export function createVerifiedPgTlsConfig(connectionString,tenantId,caPem,validateTarget=assertStagingDatabaseUrl){
+ if(typeof validateTarget!=='function')throw new Error('DB_TARGET_VALIDATOR_REQUIRED');
+ validateTarget(connectionString,tenantId);
  if(typeof caPem!=='string'||!caPem.trim())throw new Error('DB_CA_CERTIFICATE_REQUIRED');
  const ca=caPem.trim().replace(/\\n/g,'\n');
  if(ca.length>20000||!/^-----BEGIN CERTIFICATE-----\r?\n[\s\S]+?\r?\n-----END CERTIFICATE-----$/.test(ca))
