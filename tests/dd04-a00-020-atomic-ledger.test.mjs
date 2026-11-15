@@ -15,8 +15,9 @@ function fixture({g1=true,prior=false,dbError=false,state='READY',owner='A03',ag
   const q=String(sql).toLowerCase();
   if(dbError&&q.includes('select t.owner_agent'))throw Error('DB_FAILURE');
   if(q.includes('from dd04_stage.a00_transition_events where'))return {rows:prior?[{event_id:9,request_sha256:'unexpected',to_state:'READY'}]:[]};
-  if(q.includes('select t.owner_agent'))return {rows:[{owner_agent:owner,legacy_status:'PLANNED_WAIT_G1',state,revision:1,
+  if(q.includes('select t.owner_agent'))return {rows:[{owner_agent:owner,legacy_status:'READY',state,revision:1,
     dependency_task_ids:[],output_refs:[{uri:'private://test'}],output_sha256:'a'.repeat(64),profile_sha256:null,channel_id:null,last_reviewer_agent:null}]};
+  if(q.includes("action='qc_pass'"))return {rows:[{agent_id:'A08'},{agent_id:'A09'}]};
   if(q.includes('from dd04_stage.approvals'))return {rows:[{passed:g1}]};
   if(q.includes('from dd04_stage.a00_task_contexts')&&q.includes('for share'))return {rows:[]};
   if(q.includes('insert into dd04_stage.a00_transition_events'))return {rows:[{event_id:5}]};
@@ -26,7 +27,7 @@ function fixture({g1=true,prior=false,dbError=false,state='READY',owner='A03',ag
  },release(){released++;}
  };
  return {calls,released:()=>released,pool:{async connect(){return client;}},actor:{
-  verified_by_db:true,active:true,runtime_environment:'STAGING',tenant_id:tenant,subject_id:subject,agent_id:agent
+  verified_by_db:true,active:true,runtime_environment:'STAGING',tenant_id:tenant,subject_id:subject,agent_id:agent,allowed_actions:['START','SUBMIT','QC_PASS','REVIEW_PASS','REVIEW_FAIL','REWORK']
  }};
 }
 test('rejects client-supplied authority fields before connecting',async()=>{
@@ -83,4 +84,26 @@ test('database exception releases connection after rollback',async()=>{
 });
 test('no production execution',()=>{
  const f=fixture();assert.throws(()=>createA0020LedgerRepository(f.pool,async()=>f.actor,{environment:'PRODUCTION'}),/STAGING_ONLY/);
+});
+
+test('dual QC verification is required before automatic handoff',async()=>{
+ const f=fixture({state:'INTERNAL_REVIEW',agent:'A08'});
+ const old=f.pool.connect;
+ f.pool.connect=async()=>{
+  const client=await old();const q=client.query;
+  client.query=async(sql,args)=>{
+   if(String(sql).toLowerCase().includes("action='qc_pass'"))return {rows:[{agent_id:'A08'}]};
+   return q(sql,args);
+  };return client;
+ };
+ const r=createA0020LedgerRepository(f.pool,async()=>f.actor);
+ await assert.rejects(r.transact(input({action:'REVIEW_PASS'}),{}),/A08_A09_QC_EVIDENCE_REQUIRED/);
+ assert.equal(f.calls.at(-1).sql,'ROLLBACK');
+});
+test('QC evidence can only be recorded by an independent A08/A09 reviewer',async()=>{
+ const f=fixture({state:'INTERNAL_REVIEW',agent:'A08'});
+ const r=createA0020LedgerRepository(f.pool,async()=>f.actor);
+ const res=await r.transact(input({action:'QC_PASS'}),{});
+ assert.equal(res.state,'INTERNAL_REVIEW');assert.equal(res.publish_allowed,false);
+ assert.equal(f.calls.at(-1).sql,'COMMIT');
 });
