@@ -50,3 +50,9 @@ Local rehearsal ZIP `DD04_A00_029_3_CHANNEL_PRIVATE_READBACK_REHEARSAL.zip`:
 - **PASS**: storage adapter and provisioning code; CI on latest commit (check GitHub Action); 4/4 real input file local exclusive write/readback SHA.
 - **NOT PASS**: hosted storage bucket, live upload/readback, authenticated A08/A09, released A05 video.
 - Current production, G2 and API-spending controls unchanged.
+
+## CI final acceptance (latest verified)
+- GitHub Actions [run #777](https://github.com/tangtruongbenvung/garment-backend/actions/runs/43702376923) finished all three jobs with **success**: `test-a00`, `validate-sql-ephemeral`, `validate-windows-powershell`.
+- CI mocks verify backend private Storage upload/download routes and safe provisioning operator guard; **not remote storage integration**.
+- Local pilot ZIP SHA256 after including 3 A05 shot plans: `d0738262fce8881d950a4378605969d47bbf38be24c7d754817bf18949e6168e`.
+- Staging: no bucket and no approved SQL30; no claimed successful remote upload, no A08/A09 PASS, no A05 video.
