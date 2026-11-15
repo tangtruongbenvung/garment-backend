@@ -61,3 +61,18 @@ test('workflow modifications stay least privilege and publishing is blocked',()=
  assert.doesNotMatch(s,/GRANT SELECT,INSERT,UPDATE ON dd04_stage\.a00_workflow_instances/i);
  assert.doesNotMatch(s,/GRANT .* ON dd04_stage\.v55_publish_jobs/i);
 });
+
+test('runtime transaction code changes to least-privilege role and binds worker secret locally',()=>{
+ for(const path of ['a00-020-save-task-plan.mjs','a00-020-atomic-ledger-repository.mjs',
+  'a00-020-attach-artifact.mjs']){
+  const code=readFileSync(new URL('../dd04-agent-control/'+path,import.meta.url),'utf8');
+  assert.match(code,/SET LOCAL ROLE dd04_a00_runtime/);
+  assert.match(code,/set_config\('dd04.worker_credential',\$1,true\)/);
+ }
+});
+test('root-task grant is constrained to current tenant and existing G1 evidence',()=>{
+ assert.match(s,/t\.tenant_id=a00_task_contexts\.tenant_id/);
+ assert.match(s,/a\.tenant_id=a00_task_contexts\.tenant_id/);
+ assert.match(s,/a\.decision='APPROVED'/);
+ assert.match(s,/state='READY' AND cardinality\(dependency_task_ids\)=0/);
+});
