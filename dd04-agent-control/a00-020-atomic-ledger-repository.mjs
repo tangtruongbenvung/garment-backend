@@ -64,6 +64,9 @@ export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environme
   try{
    await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');begun=true;
    await client.query("SET LOCAL statement_timeout='8000ms'");
+   // RLS authorization binds each statement to the verified opaque worker secret.
+   // Never place this secret into a browser payload, audit log or response.
+   await client.query("SELECT pg_catalog.set_config('dd04.worker_credential',$1,true)",[serverCredential]);
    const actor=validateActor(await resolveVerifiedActor(client,serverCredential));
    requireAgentCapability(actor,request.action);
    // per-tenant idempotency serialization; keys across tenants are independent.
