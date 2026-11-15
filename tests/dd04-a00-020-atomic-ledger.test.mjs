@@ -134,10 +134,14 @@ test('automatic handoff writes audit BEFORE moving dependent task and commits bo
   const c=await connect(),query=c.query;
   c.query=async(sql,args)=>{
    const q=String(sql);
-   if(q.includes('SELECT target.task_id,target.revision'))
+   if(q.includes('SELECT target.task_id,target.revision')){
+    await query(sql,args);
     return {rows:[{task_id:command+'_A04',revision:1}]};
-   if(q.includes("SET state='READY',revision=revision+1")&&q.includes("RETURNING task_id"))
+   }
+   if(q.includes("SET state='READY',revision=revision+1")&&q.includes("RETURNING task_id")){
+    await query(sql,args);
     return {rows:[{task_id:command+'_A04'}]};
+   }
    return query(sql,args);
   };return c;
  };
