@@ -61,3 +61,14 @@ test('20 channels maintain separate identity locks and still contain no real med
   assert.ok(p.A04.image_shots.every(s=>s.channel_identity_sha256===p.channel_identity_sha256));
  }
 });
+
+test('channel strategy profile update is hash-addressed; stale identity cannot silently pass',()=>{
+ const c={channel_id:'FB001',platform:'FANPAGE',name:'Mẹ bé Việt FB001'};
+ const a=makeChannelIdentity(c,{profile_sha256:'a'.repeat(64)});
+ const b=makeChannelIdentity(c,{profile_sha256:'b'.repeat(64)});
+ assert.notEqual(a.character_bible_sha256,b.character_bible_sha256);
+ assert.notEqual(a.identity_bundle_sha256,b.identity_bundle_sha256);
+ const draft=buildContentFactoryDraft(plan('DEMO-ONE')).packets[0];
+ assert.equal(assessContinuityPacket(draft,a).reason,'CHANNEL_IDENTITY_MISMATCH');
+ assert.throws(()=>makeChannelIdentity(c,{profile_sha256:'bad'}),/CHANNEL_PROFILE_HASH_INVALID/);
+});
