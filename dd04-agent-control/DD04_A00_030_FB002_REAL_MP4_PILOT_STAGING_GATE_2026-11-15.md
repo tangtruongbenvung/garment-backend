@@ -22,6 +22,13 @@ Trực tiếp truy vấn project `wbvkqfnrlasmtizjszab`:
 - Supabase chính thức hỗ trợ tạo private bucket qua dashboard/Storage API, hạn mức MIME và file; object download private cần auth JWT/RLS (https://supabase.com/docs/guides/storage/buckets/fundamentals và https://supabase.com/docs/guides/storage/serving/downloads).
 - Supabase connector trong chat chưa cung cấp binary object upload; backend adapter, script private bucket đã viết và CI PASS nhưng chưa thể tuyên bố live Storage hoạt động.
 
+## 2A. Storage bucket created on live staging AFTER initial read-only audit
+- Authorized staging task included setting up private image storage. Applied **only** bucket configuration to project `wbvkqfnrlasmtizjszab`, without applying SQL30 or changing production.
+- Final live readback: `storage.buckets` includes exactly `dd04-media-private-staging` with `public=false`, `file_size_limit=12582912`, `allowed_mime_types=['image/png','image/jpeg','image/webp']`.
+- `storage.objects` currently has **0 objects** in this bucket; no bucket-specific public RLS policy. No upload/readback through Supabase yet.
+- No user secrets exposed, no Agent worker activated. `a00_026_%` media tables remain 0, G2/publishing locked.
+- Private bucket creation is a **staging Storage configuration write**, not SQL30 schema migration or a real successful media pipeline.
+
 ## 3. Trình tự để vận hành video AI thật trên staging
 1. CEO phê duyệt **chính xác SQL30 với SHA-256 trên** cho riêng project staging, sau đó A00 áp migration và hậu kiểm RLS/immutability.
 2. Tạo bucket `dd04-media-private-staging` **private**, PNG/JPEG/WebP, tối đa 12MB, dùng official Storage API với backend key chỉ nằm ở server. Không đưa service-role lên trình duyệt/chat/GitHub. Chỉ cho phép `staging`, tenant & channel whitelist. Kiểm tra upload + download real byte SHA cho FB001/FB002/TT002.
@@ -32,5 +39,5 @@ Trực tiếp truy vấn project `wbvkqfnrlasmtizjszab`:
 
 ## 4. Báo cáo trạng thái
 PASS: tạo và kiểm tra MP4 thực, 30s dọc, file hash; backend Storage code & tests, staging SQL read-only checks.
-FAIL/CHƯA: bucket thật, SQL30, lưu/đọc ảnh Supabase thật, A08/A09 độc lập, A05 video AI chuyển động thật, G2.
+PASS: private staging bucket metadata/configuration verified. FAIL/CHƯA: SQL30, upload/readback actual image bytes through Supabase, independent A08/A09, true AI character-motion video, G2.
 Production: KHÔNG THAY ĐỔI. Chi phí AI: KHÔNG PHÁT SINH. Không đăng bài.
