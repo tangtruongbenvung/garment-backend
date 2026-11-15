@@ -48,3 +48,12 @@ Bản SQL cần được review trước khi `apply_migration`:
 
 ### Quyết định quản trị
 **Chưa được phép gỡ khóa G1/G2 ở DB** chỉ từ yêu cầu triển khai code. Cần CEO xem, nghiệm thu và phê duyệt bản SQL giao dịch cụ thể. Số liệu chưa có không được giả định đạt QC hoặc bằng 0.
+
+## 6. DD04-A00-014 — Hoàn thiện giao diện và luồng MFA (15/11/2026)
+- Loại bỏ cảnh báo cứng sai thực tế `Chưa có quyền CEO` trên trang đăng nhập. Giao diện phân biệt bốn điều kiện **Auth / CEO ACTIVE / MFA của phiên / giao dịch G1-G2** dựa trên API server.
+- Đăng nhập Auth sẽ tự kiểm tra đăng ký TOTP và đọc readiness; không mặc định yêu cầu đăng ký MFA mới. Sau khi challenge/verify TOTP trả token mới, giao diện tự gọi lại readiness để đối chiếu `aal2` trong `auth.sessions`.
+- Chỉ khi Auth, CEO ACTIVE và MFA `aal2` được server xác minh, mục **Xem hồ sơ G1/G2 — chỉ đọc** mới xuất hiện.
+- `POST /api/dd04-ceo-gate-list`: trả tối đa 30 yêu cầu `PENDING`, khóa MFA2/CEO, lọc đúng tenant và truy vấn `BEGIN READ ONLY`. CEO chọn trong dropdown; không phải copy UUID thủ công.
+- Tất cả giao diện, API và thử nghiệm chỉ chạy ở Netlify Deploy Preview. Không migration, không sửa `approvals`, không kích hoạt A07.
+- Bằng chứng CI: commit `08b6eb99aee3aed805077f11c428a047048b1fe4`, GitHub `test-a00` PASS và Netlify deploy preview SUCCESS.
+- Bước tiếp theo: thiết kế và trình duyệt **SQL approval-packet + transaction** có gắn phạm vi/ngân sách G1 và bằng chứng asset/QC G2; tuyệt đối không duyệt bản demo khi chưa có bằng chứng thật.
