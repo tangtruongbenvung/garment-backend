@@ -113,5 +113,7 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/dd04-a00-022-ephemeral-g1-a11-setup.sql
       - name: Test atomic internal G1 and A11 spending guard as dedicated backend login
         run: PGUSER=dd04_a00_backend PGPASSWORD=ci_ephemeral_only_not_production psql -v ON_ERROR_STOP=1 -f tests/sql/dd04-a00-022-ephemeral-g1-a11-transaction.sql
+      - name: Audit transaction ROLLBACK as isolated database owner
+        run: psql -v ON_ERROR_STOP=1 -f tests/sql/dd04-a00-022-ephemeral-rollback-verify.sql
       - name: Exercise isolated A00 worker insert and denied handoff with rollback
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/dd04-a00-021-ephemeral-agent-write-and-handoff.sql
