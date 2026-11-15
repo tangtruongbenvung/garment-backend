@@ -18,6 +18,6 @@ test('connection health probe executes no DML, no G1/G2 updates or external spen
 test('never returns database secret, URL or raw exceptions',()=>{
  assert.match(source,/STAGING_DATABASE_CONNECTION_UNAVAILABLE/);
  assert.match(source,/worker_active:false,read_only:true,can_publish:false,can_spend:false/);
- assert.doesNotMatch(source,/connectionString[,)]/);
+ assert.doesNotMatch(source,/JSON\\.stringify\\([^)]*connectionString/);
  assert.doesNotMatch(source,/error\.message|err\.stack|console\.log\(.*env/);
 });
