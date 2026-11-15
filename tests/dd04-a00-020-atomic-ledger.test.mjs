@@ -18,6 +18,7 @@ function fixture({g1=true,prior=false,dbError=false,state='READY',owner='A03',ag
   if(q.includes('select t.owner_agent'))return {rows:[{owner_agent:owner,legacy_status:'READY',state,revision:1,
     dependency_task_ids:[],output_refs:[{uri:'private://test'}],output_sha256:'a'.repeat(64),profile_sha256:null,channel_id:null,last_reviewer_agent:null}]};
   if(q.includes("action='qc_pass'"))return {rows:[{agent_id:'A08'},{agent_id:'A09'}]};
+  if(q.includes('from dd04_stage.artifacts'))return {rows:[{exists:true}]};
   if(q.includes('from dd04_stage.approvals'))return {rows:[{passed:g1}]};
   if(q.includes('from dd04_stage.a00_task_contexts')&&q.includes('for share'))return {rows:[]};
   if(q.includes('insert into dd04_stage.a00_transition_events'))return {rows:[{event_id:5}]};
@@ -106,4 +107,22 @@ test('QC evidence can only be recorded by an independent A08/A09 reviewer',async
  const res=await r.transact(input({action:'QC_PASS'}),{});
  assert.equal(res.state,'INTERNAL_REVIEW');assert.equal(res.publish_allowed,false);
  assert.equal(f.calls.at(-1).sql,'COMMIT');
+});
+
+test('unregistered QC report cannot be used for approval',async()=>{
+ const f=fixture({state:'INTERNAL_REVIEW',agent:'A09'}); const prior=f.pool.connect;
+ f.pool.connect=async()=>{const c=await prior();const q=c.query;
+  c.query=async(sql,args)=>String(sql).includes('FROM dd04_stage.artifacts')?{rows:[{exists:false}]}:q(sql,args);
+  return c;};
+ const r=createA0020LedgerRepository(f.pool,async()=>f.actor);
+ await assert.rejects(r.transact(input({action:'QC_PASS'}),{}),/QC_REPORT_ARTIFACT_NOT_REGISTERED/);
+ assert.equal(f.calls.at(-1).sql,'ROLLBACK');
+});
+test('unregistered production output cannot advance to QC',async()=>{
+ const f=fixture({state:'IN_PROGRESS'});const prior=f.pool.connect;
+ f.pool.connect=async()=>{const c=await prior();const q=c.query;
+  c.query=async(sql,args)=>String(sql).includes('FROM dd04_stage.artifacts')?{rows:[{exists:false}]}:q(sql,args);
+  return c;};
+ const r=createA0020LedgerRepository(f.pool,async()=>f.actor);
+ await assert.rejects(r.transact(input({action:'SUBMIT'}),{}),/OUTPUT_ARTIFACT_NOT_REGISTERED/);
 });
