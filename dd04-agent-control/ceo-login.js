@@ -4,7 +4,7 @@
 const API="https://wbvkqfnrlasmtizjszab.supabase.co";
 const PUBLISHABLE_KEY="sb_publishable_eYGZHWqLAvhuFjIU3ej3Zg_eQdL5lrU";
 const CALLBACK=location.origin+"/dd04-agent-control/ceo-login.html";
-const ALLOWED_PREVIEW=/^deploy-preview-(?:1|6)--ducduy-ai-os-test\.netlify\.app$/;
+const ALLOWED_PREVIEW=/^deploy-preview-(?:1|6|7)--ducduy-ai-os-test\.netlify\.app$/;
 const $=id=>document.getElementById(id);
 let accessToken="",refreshToken="",factorId="",recoveryMode=false;
 let currentReadiness=null;
@@ -334,7 +334,7 @@ async function probeA0021Backend(){
 }
 function bind(id,fn){$(id).addEventListener("click",()=>void Promise.resolve(fn()).catch(e=>message("Yêu cầu chưa hoàn thành: "+e.message)));}
 if(location.protocol!=="https:"||!ALLOWED_PREVIEW.test(location.hostname)){
- document.body.textContent="Chỉ dùng trang này trên HTTPS Deploy Preview #1 hoặc #6 của Đức Duy.";
+ document.body.textContent="Chỉ dùng trang này trên HTTPS Deploy Preview #1, #6 hoặc #7 của Đức Duy.";
 }else{
  void parseCallback();
  bind("passwordBtn",passwordSignIn);bind("magicBtn",magicSignIn);
