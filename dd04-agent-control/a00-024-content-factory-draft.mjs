@@ -45,7 +45,8 @@ function makePack(script){
  assertDraft(script);
  const identity=makeChannelIdentity({channel_id:script.channel_id,
   platform:script.platform,name:script.channel_name},
-  {channel_version:script.profile_version||1});
+  {channel_version:script.profile_version||1,
+   profile_sha256:script.profile_sha256||null});
  const bible=identity.character_bible;
  const images=script.scenes.map((scene,i)=>({
   scene_id:`${script.script_id}_scene_${String(i+1).padStart(2,'0')}`,
