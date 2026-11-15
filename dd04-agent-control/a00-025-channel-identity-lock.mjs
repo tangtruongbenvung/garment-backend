@@ -18,11 +18,12 @@ function forbidUnsafeText(t){
  if(/\b(?:photorealistic\s+(?:child|baby)|real\s+infant\s+identity)\b/i.test(t))
   throw Error('REAL_CHILD_IMPERSONATION_DENIED');
 }
-export function makeChannelIdentity(channel,{channel_version=1,reference_assets=null}={}){
+export function makeChannelIdentity(channel,{channel_version=1,profile_sha256=null,reference_assets=null}={}){
  if(!channel||!ID.test(channel.channel_id||'')||!['FANPAGE','TIKTOK'].includes(channel.platform)||
     !Number.isSafeInteger(channel_version)||channel_version<1)
   throw Error('CHANNEL_IDENTITY_SCOPE_INVALID');
  const name=requireText(channel.name,'CHANNEL_NAME_REQUIRED',100);
+ if(profile_sha256!==null&&!DIGEST.test(profile_sha256))throw Error('CHANNEL_PROFILE_HASH_INVALID');
  const seed=H({channel_id:channel.channel_id,platform:channel.platform,kind:'VIETNAMESE_FICTIONAL_FAMILY_V1'});
  const palette=palettes[parseInt(seed.slice(0,2),16)%palettes.length];
  const setting=['Nhà phố Việt Nam sáng sủa','Căn hộ gia đình Việt ấm cúng',
@@ -56,7 +57,7 @@ export function makeChannelIdentity(channel,{channel_version=1,reference_assets=
  const bible={
   schema_version:'DD04_CHARACTER_BIBLE_V1',
   channel_id:channel.channel_id,channel_name:name,platform:channel.platform,
-  character_version:channel_version,canonical_seed:seed,
+  character_version:channel_version,profile_sha256,canonical_seed:seed,
   fictional:true,locale:'vi-VN',reference_source:'GENERATED_CONTRACT_ONLY',
   mother,baby,side_characters:[],
   cultural_rules:['Bối cảnh gia đình Việt gần gũi, không rập khuôn vùng miền',
@@ -67,7 +68,7 @@ export function makeChannelIdentity(channel,{channel_version=1,reference_assets=
  };
  const visual={
   schema_version:'DD04_VISUAL_STYLE_V1',channel_id:channel.channel_id,
-  channel_version,style:'Hoạt hình 3D cách điệu mềm mại, không giống ảnh người thật',
+  channel_version,profile_sha256,style:'Hoạt hình 3D cách điệu mềm mại, không giống ảnh người thật',
   color_palette:palette,setting,lighting:'ánh sáng dịu, ấm, rõ nhân vật',
   composition:'9:16, chủ thể rõ, an toàn vùng đặt phụ đề',
   motion:'chuyển động mượt vừa phải, không giật hình',
@@ -75,7 +76,7 @@ export function makeChannelIdentity(channel,{channel_version=1,reference_assets=
   identity_reference:'Bám Character Bible của kênh, không tự tạo người mẹ/bé mới mỗi video'
  };
  const rules={
-  schema_version:'DD04_CONTINUITY_V1',channel_id:channel.channel_id,
+  schema_version:'DD04_CONTINUITY_V1',channel_id:channel.channel_id,profile_sha256,
   lock_fields:['character_id','face_shape','hair','eye_color','skin_tone','silhouette','outfit','voice','color_palette','style','setting'],
   may_change:['expression','gesture','camera_angle','story_prop_if_safe'],
   video_frame_rule:'A04 phải mang cùng channel_character_bible_sha256 và channel_visual_style_sha256 tới mọi cảnh',
@@ -102,9 +103,9 @@ export function makeChannelIdentity(channel,{channel_version=1,reference_assets=
  const continuity_rules_sha256=H(rules);
  return Object.freeze({
   schema_version:'DD04_CHANNEL_IDENTITY_LOCK_V1',channel_id:channel.channel_id,
-  channel_version,character_bible:bible,visual_style:visual,continuity_rules:rules,
+  channel_version,profile_sha256,character_bible:bible,visual_style:visual,continuity_rules:rules,
   character_bible_sha256,visual_style_sha256,continuity_rules_sha256,
-  identity_bundle_sha256:H({channel_id:channel.channel_id,channel_version,
+  identity_bundle_sha256:H({channel_id:channel.channel_id,channel_version,profile_sha256,
    character_bible_sha256,visual_style_sha256,continuity_rules_sha256}),
   reference_assets_verified:false,status:'DESIGN_LOCKED_NO_REAL_MEDIA_PROOF'
  });
