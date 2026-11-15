@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DD04 Visual Style V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "channel_id",
+    "channel_version",
+    "profile_sha256",
+    "style",
+    "color_palette",
+    "setting",
+    "lighting",
+    "composition",
+    "motion",
+    "typography",
+    "audio",
+    "identity_reference"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "DD04_VISUAL_STYLE_V1"
+    },
+    "channel_id": {
+      "type": "string",
+      "minLength": 2
+    },
+    "channel_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "profile_sha256": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      ]
+    },
+    "style": {
+      "type": "string",
+      "minLength": 8
+    },
+    "color_palette": {
+      "type": "object",
+      "required": [
+        "name",
+        "primary",
+        "secondary",
+        "accent"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "primary": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{6}$"
+        },
+        "secondary": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{6}$"
+        },
+        "accent": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{6}$"
+        }
+      }
+    },
+    "setting": {
+      "type": "string",
+      "minLength": 5
+    },
+    "lighting": {
+      "type": "string",
+      "minLength": 5
+    },
+    "composition": {
+      "type": "string",
+      "minLength": 3
+    },
+    "motion": {
+      "type": "string",
+      "minLength": 3
+    },
+    "typography": {
+      "type": "string",
+      "minLength": 3
+    },
+    "audio": {
+      "type": "string",
+      "minLength": 3
+    },
+    "identity_reference": {
+      "type": "string",
+      "minLength": 8
+    }
+  }
+}
