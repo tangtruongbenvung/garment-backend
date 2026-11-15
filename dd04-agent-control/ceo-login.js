@@ -338,6 +338,41 @@ async function loadAgentWorklist(){
   if(data.truncated)$("worklistSummary").textContent+=" Danh sách giới hạn 200 nhiệm vụ gần nhất.";
  }catch{$("worklistSummary").textContent="Không kết nối được dịch vụ theo dõi trên staging.";}
 }
+let commandRequestId="ceo_"+crypto.randomUUID();
+function newCeoCommand(){
+ commandRequestId="ceo_"+crypto.randomUUID();
+ $("ceoCommandText").value="";
+ $("ceoCommandStatus").textContent="Đang soạn lệnh mới. Chưa gửi lên staging.";
+}
+async function submitCeoCommand(){
+ const message_text=$("ceoCommandText").value.trim();
+ if(message_text.length<8||message_text.length>2000){
+  $("ceoCommandStatus").textContent="Lệnh cần 8–2000 ký tự, không gồm mật khẩu hoặc token.";return;
+ }
+ if(!accessToken||currentReadiness?.mfa_aal2!==true||currentReadiness?.enrollment_verified!==true){
+  $("ceoCommandStatus").textContent="Cần đăng nhập CEO, xác minh MFA AAL2 và kiểm tra quyền trước khi gửi.";return;
+ }
+ const btn=$("ceoSubmitCommandBtn");btn.disabled=true;
+ $("ceoCommandStatus").textContent="Đang ghi lệnh và phân công nháp vào Supabase staging...";
+ try{
+  const r=await fetch("/api/dd04-ceo-command",{
+   method:"POST",
+   headers:{"authorization":"Bearer "+accessToken,"content-type":"application/json","accept":"application/json"},
+   body:JSON.stringify({request_id:commandRequestId,message_text,media_refs:[]}),
+   cache:"no-store",referrerPolicy:"no-referrer",signal:AbortSignal.timeout(14000)
+  });
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok){
+   $("ceoCommandStatus").textContent="KHÔNG GỬI THÀNH CÔNG: "+(data.error||"HTTP "+r.status)+
+     ". Nếu sửa nội dung, chọn Lệnh mới trước khi gửi lại.";return;
+  }
+  $("ceoCommandStatus").textContent=
+   "Đã ghi "+data.command_id+(data.duplicate?" (yêu cầu trùng, không tạo thêm)":"")+
+   ". Phân công nháp "+(data.task_count??0)+" Agent; chưa tự chạy AI, chưa duyệt/đăng.";
+  await loadAgentWorklist();
+ }catch{$("ceoCommandStatus").textContent="Không xác nhận được kết quả ghi lệnh. Giữ nguyên mã yêu cầu để kiểm tra chống gửi trùng.";}
+ finally{btn.disabled=false;}
+}
 function bind(id,fn){$(id).addEventListener("click",()=>void Promise.resolve(fn()).catch(e=>message("Yêu cầu chưa hoàn thành: "+e.message)));}
 if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
  document.body.textContent="Chỉ dùng trang này trên HTTPS Deploy Preview #1 của Đức Duy.";
@@ -345,12 +380,12 @@ if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
  void parseCallback();
  bind("passwordBtn",passwordSignIn);bind("magicBtn",magicSignIn);
  bind("recoveryBtn",requestPasswordRecovery);bind("savePasswordBtn",savePassword);bind("cancelRecoveryBtn",logout);
- bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);bind("gateReviewBtn",reviewGate);bind("loadGateQueueBtn",loadGateQueue);bind("loadAgentWorklistBtn",loadAgentWorklist);
+ bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);bind("gateReviewBtn",reviewGate);bind("loadGateQueueBtn",loadGateQueue);bind("loadAgentWorklistBtn",loadAgentWorklist);bind("ceoSubmitCommandBtn",submitCeoCommand);bind("ceoNewCommandBtn",newCeoCommand);
  $("worklistAgentFilter").addEventListener("change",showWorklist);
  $("worklistStatusFilter").addEventListener("change",showWorklist);
  $("gateApprovalSelect").addEventListener("change",()=>{$("gateApprovalId").value=$("gateApprovalSelect").value;});
  bind("showSecret",()=>{$("secret").type=$("secret").type==="password"?"text":"password"});
- window.addEventListener("pagehide",()=>{accessToken="";refreshToken="";recoveryMode=false;clearSecret();$("newPassword").value="";$("confirmPassword").value="";});
+ window.addEventListener("pagehide",()=>{accessToken="";refreshToken="";recoveryMode=false;clearSecret();$("ceoCommandText").value="";$("newPassword").value="";$("confirmPassword").value="";});
  // parseCallback handles token_hash verification asynchronously; fragment path needs a session check.
  if(accessToken)void checkSession();
 }
