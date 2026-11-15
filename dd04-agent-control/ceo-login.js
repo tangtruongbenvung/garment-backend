@@ -4,7 +4,7 @@
 const API="https://wbvkqfnrlasmtizjszab.supabase.co";
 const PUBLISHABLE_KEY="sb_publishable_eYGZHWqLAvhuFjIU3ej3Zg_eQdL5lrU";
 const CALLBACK=location.origin+"/dd04-agent-control/ceo-login.html";
-const ALLOWED_PREVIEW=/^deploy-preview-(?:1|6)--ducduy-ai-os-test\\.netlify\\.app$/;
+const ALLOWED_PREVIEW=/^deploy-preview-(?:1|6)--ducduy-ai-os-test\.netlify\.app$/;
 const $=id=>document.getElementById(id);
 let accessToken="",refreshToken="",factorId="",recoveryMode=false;
 let currentReadiness=null;
