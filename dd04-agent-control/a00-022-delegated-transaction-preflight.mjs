@@ -21,6 +21,8 @@ const requiredAgents=Object.freeze(['A00','A02','A09','A11']);
  * @param {object} source Server-created bundle loaded inside the same
  * SERIALIZABLE transaction, not derived from caller JSON.
  * No active finance policy means NO eligible delegated G1 even if cost=0.
+ * Per-request A11 limit approval flow DISABLED per CEO instruction. Hard caps
+ * remain enforced, spending above cap is DENIED, not auto-approved or queued.
  * Approved policy limits are never inferred from estimates or stale versions.
  */
 export function evaluateA0022InternalG1(source){
@@ -37,7 +39,7 @@ export function evaluateA0022InternalG1(source){
    finance_policy.version<1||!Number.isSafeInteger(finance_policy.max_single_spend_vnd)||
    !Number.isSafeInteger(finance_policy.max_campaign_spend_vnd)||
    finance_policy.max_single_spend_vnd<0||finance_policy.max_campaign_spend_vnd<0)
-   return blocked('A11_ACTIVE_FINANCE_POLICY_REQUIRED',{requires_ceo_finance:true});
+   return blocked('A11_INACTIVE_POLICY_HOLD_NO_SPEND',{requires_ceo_finance:false,finance_limit_approval_enabled:false});
  if(!finance_ledger||finance_ledger.source!=='DB_LOCKED_FINANCE_LEDGER'||
    finance_ledger.tenant_id!==tenant_id||finance_ledger.command_id!==command_id||
    finance_ledger.policy_sha256!==finance_policy.policy_sha256||
@@ -46,7 +48,7 @@ export function evaluateA0022InternalG1(source){
    return blocked('A11_SERIALIZABLE_FINANCE_RESERVATION_REQUIRED');
  if(finance_ledger.requested_vnd>finance_policy.max_single_spend_vnd||
     finance_ledger.campaign_committed_vnd+finance_ledger.requested_vnd>finance_policy.max_campaign_spend_vnd)
-    return blocked('CEO_FINANCE_EXCEPTION_REQUIRED',{requires_ceo_finance:true});
+    return blocked('A11_LIMIT_EXCEEDED_HARD_DENY',{requires_ceo_finance:false,finance_limit_approval_enabled:false});
  if(!Array.isArray(checks)||checks.length!==requiredAgents.length)
    return blocked('INDEPENDENT_REVIEW_SET_REQUIRED');
  const actors=new Set();
@@ -63,7 +65,7 @@ export function evaluateA0022InternalG1(source){
  return Object.freeze({ok:true,reason:'ELIGIBLE_FOR_DB_TRANSACTION_ONLY',
   tenant_id,command_id,packet_sha256,snapshot_sha256:snapshotHash,
   internal_g1_candidate:true,executable:false,publish_allowed:false,spend_allowed:false,
-  requires_ceo_finance:false});
+  requires_ceo_finance:false,finance_limit_approval_enabled:false});
 }
 /**
  * Handoff only reports eligibility. DB must independently verify canonical G1,
