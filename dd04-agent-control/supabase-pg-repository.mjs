@@ -70,9 +70,9 @@ export function createPgRepository(pool,tenantId){
  async function diagnose(){
   return using(async c=>{
    const db=await c.query('select current_database() as db_name, current_user as db_user');
-   const schema=await c.query("select count(*)::int as table_count from information_schema.tables where table_schema='dd04_stage'");
-   return {ok:db.rows[0]?.db_name==='postgres'&&schema.rows[0]?.table_count===7,
-     stage:'DATABASE_READ_ONLY',tables:schema.rows[0]?.table_count??null};
+   const schema=await c.query("select count(*)::int AS table_count, count(*) filter (where table_name IN ('commands','tasks','task_events','artifacts','approvals','agent_memories','capability_versions'))::int AS core_tables FROM information_schema.tables WHERE table_schema='dd04_stage' AND table_type='BASE TABLE'");
+   return {ok:db.rows[0]?.db_name==='postgres'&&schema.rows[0]?.core_tables===7,
+     stage:'DATABASE_READ_ONLY',tables:schema.rows[0]?.table_count??null,core_tables:schema.rows[0]?.core_tables??null};
   });
  }
  async function get(id){return using(c=>read(c,id))}
