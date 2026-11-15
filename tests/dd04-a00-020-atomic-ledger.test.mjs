@@ -66,7 +66,7 @@ test('independent A08 review can PASS internal only, never publishes',async()=>{
  const r=createA0020LedgerRepository(f.pool,async()=>f.actor);
  const res=await r.transact(input({action:'REVIEW_PASS'}),{});
  assert.equal(res.state,'APPROVED_INTERNAL');assert.equal(res.publish_allowed,false);
- assert.ok(f.calls.some(c=>c.sql.includes('UPDATE dd04_stage.a00_task_contexts target')));
+ assert.ok(f.calls.some(c=>c.sql.includes('SELECT target.task_id,target.revision')));
 });
 test('stale revision rejected and rollback complete',async()=>{
  const f=fixture();const r=createA0020LedgerRepository(f.pool,async()=>f.actor);
@@ -125,4 +125,27 @@ test('unregistered production output cannot advance to QC',async()=>{
   return c;};
  const r=createA0020LedgerRepository(f.pool,async()=>f.actor);
  await assert.rejects(r.transact(input({action:'SUBMIT'}),{}),/OUTPUT_ARTIFACT_NOT_REGISTERED/);
+});
+
+test('automatic handoff writes audit BEFORE moving dependent task and commits both',async()=>{
+ const f=fixture({state:'INTERNAL_REVIEW',agent:'A08'});
+ const connect=f.pool.connect;
+ f.pool.connect=async()=>{
+  const c=await connect(),query=c.query;
+  c.query=async(sql,args)=>{
+   const q=String(sql);
+   if(q.includes('SELECT target.task_id,target.revision'))
+    return {rows:[{task_id:command+'_A04',revision:1}]};
+   if(q.includes("SET state='READY',revision=revision+1")&&q.includes("RETURNING task_id"))
+    return {rows:[{task_id:command+'_A04'}]};
+   return query(sql,args);
+  };return c;
+ };
+ const repo=createA0020LedgerRepository(f.pool,async()=>f.actor);
+ const result=await repo.transact(input({action:'REVIEW_PASS'}),{});
+ assert.deepEqual(result.unblocked,[command+'_A04']);
+ const auditIdx=f.calls.findIndex(x=>x.sql.includes("'AUTO_READY','BLOCKED','READY'"));
+ const updateIdx=f.calls.findIndex(x=>x.sql.includes("SET state='READY',revision=revision+1"));
+ assert.ok(auditIdx>=0&&updateIdx>auditIdx);
+ assert.equal(f.calls.at(-1).sql,'COMMIT');
 });
