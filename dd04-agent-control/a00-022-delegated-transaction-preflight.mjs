@@ -86,19 +86,31 @@ export function evaluateA0022Handoff({source_task,destination_task,context}={}){
  if(from<0||to!==from+1||!STAGES.has(source_task.owner_agent)||
     destination_task.owner_agent==='A07')
     return blocked('HANDOFF_ORDER_DENIED');
- if(source_task.state!=='APPROVED_INTERNAL'||destination_task.state!=='BLOCKED'||
-    !Number.isSafeInteger(source_task.revision)||source_task.revision<1||
-    !Number.isSafeInteger(destination_task.revision)||destination_task.revision<1)
+ if(!Number.isSafeInteger(source_task.revision)||source_task.revision<1||
+    !Number.isSafeInteger(destination_task.revision)||destination_task.revision<1||
+    destination_task.state!=='BLOCKED')
     return blocked('HANDOFF_STATE_OR_REVISION_INVALID');
+ // A03/A04 are produced and handed off under independent A00 review.
+ // A05 -> A08 sends the finished media TO QC (QC has not yet occurred).
+ // A08 -> A09 requires A08 review; final QC requires both A08 and A09
+ // via evaluateA0022FinalQC, never earlier. This avoids circular gating.
+ const toQC=destination_task.owner_agent==='A08';
+ const toSecondQC=destination_task.owner_agent==='A09';
+ if(toQC?source_task.state!=='INTERNAL_REVIEW':
+     source_task.state!=='APPROVED_INTERNAL')
+   return blocked('HANDOFF_SOURCE_NOT_READY');
  if(!HEX.test(source_task.output_sha256||'')||
     context.storage_verified_output_sha256!==source_task.output_sha256)
     return blocked('OUTPUT_BYTES_NOT_VERIFIED');
- if(context.a08_qc!==true||context.a09_qc!==true||
-    !Array.isArray(context.qc_actor_subject_ids)||
-    context.qc_actor_subject_ids.length!==2||
-    !context.qc_actor_subject_ids.every(x=>UUID.test(x))||
-    new Set(context.qc_actor_subject_ids).size!==2)
-   return blocked('A08_A09_INDEPENDENT_QC_REQUIRED');
+ if(toSecondQC){
+  if(context.a08_qc!==true||!UUID.test(context.a08_actor_subject_id||''))
+   return blocked('A08_INDEPENDENT_QC_REQUIRED');
+ }else if(!toQC){
+  if(context.independent_a00_review!==true||
+     !UUID.test(context.a00_reviewer_subject_id||'')||
+     context.a00_reviewer_subject_id===source_task.owner_subject_id)
+    return blocked('A00_INDEPENDENT_STAGE_REVIEW_REQUIRED');
+ }
  return Object.freeze({ok:true,reason:'ELIGIBLE_FOR_ATOMIC_DB_HANDOFF_ONLY',
   from_agent:source_task.owner_agent,to_agent:destination_task.owner_agent,
   source_revision:source_task.revision,destination_revision:destination_task.revision,
@@ -106,4 +118,24 @@ export function evaluateA0022Handoff({source_task,destination_task,context}={}){
    output_sha256:source_task.output_sha256,
    source_revision:source_task.revision,destination_revision:destination_task.revision}),
   executable:false,publish_allowed:false,spend_allowed:false});
+}
+
+/** Final publication-ready QC preflight; still never authorizes publication.
+ *  CEO G2 of exact immutable video/caption/channel/schedule remains mandatory.
+ */
+export function evaluateA0022FinalQC({task,context}={}){
+ if(!context||context.provenance!=='DB_SERIALIZABLE_READ'||context.environment!=='STAGING')
+  return blocked('TRUSTED_DB_SNAPSHOT_REQUIRED');
+ if(!task||task.owner_agent!=='A05'||task.tenant_id!==context.tenant_id||
+    task.command_id!==context.command_id||!HEX.test(task.output_sha256||'')||
+    task.output_sha256!==context.storage_verified_output_sha256)
+  return blocked('FINAL_ASSET_UNVERIFIED');
+ if(context.a08_qc!==true||context.a09_qc!==true||
+    !Array.isArray(context.qc_actor_subject_ids)||context.qc_actor_subject_ids.length!==2||
+    !context.qc_actor_subject_ids.every(x=>UUID.test(x))||
+    new Set(context.qc_actor_subject_ids).size!==2||
+    context.qc_asset_sha256!==task.output_sha256)
+  return blocked('A08_A09_INDEPENDENT_QC_REQUIRED');
+ return Object.freeze({ok:true,reason:'ELIGIBLE_FOR_CEO_G2_REVIEW_ONLY',
+  asset_sha256:task.output_sha256,executable:false,publish_allowed:false,spend_allowed:false});
 }
