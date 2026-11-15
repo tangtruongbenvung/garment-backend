@@ -32,6 +32,14 @@
 <p id="identity" class="status" aria-live="polite"></p>
 <p class="warning">Đây mới là xác minh danh tính Auth. Chưa có quyền CEO và chưa thể duyệt G1/G2.</p>
 <section class="readiness-box" id="readinessPanel"><h2>3. Kiểm tra điều kiện quyền CEO và G1/G2</h2><p class="muted small">Chỉ đọc phiên Auth và trạng thái quyền CEO trên staging. Không cấp quyền, không duyệt và không đổi dữ liệu.</p><button type="button" id="checkReadinessBtn" class="secondary">Kiểm tra quyền CEO · MFA · G1/G2</button><p id="readinessStatus" role="status" aria-live="polite">Chưa kiểm tra điều kiện phê duyệt.</p></section>
+<section class="readiness-box" id="gateReviewPanel">
+<h2>4. Xem hồ sơ G1/G2 — chỉ đọc</h2>
+<p class="muted small">Cần phiên MFA AAL2 và quyền CEO ACTIVE. Bản G1 hiện tại chưa có đầy đủ hồ sơ kế hoạch và ngân sách. G2 chưa có video/QC thật. Không có nút duyệt trong giai đoạn này.</p>
+<label for="gateApprovalId">Mã approval_id từ DD04</label>
+<input id="gateApprovalId" type="text" inputmode="text" maxlength="36" placeholder="UUID của yêu cầu G1/G2">
+<button type="button" id="gateReviewBtn" class="secondary">Kiểm tra hồ sơ duyệt (chỉ đọc)</button>
+<p id="gateReviewStatus" role="status" aria-live="polite">Chưa kiểm tra. Không thay đổi quyết định.</p>
+</section>
 <div class="actions"><button id="enrollBtn" type="button">Tạo MFA bằng ứng dụng Authenticator</button><button id="factorBtn" type="button" class="secondary">Kiểm tra MFA đã đăng ký</button></div>
 <div id="totpEnroll" hidden>
 <p class="muted">Thêm mã bí mật bên dưới vào ứng dụng Authenticator. Không chia sẻ hoặc chụp ảnh mã này. Sau đó nhập mã 6 chữ số để hoàn tất.</p>
