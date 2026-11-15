@@ -11,7 +11,7 @@ function fakeStorage(){
  const blobs=new Map(),calls=[];
  async function fakeFetch(target,opts){
   calls.push({target,method:opts.method,headers:opts.headers,body:opts.body});
-  const key=decodeURIComponent(new URL(target).pathname.split('/').slice(5).join('/'));
+  const key=decodeURIComponent(new URL(target).pathname.split('/').slice(opts.method==='GET'?6:5).join('/'));
   if(opts.method==='POST'){
    if(blobs.has(key))return {ok:false,status:409};
    blobs.set(key,Buffer.from(opts.body));
@@ -49,7 +49,8 @@ test('private Supabase storage supports 2 distinct writes+authenticated read-bac
  assert.equal(Buffer.compare(two,second),0);
  assert.equal(fake.blobs.size,2);
  assert.equal(fake.calls.filter(x=>x.method==='POST').length,2);
- assert.ok(fake.calls.every(x=>x.target.startsWith(url+'/storage/v1/object/dd04-media-private-staging/')));
+ assert.ok(fake.calls.filter(x=>x.method==='POST').every(x=>x.target.startsWith(url+'/storage/v1/object/dd04-media-private-staging/')));
+ assert.ok(fake.calls.filter(x=>x.method==='GET').every(x=>x.target.startsWith(url+'/storage/v1/object/authenticated/dd04-media-private-staging/')));
  assert.ok(fake.calls.filter(x=>x.method==='POST').every(x=>x.headers['x-upsert']==='false'));
  await assert.rejects(a.putIfAbsent(path,bytes,'image/png'),/STORAGE_IMMUTABLE_CONFLICT/);
 });
