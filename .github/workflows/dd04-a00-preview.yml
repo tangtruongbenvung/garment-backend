@@ -45,7 +45,7 @@ jobs:
       - run: node --check netlify/functions/dd04-ceo-gate-list.mjs
       - run: node --check netlify/functions/dd04-ceo-readiness.mjs
       - run: node --check dd04-agent-control/ceo-login.js
-      - run: node --test tests/dd04-a00-delegated-orchestrator.test.mjs tests/dd04-a00-delegated-gates.test.mjs tests/dd04-a00-018-read-ledger.test.mjs tests/dd04-a00-019-readiness-audit.test.mjs tests/dd04-a00-020-atomic-ledger.test.mjs tests/dd04-a00-020-save-plan.test.mjs tests/dd04-a00-020-db-actor.test.mjs
+      - run: node --test tests/dd04-a00-delegated-orchestrator.test.mjs tests/dd04-a00-delegated-gates.test.mjs tests/dd04-a00-018-read-ledger.test.mjs tests/dd04-a00-019-readiness-audit.test.mjs tests/dd04-a00-020-atomic-ledger.test.mjs tests/dd04-a00-020-save-plan.test.mjs tests/dd04-a00-020-db-actor.test.mjs tests/dd04-a00-020-final-sql-contract.test.mjs
       - run: node --test tests/dd04-a00.test.mjs tests/dd04-persistence-contract.test.mjs tests/dd04-schema-v2.test.mjs tests/dd04-postgres-adapter.test.mjs tests/dd04-pg-tls.test.mjs tests/dd04-ceo-approval-contract.test.mjs tests/dd04-ceo-readiness.test.mjs tests/dd04-ceo-clipboard-script.test.mjs tests/dd04-ceo-gates-preflight.test.mjs tests/dd04-ceo-gate-review.test.mjs tests/dd04-ceo-gate-list.test.mjs tests/dd04-ceo-login.test.mjs tests/dd04-ceo-admin-bootstrap.test.mjs tests/dd04-a03-channel-scripts.test.mjs tests/dd04-a03-preview-api.test.mjs tests/dd04-channel-context.test.mjs tests/dd04-channel-control-ui.test.mjs tests/dd04-channel-registry-v2.test.mjs tests/dd04-channel-registry-v2-schema.test.mjs
 
   validate-windows-powershell:
