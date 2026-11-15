@@ -1,7 +1,6 @@
 // DD04 A00-021 — strictly staging-only PostgreSQL login for Agent backend.
 // This is a SERVER LIBRARY, not an HTTP endpoint. Never expose in browser bundles.
 // Runtime worker tokens must be separately authorized, provisioned, and revoked.
-import {Pool} from 'pg';
 import {createVerifiedPgTlsConfig} from './pg-tls.mjs';
 import {createA0020DbActorResolver} from './a00-020-db-actor-resolver.mjs';
 import {createA0020TaskPlanWriter} from './a00-020-save-task-plan.mjs';
@@ -22,13 +21,14 @@ export function assertA0021BackendDbUrl(raw){
   throw new Error('A00_BACKEND_TLS_REQUIRED');
  return {target:'A00_STAGING_ONLY',role:'dd04_a00_backend'};
 }
-export function createA0021Runtime({
+export async function createA0021Runtime({
   connectionString,caPem,tenantId,environment='STAGING'
 }={}){
  if(environment!=='STAGING'||!TENANT.test(tenantId||''))
   throw new Error('A00_STAGING_TENANT_REQUIRED');
  assertA0021BackendDbUrl(connectionString);
  const tls=createVerifiedPgTlsConfig(connectionString,tenantId,caPem);
+ const {Pool}=await import('pg');
  const pool=new Pool({...tls,max:2,connectionTimeoutMillis:6000,
   idleTimeoutMillis:8000,statement_timeout:8000,query_timeout:10000});
  const resolveActor=createA0020DbActorResolver({expectedTenantId:tenantId});
