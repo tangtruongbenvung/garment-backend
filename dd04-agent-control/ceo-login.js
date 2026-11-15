@@ -15,6 +15,7 @@ function logout(){
  $("newPassword").value="";$("confirmPassword").value="";$("passwordRecoveryPanel").hidden=true;
  $("sessionPanel").hidden=true;$("loginPanel").hidden=false;$("identity").textContent="";
  $("readinessStatus").textContent="Phiên đã đăng xuất; điều kiện G1/G2 chưa xác minh.";
+ $("gateReviewStatus").textContent="Đã đăng xuất. Không có quyết định được ghi.";
  message("Đã xóa phiên khỏi bộ nhớ tab. Không có quyền CEO được cấp.",true);
 }
 // Callback handles fragment sessions and safe recovery token hashes; no token is ever logged.
@@ -201,6 +202,29 @@ async function checkCeoReadiness(){
   $("readinessStatus").textContent="Không kiểm tra được dịch vụ staging. G1/G2 vẫn khóa.";
  }
 }
+async function reviewGate(){
+ const id=$("gateApprovalId").value.trim();
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)){
+  $("gateReviewStatus").textContent="Cần approval_id UUID hợp lệ từ A00. Không thay đổi quyết định.";return;
+ }
+ if(!accessToken){$("gateReviewStatus").textContent="Đăng nhập và xác minh MFA trước.";return;}
+ $("gateReviewStatus").textContent="Đang kiểm tra hồ sơ G1/G2 chỉ đọc...";
+ try{
+  const r=await fetch("/api/dd04-ceo-gate-review",{
+   method:"POST",headers:{"authorization":"Bearer "+accessToken,
+    "content-type":"application/json","accept":"application/json"},
+   body:JSON.stringify({approval_id:id}),cache:"no-store",
+   referrerPolicy:"no-referrer",signal:AbortSignal.timeout(12000)
+  });
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok){$("gateReviewStatus").textContent="KHÓA: "+(data.error||"HTTP "+r.status)+". Không có quyết định được ghi.";return;}
+  const a=data.approval;
+  $("gateReviewStatus").textContent=
+   "Hồ sơ "+a.gate+" · "+a.command_id+" · V"+a.revision+" · "+a.decision+
+   ". Bằng chứng còn thiếu: "+(data.missing||[]).join(", ")+
+   ". QUYỀN DUYỆT: KHÓA. Không tạo công việc xuất bản.";
+ }catch{$("gateReviewStatus").textContent="Không đọc được hồ sơ staging. G1/G2 vẫn khóa.";}
+}
 function bind(id,fn){$(id).addEventListener("click",()=>void Promise.resolve(fn()).catch(e=>message("Yêu cầu chưa hoàn thành: "+e.message)));}
 if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
  document.body.textContent="Chỉ dùng trang này trên HTTPS Deploy Preview #1 của Đức Duy.";
@@ -208,7 +232,7 @@ if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
  void parseCallback();
  bind("passwordBtn",passwordSignIn);bind("magicBtn",magicSignIn);
  bind("recoveryBtn",requestPasswordRecovery);bind("savePasswordBtn",savePassword);bind("cancelRecoveryBtn",logout);
- bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);
+ bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);bind("gateReviewBtn",reviewGate);
  bind("showSecret",()=>{$("secret").type=$("secret").type==="password"?"text":"password"});
  window.addEventListener("pagehide",()=>{accessToken="";refreshToken="";recoveryMode=false;clearSecret();$("newPassword").value="";$("confirmPassword").value="";});
  // parseCallback handles token_hash verification asynchronously; fragment path needs a session check.
