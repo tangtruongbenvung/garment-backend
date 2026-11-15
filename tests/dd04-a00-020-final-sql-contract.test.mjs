@@ -45,3 +45,19 @@ test('candidate does not create worker secret, enable workers or change G1/G2',(
  assert.doesNotMatch(s,/UPDATE dd04_stage\.approvals/i);
  assert.doesNotMatch(s,/INSERT INTO dd04_stage\.v55_publish_jobs/i);
 });
+
+test('database guards block un-audited direct state changes and forged handoff',()=>{
+ for(const rule of ['A00_ATOMIC_AUDIT_REQUIRED','A00_CANONICAL_G1_LOCKED',
+   'A00_SELF_APPROVAL_DENIED','A00_DUAL_QC_MISSING',
+   'A00_QC_REPORT_NOT_VERIFIED','A00_REVIEW_REPORT_NOT_REGISTERED',
+   'A00_HANDOFF_UNVERIFIED','A00_SUBJECT_SPOOF','A00_OUTPUT_ATTACH_NOT_REGISTERED'])
+    assert.ok(s.includes(rule),rule);
+ assert.match(s,/CREATE TRIGGER a00_context_transition_guard/);
+ assert.match(s,/CREATE TRIGGER a00_transition_event_guard/);
+ assert.match(s,/CREATE TRIGGER a00_v55_handoff_insert_guard/);
+});
+test('workflow modifications stay least privilege and publishing is blocked',()=>{
+ assert.match(s,/GRANT SELECT,INSERT ON dd04_stage\.a00_workflow_instances TO dd04_a00_runtime;/);
+ assert.doesNotMatch(s,/GRANT SELECT,INSERT,UPDATE ON dd04_stage\.a00_workflow_instances/i);
+ assert.doesNotMatch(s,/GRANT .* ON dd04_stage\.v55_publish_jobs/i);
+});
