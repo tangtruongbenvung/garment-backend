@@ -71,6 +71,8 @@
 <h2>5. Master Task Ledger — dữ liệu staging thật</h2>
 <p class="muted small">Danh sách đọc từ Supabase sau khi xác minh CEO và MFA AAL2. Chưa có chức năng ghi, phê duyệt hay đăng bài.</p>
 <div class="actions"><button type="button" id="refreshWorklistBtn" class="secondary">Tải danh sách nhiệm vụ từ staging</button></div>
+<div class="actions"><button type="button" id="backendProbeBtn" class="secondary">Kiểm tra kết nối backend staging (chỉ đọc)</button></div>
+<p id="backendProbeStatus" role="status" aria-live="polite">Chưa kiểm tra kết nối backend A00-021. Không cấp quyền Agent hoặc ghi dữ liệu.</p>
 <p id="worklistStatus" role="status" aria-live="polite">Chưa tải dữ liệu.</p>
 <div style="overflow-x:auto"><table id="worklistTable"><thead><tr><th>Nhiệm vụ</th><th>Agent</th><th>Trạng thái gốc</th><th>A00 runtime</th><th>G1</th><th>Phiên bản</th></tr></thead><tbody id="worklistRows"></tbody></table></div>
 </section>
