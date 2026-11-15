@@ -332,6 +332,46 @@ async function probeA0021Backend(){
    : "Chưa PASS: phản hồi không đáp ứng chính sách an toàn.";
  }catch{$("backendProbeStatus").textContent="Chưa kết nối được endpoint trên Deploy Preview. Không thay đổi dữ liệu.";}
 }
+// CEO-only explicit AAL2 activation, authorized version/hash, no arbitrary limits.
+// PostgREST only works if dd04_stage is already in the Data API exposed-schemas
+// allowlist; do not alter API exposure or bypass auth if that is not the case.
+async function activateA11ZeroV1(){
+ const target=$("a11V1Status");
+ if(!accessToken||currentReadiness?.identity_verified!==true||
+   currentReadiness?.enrollment_verified!==true||
+   currentReadiness?.mfa_aal2!==true){
+  target.textContent="KHÓA: Phiên CEO ACTIVE + MFA AAL2 bắt buộc.";return;
+ }
+ if(!window.confirm("Kích hoạt A11 v1 chỉ trên staging với trần 0 đồng/lần và 0 đồng/chiến dịch? Mọi yêu cầu chi tiền sẽ bị từ chối.")){
+  target.textContent="Đã hủy, chính sách không thay đổi.";return;
+ }
+ target.textContent="Đang xác nhận chính sách bằng phiên CEO AAL2 với Supabase staging...";
+ const key="DD04_A00_023_A11_POLICY";
+ try{
+  const response=await fetch(API+"/rest/v1/rpc/a00_022_ceo_policy_decision",{
+   method:"POST",headers:{
+    "apikey":PUBLISHABLE_KEY,"authorization":"Bearer "+accessToken,
+    "content-type":"application/json","accept":"application/json",
+    "Content-Profile":"dd04_stage"
+   },
+   body:JSON.stringify({
+    p_tenant:"6bc73b49-a396-4c7d-b390-ab6339d547cd",
+    p_policy:"0c42f63e-6484-4519-8811-7c66b8e9d852",
+    p_expected_hash:"8f206452d6338b282b59b6aa368747157de52dca4349946b874a201b8de25e94",
+    p_decision:"ACTIVE"
+   }),cache:"no-store",referrerPolicy:"no-referrer",
+   signal:AbortSignal.timeout(12000)});
+  const result=await response.json().catch(()=>null);
+  if(response.ok&&result==="CEO_POLICY_ACTIVE"){
+   target.textContent="PASS: CEO MFA AAL2 đã kích hoạt A11 v1 trên staging, hạn mức 0 đồng. Không có quyền chi tiền.";
+  }else{
+   const code=typeof result?.code==="string"&&/^[A-Za-z0-9_]{2,24}$/.test(result.code)
+     ?result.code:"HTTP_"+response.status;
+   target.textContent="CHƯA KÍCH HOẠT: "+code+
+    ". Nếu schema staging không được mở qua Data API, không tự mở rộng quyền; báo cho A00 cấu hình một đường phê duyệt riêng.";
+  }
+ }catch{target.textContent="CHƯA KÍCH HOẠT: Không truy cập được kênh xác thực chính sách. Không thay đổi G1/G2.";}
+}
 function bind(id,fn){$(id).addEventListener("click",()=>void Promise.resolve(fn()).catch(e=>message("Yêu cầu chưa hoàn thành: "+e.message)));}
 if(location.protocol!=="https:"||!ALLOWED_PREVIEW.test(location.hostname)){
  document.body.textContent="Chỉ dùng trang này trên HTTPS Deploy Preview #1, #6 hoặc #7 của Đức Duy.";
@@ -339,7 +379,7 @@ if(location.protocol!=="https:"||!ALLOWED_PREVIEW.test(location.hostname)){
  void parseCallback();
  bind("passwordBtn",passwordSignIn);bind("magicBtn",magicSignIn);
  bind("recoveryBtn",requestPasswordRecovery);bind("savePasswordBtn",savePassword);bind("cancelRecoveryBtn",logout);
- bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);bind("gateReviewBtn",reviewGate);bind("loadGateQueueBtn",loadGateQueue);bind("refreshWorklistBtn",loadMasterTaskLedger);bind("backendProbeBtn",probeA0021Backend);
+ bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);bind("gateReviewBtn",reviewGate);bind("loadGateQueueBtn",loadGateQueue);bind("refreshWorklistBtn",loadMasterTaskLedger);bind("backendProbeBtn",probeA0021Backend);bind("activateA11V1Btn",activateA11ZeroV1);
  $("gateApprovalSelect").addEventListener("change",()=>{$("gateApprovalId").value=$("gateApprovalSelect").value;});
  bind("showSecret",()=>{$("secret").type=$("secret").type==="password"?"text":"password"});
  window.addEventListener("pagehide",()=>{accessToken="";refreshToken="";recoveryMode=false;clearSecret();$("newPassword").value="";$("confirmPassword").value="";});
