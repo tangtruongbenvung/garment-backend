@@ -88,7 +88,7 @@ test('no production execution',()=>{
 });
 
 test('dual QC verification is required before automatic handoff',async()=>{
- const f=fixture({state:'INTERNAL_REVIEW',agent:'A08'});
+ const f=fixture({state:'INTERNAL_REVIEW',agent:'A08',owner:'A05'});
  const old=f.pool.connect;
  f.pool.connect=async()=>{
   const client=await old();const q=client.query;
@@ -102,7 +102,7 @@ test('dual QC verification is required before automatic handoff',async()=>{
  assert.equal(f.calls.at(-1).sql,'ROLLBACK');
 });
 test('QC evidence can only be recorded by an independent A08/A09 reviewer',async()=>{
- const f=fixture({state:'INTERNAL_REVIEW',agent:'A08'});
+ const f=fixture({state:'INTERNAL_REVIEW',agent:'A08',owner:'A05'});
  const r=createA0020LedgerRepository(f.pool,async()=>f.actor);
  const res=await r.transact(input({action:'QC_PASS'}),{});
  assert.equal(res.state,'INTERNAL_REVIEW');assert.equal(res.publish_allowed,false);
@@ -128,7 +128,7 @@ test('unregistered production output cannot advance to QC',async()=>{
 });
 
 test('automatic handoff writes audit BEFORE moving dependent task and commits both',async()=>{
- const f=fixture({state:'INTERNAL_REVIEW',agent:'A08'});
+ const f=fixture({state:'INTERNAL_REVIEW',agent:'A08',owner:'A05'});
  const connect=f.pool.connect;
  f.pool.connect=async()=>{
   const c=await connect(),query=c.query;
