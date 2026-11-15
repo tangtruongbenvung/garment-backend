@@ -55,5 +55,5 @@ test('Readiness endpoint cannot mutate DB, grant role or approve and remains exa
  assert.match(html,/id="checkReadinessBtn"/);
  assert.match(client,/function checkCeoReadiness\(\)/);
  assert.match(client,/fetch\("\/api\/dd04-ceo-readiness"/);
- assert.match(client,/Chưa mở giao dịch G1\/G2/);
+ assert.match(client,/G2 CEO: đang khóa/);
 });
