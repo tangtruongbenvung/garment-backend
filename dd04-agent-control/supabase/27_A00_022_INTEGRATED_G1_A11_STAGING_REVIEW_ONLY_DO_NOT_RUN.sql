@@ -326,7 +326,8 @@ BEGIN
  PERFORM dd04_stage.a00_022_check_worker(p_tenant,'READ','A11');
  IF current_setting('transaction_isolation')<>'serializable'
  THEN RAISE EXCEPTION 'A11_SERIALIZABLE_REQUIRED'; END IF;
- IF p_amount IS NULL OR p_amount<0 OR p_period !~ '^[0-9]{4}-[0-9]{2}
+ IF p_amount IS NULL OR p_amount<0 OR p_period !~ '^[0-9]{4}-[0-9]{2}$'
+  OR p_period<>to_char((now() AT TIME ZONE 'Asia/Bangkok'),'YYYY-MM')
   OR length(p_campaign)<1 OR length(p_campaign)>128
  THEN RAISE EXCEPTION 'A11_REQUEST_INVALID'; END IF;
  PERFORM pg_advisory_xact_lock(hashtextextended(
