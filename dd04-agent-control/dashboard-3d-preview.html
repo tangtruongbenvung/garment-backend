@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"><title>Đức Duy AI OS · Trung tâm điều hành 3D · Staging</title><link rel="stylesheet" href="./dashboard-3d-preview.css"><script type="module" src="./dashboard-3d-preview.js"></script></head>
+<body>
+<main>
+ <header class="top"><div><div class="eyebrow">ĐỨC DUY AI OS / DD-04 <span class="dot">●</span> BẢN THIẾT KẾ THỬ NGHIỆM</div><h1>TRUNG TÂM ĐIỀU HÀNH <em>AI 3D</em></h1><p>18 Agent · 20 kênh mục tiêu · AI Content Factory mẹ & bé Việt Nam</p></div><div class="topactions"><span class="pill warn" id="sourceStatus">CHẾ ĐỘ MINH HỌA · KHÔNG CÓ DỮ LIỆU THẬT</span><button id="reduceMotion" type="button" aria-pressed="false">Tắt chuyển động</button></div></header>
+ <section class="strip" aria-label="trạng thái quản trị">
+  <div class="metric"><span>Kênh mục tiêu</span><strong>20</strong><small>10 Fanpage · 10 TikTok</small></div>
+  <div class="metric"><span>Nhân sự AI thiết kế</span><strong>18</strong><small>A00 đến A17</small></div>
+  <div class="metric"><span>Worker hoạt động</span><strong>—</strong><small>Chưa kết nối xác thực</small></div>
+  <div class="metric"><span>Video đã duyệt G2</span><strong>—</strong><small>Không suy diễn số liệu</small></div>
+ </section>
+ <div class="layout">
+  <section class="panel scene-panel" aria-labelledby="scene-title"><div class="panel-head"><div><h2 id="scene-title">Bộ não điều phối A00</h2><span>Đường chuyển giao nội dung hiển thị theo luồng nhiệm vụ</span></div><span class="chip">3D CSS · mô phỏng</span></div>
+   <div class="scene" id="scene">
+    <svg class="connections" id="connections" viewBox="0 0 1000 530" preserveAspectRatio="none" aria-hidden="true">
+      <defs><linearGradient id="energy"><stop offset="0" stop-color="#00d2ef" stop-opacity=".04"/><stop offset=".45" stop-color="#08e0ed" stop-opacity=".9"/><stop offset="1" stop-color="#a486ff" stop-opacity=".1"/></linearGradient></defs>
+      <path class="stream" d="M0 260 C270 260 265 245 500 245 C710 245 760 142 1000 142"/>
+      <path class="stream second" d="M0 315 C295 315 325 245 500 245 C730 245 775 308 1000 308"/>
+      <path class="stream third" d="M0 365 C295 365 335 245 500 245 C740 245 800 430 1000 430"/>
+    </svg>
+    <div class="orbit-camera"><div class="orbital" role="img" aria-label="Biểu tượng A00 3D đang xoay"><div class="shell"><div class="core-face"><div class="eyes"><i></i><i></i></div><div class="smile"></div></div></div><div class="ring ring1"></div><div class="ring ring2"></div><div class="ring ring3"></div></div></div>
+    <div class="a00-label">A00 · ĐIỀU PHỐI</div>
+    <div class="flow left"><div class="tiny-title">ĐẦU VÀO</div><button type="button" class="node muted" data-agent="A01"><b>A01</b> Trend</button><button type="button" class="node muted" data-agent="A02"><b>A02</b> Chiến lược kênh</button><button type="button" class="node" data-agent="A03"><b>A03</b> Kịch bản tiếng Việt</button></div>
+    <div class="flow right"><div class="tiny-title">SẢN XUẤT → KIỂM DUYỆT</div><button type="button" class="node" data-agent="A04"><b>A04</b> Ảnh & nhân vật</button><button type="button" class="node" data-agent="A05"><b>A05</b> Video & giọng</button><button type="button" class="node" data-agent="A08"><b>A08</b> Chất lượng</button><button type="button" class="node" data-agent="A09"><b>A09</b> Tuân thủ</button><div class="gate">🔒 CEO G2 → A07 ĐĂNG</div></div>
+    <div class="scene-floor"></div>
+   </div>
+   <div class="scene-footer"><span>◉ Nhấp một Agent để xem nhiệm vụ</span><span>Không kích hoạt worker, không chi phí API, không đăng bài</span></div>
+  </section>
+  <aside class="side">
+   <section class="panel"><div class="panel-head"><h2>Chi tiết Agent</h2><span class="chip" id="agentCode">A00</span></div><h3 id="agentName">Điều phối toàn hệ thống</h3><p id="agentDesc">Nhận lệnh CEO, phân phối nhiệm vụ và giám sát bằng chứng bàn giao.</p><div class="minirow"><span>Phiên xác thực</span><strong>CHƯA KẾT NỐI</strong></div><div class="minirow"><span>Trạng thái</span><strong>MINH HỌA</strong></div><div class="minirow"><span>Bằng chứng</span><strong>KHÔNG CÓ</strong></div></section>
+   <section class="panel"><div class="panel-head"><h2>Luồng bàn giao</h2><span class="chip">DD-04</span></div><ol class="pipeline"><li>A03 · Kịch bản</li><li>A04 · Hình ảnh & tham chiếu</li><li>A05 · Chuyển động, giọng Việt</li><li>A08 · QC thẩm mỹ/nhân vật</li><li>A09 · Văn hóa & pháp lý</li><li class="locked">CEO G2 · Duyệt cuối</li><li class="locked">A07 · Đăng bài khi được duyệt</li></ol></section>
+  </aside>
+ </div>
+ <section class="panel agents"><div class="panel-head"><div><h2>18 Agent — Sơ đồ chức năng</h2><span>Nhấn từng Agent để xem vai trò; không phải bằng chứng Agent đang chạy</span></div><span class="chip">Danh mục A00–A17</span></div><div class="agent-grid" id="agentGrid"></div></section>
+ <section class="bottom"><div class="panel"><h2>Nhật ký thực thi</h2><p class="empty">Chưa kết nối Master Task Ledger staging. Khi có dữ liệu thật sẽ hiển thị thời gian, tác nhân, nhiệm vụ, phiên bản và trạng thái PASS/FAIL.</p></div><div class="panel"><h2>Kiểm soát sản xuất</h2><p class="empty">Character Bible riêng từng kênh → ảnh tham chiếu có hash → khung hình A04 → video A05 → QC A08/A09 → CEO G2. Khóa sản xuất và đăng bài được giữ nguyên.</p></div></section>
+ <footer>DD04-A00-032 · Bản xem trước giao diện · Chưa dùng dữ liệu production · Không ủy quyền phát sinh chi phí hoặc đăng bài</footer>
+</main></body></html>
