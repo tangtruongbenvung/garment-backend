@@ -7,8 +7,14 @@ const js=readFileSync(new URL('ceo-login.js',dir),'utf8');
 test('CEO page isolated to staging and never grants database roles or enables approval',()=>{
  assert.match(page,/noindex,nofollow/);
  assert.match(page,/connect-src 'self' https:\/\/wbvkqfnrlasmtizjszab\.supabase\.co/);
- assert.match(js,/EXPECTED_HOST="deploy-preview-1--ducduy-ai-os-test\.netlify\.app"/);
- assert.match(js,/const CALLBACK="https:\/\/deploy-preview-1--ducduy-ai-os-test\.netlify\.app\/dd04-agent-control\/ceo-login\.html"/);
+ const literal=js.match(/const ALLOWED_PREVIEW=(\/.*\/);/)[1];
+ const allowed=new RegExp(literal.slice(1,literal.lastIndexOf('/')));
+ for(const n of [1,6,7])assert.ok(allowed.test('deploy-preview-'+n+'--ducduy-ai-os-test.netlify.app'));
+ for(const host of ['ducduy-ai-os-test.netlify.app','ducduy.netlify.app',
+  'deploy-preview-8--ducduy-ai-os-test.netlify.app',
+  'deploy-preview-7--ducduy-ai-os-test.netlify.app.evil.test',
+  'deploy-preview-7--other-site.netlify.app'])assert.equal(allowed.test(host),false);
+ assert.ok(js.includes('const CALLBACK=location.origin+"/dd04-agent-control/ceo-login.html"'));
  assert.doesNotMatch(js,/const\s+\w+\s*=\s*["\x27](?:sb_secret_|eyJ[^"\x27]*service_role)/);
  assert.doesNotMatch(js,/localStorage|document\.cookie|sessionStorage/);
  assert.doesNotMatch(js,/dd04_stage\.approvals|update\s+dd04_stage/);

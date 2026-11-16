@@ -1,0 +1,243 @@
+// DD04-A00-020 — Atomic task + independent review + handoff; PRIVATE SERVER LIBRARY.
+// NO HTTP entrypoint. NO bypass of G1/G2, finance controls, task guards or publish lock.
+// Requires reviewed staging schema 22_A00_020 and a separately trusted, DB-backed actor resolver.
+import {createHash} from 'node:crypto';
+import {requireAgentCapability} from './a00-020-db-actor-resolver.mjs';
+const HEX=/^[a-f0-9]{64}$/;
+const AGENT=/^A(0[0-9]|1[0-7])$/;
+const COMMAND=/^cmd_[a-f0-9]{20}$/;
+const KEY=/^[A-Za-z0-9:_-]{8,120}$/;
+const STATES=new Set(['BLOCKED','READY','IN_PROGRESS','INTERNAL_REVIEW','NEEDS_FIX','APPROVED_INTERNAL','HOLD']);
+const fail=(code)=>{throw Object.assign(new Error(code),{code})};
+const rows=(result)=>Array.isArray(result?.rows)?result.rows:fail('DB_RESULT_INVALID');
+const hash=(value)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
+const ensure=(ok,code)=>{if(!ok)fail(code)};
+const allowAction=(actor,task,action)=>{
+  ensure(AGENT.test(task.owner_agent),'TASK_OWNER_INVALID');
+  if(action==='START'||action==='SUBMIT'||action==='REWORK'){
+    ensure(actor.agent_id===task.owner_agent,'TASK_OWNER_REQUIRED');
+  }else{
+    ensure(actor.agent_id!==task.owner_agent,'INDEPENDENT_REVIEW_REQUIRED');
+    // A08/A09 can check production; reviews of either QC agent are handled by A00.
+    ensure(action!=='QC_PASS'||['A08','A09'].includes(actor.agent_id),'QC_AGENT_REQUIRED');
+    ensure(actor.agent_id==='A08'||actor.agent_id==='A09'||actor.agent_id==='A00','REVIEWER_CAPABILITY_REQUIRED');
+  }
+};
+function validateRequest(input){
+ ensure(input&&typeof input==='object'&&!Array.isArray(input),'REQUEST_INVALID');
+ const {command_id,task_id,action,expected_revision,idempotency_key,evidence_sha256,report_sha256}=input;
+ ensure(COMMAND.test(command_id)&&typeof task_id==='string'&&task_id.startsWith(command_id+'_')&&task_id.length<=150,'TASK_ID_INVALID');
+ ensure(['START','SUBMIT','QC_PASS','REVIEW_PASS','REVIEW_FAIL','REWORK'].includes(action),'ACTION_INVALID');
+ ensure(Number.isSafeInteger(expected_revision)&&expected_revision>=1,'REVISION_INVALID');
+ ensure(KEY.test(idempotency_key),'IDEMPOTENCY_KEY_INVALID');
+ ensure(HEX.test(evidence_sha256),'EVIDENCE_HASH_REQUIRED');
+ ensure(!['QC_PASS','REVIEW_PASS','REVIEW_FAIL'].includes(action)||HEX.test(report_sha256),'REVIEW_REPORT_REQUIRED');
+ // Do not accept user/client-supplied tenant, actor, reviewer, role, gate or spend flags.
+ for(const field of ['tenant_id','actor_id','actor_kind','agent_id','reviewer','approved','publish_allowed','finance_approved']){
+   ensure(!Object.hasOwn(input,field),'CLIENT_AUTHORITY_FIELD_FORBIDDEN');
+ }
+ return {command_id,task_id,action,expected_revision,idempotency_key,evidence_sha256,report_sha256:report_sha256||null};
+}
+function validateActor(actor){
+ ensure(actor&&actor.verified_by_db===true&&actor.active===true&&
+ /^[0-9a-f-]{36}$/i.test(actor.tenant_id||'')&&
+ /^[0-9a-f-]{36}$/i.test(actor.subject_id||'')&&
+ AGENT.test(actor.agent_id||'')&&actor.runtime_environment==='STAGING','DB_VERIFIED_ACTOR_REQUIRED');
+ return Object.freeze({...actor});
+}
+const MAP={
+ START:{from:['READY'],to:'IN_PROGRESS'},
+ SUBMIT:{from:['IN_PROGRESS'],to:'INTERNAL_REVIEW'},
+ REVIEW_PASS:{from:['INTERNAL_REVIEW'],to:'APPROVED_INTERNAL'},
+ REVIEW_FAIL:{from:['INTERNAL_REVIEW'],to:'NEEDS_FIX'},
+ REWORK:{from:['NEEDS_FIX'],to:'IN_PROGRESS'}
+};
+export function createA0020LedgerRepository(pool,resolveVerifiedActor,{environment='STAGING'}={}){
+ ensure(environment==='STAGING','STAGING_ONLY');
+ ensure(pool&&typeof pool.connect==='function'&&typeof resolveVerifiedActor==='function','PRIVATE_DEPENDENCIES_REQUIRED');
+ // A DB-backed resolver MUST use a validated session or internal worker identity,
+ // check tenant membership and agent capability; never use an HTTP role/agent claim.
+ async function transact(input,serverCredential){
+  const request=validateRequest(input);
+  const request_hash=hash(request);
+  const client=await pool.connect();let begun=false;
+  try{
+   await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');begun=true;
+   // Role membership is provisioned separately; refuses privileged/owner-only runtime.
+   await client.query('SET LOCAL ROLE dd04_a00_runtime');
+   await client.query("SET LOCAL statement_timeout='8000ms'");
+   // RLS authorization binds each statement to the verified opaque worker secret.
+   // Never place this secret into a browser payload, audit log or response.
+   await client.query("SELECT pg_catalog.set_config('dd04.worker_credential',$1,true)",[serverCredential]);
+   const actor=validateActor(await resolveVerifiedActor(client,serverCredential));
+   requireAgentCapability(actor,request.action);
+   // per-tenant idempotency serialization; keys across tenants are independent.
+   await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1::text,0))',[actor.tenant_id+':'+request.idempotency_key]);
+   const prior=rows(await client.query(`SELECT event_id,request_sha256,from_state,to_state
+ FROM dd04_stage.a00_transition_events WHERE tenant_id=$1::uuid AND idempotency_key=$2`,
+     [actor.tenant_id,request.idempotency_key]))[0];
+   if(prior){
+    ensure(prior.request_sha256===request_hash,'IDEMPOTENCY_CONFLICT');
+    await client.query('COMMIT');begun=false;
+    return {ok:true,duplicate:true,event_id:prior.event_id,state:prior.to_state,persistent:true,publish_allowed:false};
+   }
+   const task=rows(await client.query(`SELECT t.owner_agent,t.status AS legacy_status,
+ x.state,x.revision,x.dependency_task_ids,x.channel_id,x.profile_version,x.profile_sha256,
+ x.output_sha256,x.output_refs,x.last_reviewer_agent
+ FROM dd04_stage.tasks t JOIN dd04_stage.a00_task_contexts x
+ ON x.tenant_id=t.tenant_id AND x.command_id=t.command_id AND x.task_id=t.task_id
+ WHERE t.tenant_id=$1::uuid AND t.command_id=$2 AND t.task_id=$3
+ FOR UPDATE OF x`,[actor.tenant_id,request.command_id,request.task_id]))[0];
+   ensure(task,'TASK_NOT_FOUND_OR_NOT_MIGRATED');
+   ensure(task.revision===request.expected_revision,'STALE_REVISION');
+   ensure(STATES.has(task.state),'STATE_INVALID');
+   ensure(task.owner_agent!=='A07','A07_PUBLISH_LOCKED');
+   // Never use context state as a substitute for the protected canonical legacy task state.
+   ensure(['PLANNED_WAIT_G1','READY','IN_PROGRESS','REVIEW','DONE'].includes(task.legacy_status), 'CANONICAL_TASK_STATE_INVALID');
+   const spec=request.action==='QC_PASS'?{from:['INTERNAL_REVIEW'],to:'INTERNAL_REVIEW'}:MAP[request.action];
+   ensure(spec.from.includes(task.state),'TRANSITION_NOT_ALLOWED');
+   allowAction(actor,task,request.action);
+   // The original DB gate remains authoritative. A pending G1 never starts content.
+   const gate=rows(await client.query(`SELECT dd04_stage.a00_022_effective_g1(
+ $1::uuid,$2::text) AS passed`,[actor.tenant_id,request.command_id]))[0];
+   ensure(gate?.passed===true,'G1_STILL_LOCKED');
+   if(request.action==='QC_PASS'){
+     ensure(task.output_sha256===request.evidence_sha256,'QC_INPUT_HASH_MISMATCH');
+     ensure(request.report_sha256!==request.evidence_sha256,'QC_INDEPENDENT_REPORT_REQUIRED');
+     const report=rows(await client.query(`SELECT EXISTS(
+       SELECT 1 FROM dd04_stage.artifacts WHERE tenant_id=$1::uuid
+       AND command_id=$2 AND task_id=$3
+       AND kind=$4 AND sha256=$5
+       AND length(storage_ref)>3) AS artifact_found`,
+       [actor.tenant_id,request.command_id,request.task_id,
+        'QC_REPORT_'+actor.agent_id,request.report_sha256]))[0];
+     ensure(report?.artifact_found===true,'QC_REPORT_ARTIFACT_NOT_REGISTERED');
+
+     const qc=rows(await client.query(`INSERT INTO dd04_stage.a00_transition_events
+      (tenant_id,command_id,task_id,actor_user_id,agent_id,action,from_state,to_state,
+       evidence_sha256,report_sha256,request_sha256,expected_revision,idempotency_key)
+      VALUES ($1::uuid,$2,$3,$4::uuid,$5,'QC_PASS','INTERNAL_REVIEW','INTERNAL_REVIEW',
+       $6,$7,$8,$9,$10) RETURNING event_id`,
+      [actor.tenant_id,request.command_id,request.task_id,actor.subject_id,
+       actor.agent_id,request.evidence_sha256,request.report_sha256,request_hash,
+       request.expected_revision,request.idempotency_key]))[0];
+     await client.query('COMMIT');begun=false;
+     return {ok:true,state:'INTERNAL_REVIEW',qc_agent:actor.agent_id,
+       event_id:qc.event_id,persistent:true,publish_allowed:false};
+   }
+   if(request.action==='START'){
+    const deps=Array.isArray(task.dependency_task_ids)?task.dependency_task_ids:[];
+    const validated=rows(await client.query(`SELECT task_id,state FROM dd04_stage.a00_task_contexts
+ WHERE tenant_id=$1::uuid AND command_id=$2 AND task_id=ANY($3::text[]) FOR SHARE`,
+      [actor.tenant_id,request.command_id,deps]));
+    ensure(deps.length===validated.length&&validated.every(d=>d.state==='APPROVED_INTERNAL'),'DEPENDENCY_NOT_APPROVED');
+   }
+   if(request.action==='SUBMIT'){
+     ensure(Array.isArray(task.output_refs)&&task.output_refs.length>0,'ARTIFACT_REFS_REQUIRED');
+     const file=rows(await client.query(`SELECT EXISTS(
+       SELECT 1 FROM dd04_stage.artifacts WHERE tenant_id=$1::uuid
+       AND command_id=$2 AND task_id=$3 AND sha256=$4) AS artifact_found`,
+       [actor.tenant_id,request.command_id,request.task_id,request.evidence_sha256]))[0];
+     ensure(file?.artifact_found===true,'OUTPUT_ARTIFACT_NOT_REGISTERED');
+
+     ensure(HEX.test(task.profile_sha256||'')||task.channel_id===null,'CHANNEL_PROFILE_UNVERIFIED');
+   }
+   if(request.action==='REVIEW_PASS'&&['A03','A04'].includes(task.owner_agent)){
+      ensure(actor.agent_id==='A00','A00_STAGE_REVIEW_REQUIRED');
+   }
+   if(request.action==='REVIEW_PASS'||request.action==='REVIEW_FAIL'){
+    ensure(HEX.test(task.output_sha256||'')&&task.output_sha256===request.evidence_sha256,'REVIEW_INPUT_HASH_MISMATCH');
+    ensure(actor.agent_id!==task.last_reviewer_agent||request.action==='REVIEW_FAIL','REPEATED_REVIEWER_DENIED');
+    ensure(request.report_sha256!==request.evidence_sha256,'REPORT_MUST_BE_INDEPENDENT');
+    const savedReport=rows(await client.query(`SELECT EXISTS(
+      SELECT 1 FROM dd04_stage.artifacts WHERE tenant_id=$1::uuid
+       AND command_id=$2 AND task_id=$3 AND sha256=$4
+       AND kind=$5) AS artifact_found`,
+       [actor.tenant_id,request.command_id,request.task_id,
+        request.report_sha256,'REVIEW_REPORT_'+actor.agent_id]))[0];
+    ensure(savedReport?.artifact_found===true,'REVIEW_REPORT_ARTIFACT_NOT_REGISTERED');
+    // REVIEW_PASS is only an internal acknowledgement after two distinct QC records.
+    // This is NOT G2 authorization or permission to publish.
+    if(request.action==='REVIEW_PASS'&&task.owner_agent==='A05'){
+      const qc=rows(await client.query(`SELECT DISTINCT agent_id FROM dd04_stage.a00_transition_events
+       WHERE tenant_id=$1::uuid AND command_id=$2 AND task_id=$3 AND action='QC_PASS'
+        AND evidence_sha256=$4 AND report_sha256 IS NOT NULL`,
+        [actor.tenant_id,request.command_id,request.task_id,request.evidence_sha256]));
+      ensure(qc.some(x=>x.agent_id==='A08')&&qc.some(x=>x.agent_id==='A09'),'A08_A09_QC_EVIDENCE_REQUIRED');
+    }
+   }
+   const event=rows(await client.query(`INSERT INTO dd04_stage.a00_transition_events
+ (tenant_id,command_id,task_id,actor_user_id,agent_id,action,from_state,to_state,
+ evidence_sha256,report_sha256,request_sha256,expected_revision,idempotency_key)
+ VALUES ($1::uuid,$2,$3,$4::uuid,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+ RETURNING event_id`,[actor.tenant_id,request.command_id,request.task_id,actor.subject_id,
+ actor.agent_id,request.action,task.state,spec.to,request.evidence_sha256,
+ request.report_sha256,request_hash,request.expected_revision,request.idempotency_key]))[0];
+   const outputHash=request.action==='SUBMIT'?request.evidence_sha256:
+     request.action==='REWORK'?null:task.output_sha256;
+   const updated=rows(await client.query(`UPDATE dd04_stage.a00_task_contexts
+ SET state=$4,revision=revision+1,output_sha256=$5,
+ last_reviewer_agent=$6,updated_at=now()
+ WHERE tenant_id=$1::uuid AND command_id=$2 AND task_id=$3 AND revision=$7
+ RETURNING revision`,[actor.tenant_id,request.command_id,request.task_id,spec.to,outputHash,
+ request.action.startsWith('REVIEW_')?actor.agent_id:task.last_reviewer_agent,request.expected_revision]))[0];
+   ensure(updated,'REVISION_CONFLICT');
+   if(request.action==='SUBMIT'){
+    // Only PENDING is permitted in the legacy V5.5 handoff table.
+    // Review outcome is persisted in private immutable transition events.
+    await client.query(`INSERT INTO dd04_stage.v55_agent_handoff_events
+ (tenant_id,command_id,task_id,from_agent,to_agent,revision,input_sha256,report_sha256,verdict)
+ VALUES ($1::uuid,$2,$3,$4,$5,$6,$7,$8,'PENDING')`,
+ [actor.tenant_id,request.command_id,request.task_id,task.owner_agent,
+ ({A00:'A03',A03:'A04',A04:'A05',A05:'A08',A08:'A09'})[task.owner_agent]??'A08',updated.revision,request.evidence_sha256,
+ hash({kind:'HANDOFF_PENDING_ONLY',task_id:request.task_id,revision:updated.revision,
+   input_sha256:request.evidence_sha256})]);
+   }
+   // Auto-unblock dependent task contexts after verified independent review.
+   // This does not modify protected legacy tasks and does not authorize execution.
+   let unblocked=[];
+   if(request.action==='REVIEW_PASS'){
+    const next=rows(await client.query(`SELECT target.task_id,target.revision
+ FROM dd04_stage.a00_task_contexts target
+ WHERE target.tenant_id=$1::uuid AND target.command_id=$2 AND target.state='BLOCKED'
+ AND $3=ANY(target.dependency_task_ids)
+ AND EXISTS (SELECT 1 FROM dd04_stage.tasks lt WHERE lt.tenant_id=target.tenant_id
+  AND lt.command_id=target.command_id AND lt.task_id=target.task_id AND lt.status='READY')
+ AND NOT EXISTS (
+ SELECT 1 FROM unnest(target.dependency_task_ids) AS dep(id)
+ LEFT JOIN dd04_stage.a00_task_contexts src
+ ON src.tenant_id=target.tenant_id AND src.command_id=target.command_id AND src.task_id=dep.id
+ WHERE src.state IS DISTINCT FROM 'APPROVED_INTERNAL'
+ ) AND target.task_id<>$3
+ FOR UPDATE OF target`,[actor.tenant_id,request.command_id,request.task_id]));
+    // Write immutable AUTO_READY evidence BEFORE changing each task. The DB
+    // transition trigger verifies the evidence and CAS revision in this transaction.
+    for(const t of next){
+      const autoKey='auto:'+hash([actor.tenant_id,request.command_id,t.task_id,event.event_id]).slice(0,48);
+      const autoHash=hash({source_event_id:event.event_id,task_id:t.task_id,to:'READY'});
+      await client.query(`INSERT INTO dd04_stage.a00_transition_events
+       (tenant_id,command_id,task_id,actor_user_id,agent_id,action,from_state,to_state,
+        evidence_sha256,report_sha256,request_sha256,expected_revision,idempotency_key)
+       VALUES ($1::uuid,$2,$3,$4::uuid,$5,'AUTO_READY','BLOCKED','READY',$6,$7,$8,$9,$10)`,
+       [actor.tenant_id,request.command_id,t.task_id,actor.subject_id,actor.agent_id,
+        request.evidence_sha256,request.report_sha256,autoHash,t.revision,autoKey]);
+      const moved=rows(await client.query(`UPDATE dd04_stage.a00_task_contexts
+       SET state='READY',revision=revision+1,updated_at=now()
+       WHERE tenant_id=$1::uuid AND command_id=$2 AND task_id=$3
+       AND state='BLOCKED' AND revision=$4 RETURNING task_id`,
+       [actor.tenant_id,request.command_id,t.task_id,t.revision]));
+      ensure(moved.length===1,'AUTO_READY_CAS_CONFLICT');
+    }
+    unblocked=next.map(r=>r.task_id);
+   }
+   await client.query('COMMIT');begun=false;
+   return {ok:true,duplicate:false,event_id:event.event_id,state:spec.to,
+     revision:updated.revision,unblocked,persistent:true,publish_allowed:false,
+     legacy_task_state_unchanged:true};
+  }catch(err){
+   if(begun)await client.query('ROLLBACK').catch(()=>{});
+   throw err;
+  }finally{client.release()}
+ }
+ return Object.freeze({transact});
+}

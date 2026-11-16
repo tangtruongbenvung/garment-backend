@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { getDeployStore } from '@netlify/blobs';
 import { dispatch, isStagingPreviewUrl } from '../../dd04-agent-control/runtime-core.mjs';
 import { planScripts } from '../../dd04-agent-control/a03-channel-script-planner.mjs';
+import { buildContentFactoryDraft } from '../../dd04-agent-control/a00-024-content-factory-draft.mjs';
 import { assertStagingDatabaseUrl, createPgRepository } from '../../dd04-agent-control/supabase-pg-repository.mjs';
 import { createVerifiedPgTlsConfig } from '../../dd04-agent-control/pg-tls.mjs';
 
@@ -77,6 +78,23 @@ export default async (request) => {
    return reply({error:'STAGING_DRAFT_GENERATION_FAILED'},500);
   }
  }
+ // A00-024 creative factory preview: 20-channel A03/A04/A05 production packs.
+ // No A11 finance check, but no spending, render, worker claims, storage or publish.
+ if(request.method==='POST' && pathname.endsWith('/content-factory-preview')){
+  if(!(request.headers.get('content-type')||'').toLowerCase().includes('application/json'))return reply({error:'JSON_REQUIRED'},415);
+  const raw=await request.text();
+  if(raw.length>16000)return reply({error:'PAYLOAD_TOO_LARGE'},413);
+  try{
+   const draft=buildContentFactoryDraft(JSON.parse(raw));
+   return reply({ok:true,...draft});
+  }catch(e){
+   if(e instanceof SyntaxError)return reply({error:'INVALID_JSON'},400);
+   const code=String(e?.message||'');
+   if(/^(?:PLAN_|CHANNEL_|PLATFORM_|CAMPAIGN_|CREATIVE_|SCENE_|A03_)/.test(code))
+    return reply({error:code},400);
+   return reply({error:'CONTENT_DRAFT_FAILED'},500);
+  }
+ }
  const isPg=mode()==='POSTGRES';
  let repository;
  if(isPg){try{repository=await pgStore()}catch(e){const error_code=dbErrorCategory(e);console.error('DD04 PG config category:',error_code);return reply({error:'STAGING_DATABASE_NOT_CONFIGURED',error_code},503)}}
@@ -131,4 +149,4 @@ export default async (request) => {
  }
  return reply({error:'NOT_FOUND'},404);
 };
-export const config={path:['/api/dd04-a00/health','/api/dd04-a00/commands','/api/dd04-a00/commands/:id','/api/dd04-a00/diagnostics','/api/dd04-a00/a03-preview']};
+export const config={path:['/api/dd04-a00/health','/api/dd04-a00/commands','/api/dd04-a00/commands/:id','/api/dd04-a00/diagnostics','/api/dd04-a00/a03-preview','/api/dd04-a00/content-factory-preview']};

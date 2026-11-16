@@ -3,8 +3,8 @@
 // The API key is explicitly publishable, never a service_role key.
 const API="https://wbvkqfnrlasmtizjszab.supabase.co";
 const PUBLISHABLE_KEY="sb_publishable_eYGZHWqLAvhuFjIU3ej3Zg_eQdL5lrU";
-const CALLBACK="https://deploy-preview-1--ducduy-ai-os-test.netlify.app/dd04-agent-control/ceo-login.html";
-const EXPECTED_HOST="deploy-preview-1--ducduy-ai-os-test.netlify.app";
+const CALLBACK=location.origin+"/dd04-agent-control/ceo-login.html";
+const ALLOWED_PREVIEW=/^deploy-preview-(?:1|6|7)--ducduy-ai-os-test\.netlify\.app$/;
 const $=id=>document.getElementById(id);
 let accessToken="",refreshToken="",factorId="",recoveryMode=false;
 let currentReadiness=null;
@@ -19,7 +19,7 @@ function resetReadiness(){
  tile("ceoState","Chờ xác minh");
  tile("mfaState","Chờ xác minh");
  tile("gateState","Đang khóa");
- $("gateReviewPanel").hidden=true;
+ $("gateReviewPanel").hidden=true;$("worklistPanel").hidden=true;$("worklistRows").replaceChildren();
  $("gateApprovalSelect").replaceChildren(new Option("Chưa tải danh sách",""));
  $("gateApprovalId").value="";
  $("mfaHelp").hidden=true;
@@ -221,6 +221,7 @@ async function checkCeoReadiness(){
   tile("mfaState",result.mfa_aal2?"AAL2 đạt":"Cần xác minh MFA",result.mfa_aal2?"ok":"warn");
   tile("gateState","Chưa mở giao dịch G1/G2","blocked");
   $("gateReviewPanel").hidden=!(result.mfa_aal2&&result.enrollment_verified&&result.identity_verified);
+  $("worklistPanel").hidden=$("gateReviewPanel").hidden;
   $("mfaHelp").hidden=result.mfa_aal2===true;
   if(!$("gateReviewPanel").hidden && $("gateApprovalSelect").options.length===1 && !$("gateApprovalSelect").value)await loadGateQueue();
   $("sessionGuidance").textContent=result.enrollment_verified
@@ -288,14 +289,57 @@ async function reviewGate(){
    ". QUYỀN DUYỆT: KHÓA. Không tạo công việc xuất bản.";
  }catch{$("gateReviewStatus").textContent="Không đọc được hồ sơ staging. G1/G2 vẫn khóa.";}
 }
+async function loadMasterTaskLedger(){
+ if(!accessToken||currentReadiness?.mfa_aal2!==true||currentReadiness?.enrollment_verified!==true){
+  $("worklistStatus").textContent="Cần CEO ACTIVE và MFA AAL2 trong phiên hiện tại.";return;
+ }
+ $("worklistStatus").textContent="Đang đọc danh sách nhiệm vụ Supabase staging...";
+ try{
+  const response=await fetch("/api/dd04-a00-020-worklist",{
+   method:"POST",headers:{"authorization":"Bearer "+accessToken,"accept":"application/json"},
+   cache:"no-store",referrerPolicy:"no-referrer",signal:AbortSignal.timeout(12000)});
+  const body=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(body.error||"HTTP "+response.status);
+  const rows=Array.isArray(body.rows)?body.rows:[];
+  const dest=$("worklistRows");dest.replaceChildren();
+  for(const task of rows){
+   const tr=document.createElement("tr");
+   for(const value of [task.task_id,task.owner_agent,task.legacy_status,task.runtime_status??'Chưa khởi tạo',task.g1_decision??'Chưa có',task.runtime_revision??task.revision]){
+    const td=document.createElement("td");td.textContent=String(value??"");tr.append(td);
+   }dest.append(tr);
+  }
+  const c=body.counts||{};
+  $("worklistStatus").textContent="Dữ liệu staging: "+Number(c.commands||0)+" lệnh, "+Number(c.tasks||0)+
+   " nhiệm vụ, "+Number(c.handoffs||0)+" bàn giao. Giao dịch A00-020 chưa kích hoạt; không thể tự đăng.";
+ }catch(e){$("worklistRows").replaceChildren();$("worklistStatus").textContent="Chưa tải được worklist: "+e.message;}
+}
+async function probeA0021Backend(){
+ if(!accessToken||currentReadiness?.mfa_aal2!==true||
+    currentReadiness?.enrollment_verified!==true){
+  $("backendProbeStatus").textContent="Cần phiên CEO ACTIVE và MFA AAL2 trước khi kiểm tra kết nối.";return;
+ }
+ $("backendProbeStatus").textContent="Đang thử kết nối backend staging (chỉ đọc)...";
+ try{
+  const response=await fetch("/api/dd04-a00-021-backend-probe",{
+   method:"POST",headers:{"authorization":"Bearer "+accessToken,"accept":"application/json"},
+   cache:"no-store",referrerPolicy:"no-referrer",signal:AbortSignal.timeout(15000)});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok){$("backendProbeStatus").textContent="Chưa PASS: "+String(data.status||"HTTP "+response.status)+
+    ". Không thay đổi dữ liệu.";return;}
+  $("backendProbeStatus").textContent=data.ok===true&&data.read_only===true&&data.can_publish===false
+   ? "PASS: "+data.login_role+" → "+data.runtime_role+
+     " | RLS chặn worker chưa cấp quyền | Chỉ đọc, không đăng bài."
+   : "Chưa PASS: phản hồi không đáp ứng chính sách an toàn.";
+ }catch{$("backendProbeStatus").textContent="Chưa kết nối được endpoint trên Deploy Preview. Không thay đổi dữ liệu.";}
+}
 function bind(id,fn){$(id).addEventListener("click",()=>void Promise.resolve(fn()).catch(e=>message("Yêu cầu chưa hoàn thành: "+e.message)));}
-if(location.protocol!=="https:"||location.hostname!==EXPECTED_HOST){
- document.body.textContent="Chỉ dùng trang này trên HTTPS Deploy Preview #1 của Đức Duy.";
+if(location.protocol!=="https:"||!ALLOWED_PREVIEW.test(location.hostname)){
+ document.body.textContent="Chỉ dùng trang này trên HTTPS Deploy Preview #1, #6 hoặc #7 của Đức Duy.";
 }else{
  void parseCallback();
  bind("passwordBtn",passwordSignIn);bind("magicBtn",magicSignIn);
  bind("recoveryBtn",requestPasswordRecovery);bind("savePasswordBtn",savePassword);bind("cancelRecoveryBtn",logout);
- bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);bind("gateReviewBtn",reviewGate);bind("loadGateQueueBtn",loadGateQueue);
+ bind("enrollBtn",enroll);bind("factorBtn",loadFactors);bind("verifyBtn",verify);bind("logoutBtn",logout);bind("checkReadinessBtn",checkCeoReadiness);bind("gateReviewBtn",reviewGate);bind("loadGateQueueBtn",loadGateQueue);bind("refreshWorklistBtn",loadMasterTaskLedger);bind("backendProbeBtn",probeA0021Backend);
  $("gateApprovalSelect").addEventListener("change",()=>{$("gateApprovalId").value=$("gateApprovalSelect").value;});
  bind("showSecret",()=>{$("secret").type=$("secret").type==="password"?"text":"password"});
  window.addEventListener("pagehide",()=>{accessToken="";refreshToken="";recoveryMode=false;clearSecret();$("newPassword").value="";$("confirmPassword").value="";});
