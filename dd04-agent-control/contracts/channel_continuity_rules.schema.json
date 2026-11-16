@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DD04 Continuity Rules V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "channel_id",
+    "profile_sha256",
+    "lock_fields",
+    "may_change",
+    "video_frame_rule",
+    "cross_video_rule",
+    "profile_change_rule",
+    "visual_check",
+    "safety",
+    "mandatory_reviews"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "DD04_CONTINUITY_V1"
+    },
+    "channel_id": {
+      "type": "string",
+      "minLength": 2
+    },
+    "profile_sha256": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      ]
+    },
+    "lock_fields": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "string"
+      }
+    },
+    "may_change": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "video_frame_rule": {
+      "type": "string",
+      "minLength": 5
+    },
+    "cross_video_rule": {
+      "type": "string",
+      "minLength": 5
+    },
+    "profile_change_rule": {
+      "type": "string",
+      "minLength": 5
+    },
+    "visual_check": {
+      "type": "string",
+      "minLength": 5
+    },
+    "safety": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "string"
+      }
+    },
+    "mandatory_reviews": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "enum": [
+          "A08_VISUAL_CONTINUITY",
+          "A09_VIETNAMESE_CULTURAL_SAFETY"
+        ]
+      }
+    }
+  }
+}

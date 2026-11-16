@@ -1,0 +1,6 @@
+-- DD04-A00-020 | SUPERSEDED / DELIBERATELY NON-EXECUTABLE
+-- Previous draft was malformed by a partial file update. Do not run.
+-- Refer ONLY to:
+-- dd04-agent-control/supabase/24_A00_020_FINAL_CANDIDATE_STAGING_ONLY_DO_NOT_RUN.sql
+-- for reviewed staging candidate, and verify its exact SHA256 in the CEO approval record.
+-- This file is intentionally a comment-only tombstone to prevent accidental use.

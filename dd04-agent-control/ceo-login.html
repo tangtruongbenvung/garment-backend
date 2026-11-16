@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="vi"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
+<meta http-equiv="Cache-Control" content="no-store">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; script-src 'self'; connect-src 'self' https://wbvkqfnrlasmtizjszab.supabase.co; img-src 'self' data:; style-src 'self'">
+<title>Đức Duy DD04 · Đăng nhập CEO staging</title>
+<link rel="stylesheet" href="./ceo-login.css">
+<script type="module" src="./ceo-login.js"></script>
+</head><body>
+<main>
+<header><span class="eyebrow">ĐỨC DUY AI OS · DD04-A00-014</span><h1>Đăng nhập &amp; MFA — Staging</h1>
+<p class="muted">Quyền CEO được kiểm tra từ Supabase staging. Đăng nhập và xác minh MFA trong từng phiên; G1/G2 chỉ mở khi giao dịch, kế hoạch và bằng chứng QC được nghiệm thu.</p></header>
+<section class="panel" id="loginPanel">
+<h2>1. Xác thực email</h2>
+<label for="email">Email đã đăng ký Supabase Staging</label>
+<input id="email" type="email" autocomplete="username" placeholder="email@congty.vn" maxlength="254">
+<label for="password">Mật khẩu (nếu đã thiết lập)</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="Mật khẩu Supabase Auth">
+<div class="actions"><button id="passwordBtn" type="button">Đăng nhập bằng mật khẩu</button><button id="magicBtn" class="secondary" type="button">Gửi liên kết đăng nhập email</button><button id="recoveryBtn" class="secondary" type="button">Thiết lập / quên mật khẩu</button></div>
+<p class="muted small">Liên kết email chỉ gửi cho tài khoản đã tồn tại. Không gửi mật khẩu/OTP/token vào ChatGPT. Không dùng token A00 để đăng nhập.</p>
+</section>
+<section class="panel" id="passwordRecoveryPanel" hidden>
+<h2>Thiết lập mật khẩu cho tài khoản đã xác minh</h2>
+<p class="muted">Chỉ xuất hiện sau khi mở liên kết khôi phục mới từ email và xác minh phiên hợp lệ. Mật khẩu chỉ gửi trực tiếp đến Supabase Auth.</p>
+<label for="newPassword">Mật khẩu mới (ít nhất 12 ký tự)</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Mật khẩu mới">
+<label for="confirmPassword">Nhập lại mật khẩu</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Nhập lại mật khẩu">
+<div class="actions"><button id="savePasswordBtn" type="button">Lưu mật khẩu mới</button><button id="cancelRecoveryBtn" type="button" class="secondary">Hủy và xóa phiên</button></div>
+</section>
+<section class="panel" id="sessionPanel" hidden>
+<h2>2. Phiên đăng nhập Supabase</h2>
+<p id="identity" class="status" aria-live="polite"></p>
+<p class="warning" id="sessionGuidance">Đang xác minh quyền CEO và MFA phiên hiện tại. Không có quyết định G1/G2 nào được ghi tại màn hình này.</p>
+<section class="readiness-box" id="readinessPanel">
+<h2>3. Xác minh điều kiện phê duyệt</h2>
+<p class="muted small">Thông tin đọc trực tiếp từ Auth và cơ sở dữ liệu staging, không cấp quyền hoặc ghi quyết định.</p>
+<div class="status-grid" aria-label="Trạng thái điều kiện">
+<div class="status-tile"><span>Danh tính Auth</span><strong id="authState">Chờ kiểm tra</strong></div>
+<div class="status-tile"><span>Quyền CEO</span><strong id="ceoState">Chờ kiểm tra</strong></div>
+<div class="status-tile"><span>MFA phiên hiện tại</span><strong id="mfaState">Chờ kiểm tra</strong></div>
+<div class="status-tile"><span>Quyết định G1/G2</span><strong id="gateState">Chưa kích hoạt</strong></div>
+</div>
+<div class="actions"><button type="button" id="checkReadinessBtn" class="secondary">Làm mới trạng thái quyền CEO</button></div>
+<p id="readinessStatus" role="status" aria-live="polite">Chờ đọc trạng thái bảo mật từ server.</p>
+<p id="mfaHelp" class="warning" hidden>MFA đã đăng ký không tự xác minh phiên đăng nhập mới. Hãy kiểm tra MFA đã đăng ký, nhập mã 6 chữ số và xác minh; không tạo lại MFA.</p>
+<div class="actions"><button id="factorBtn" type="button" class="secondary">1. Kiểm tra MFA đã đăng ký</button><button id="enrollBtn" type="button" class="secondary" hidden>Đăng ký MFA lần đầu</button></div>
+<div id="totpEnroll" hidden>
+<p class="muted">Đây là mã bí mật MFA; tuyệt đối không chụp hoặc chia sẻ. Chỉ cần dùng khi tạo MFA lần đầu.</p>
+<label for="secret">Mã bí mật MFA (giữ kín)</label><input id="secret" readonly type="password">
+<button type="button" id="showSecret" class="secondary">Hiện / ẩn mã</button>
+</div>
+<div id="verifyPanel" hidden>
+<label for="totpCode">Mã xác thực từ Authenticator (6 chữ số)</label>
+<input id="totpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000">
+<button type="button" id="verifyBtn">2. Xác minh MFA của phiên này</button>
+</div>
+</section>
+<section class="readiness-box" id="gateReviewPanel" hidden>
+<h2>4. Xem hồ sơ G1/G2 — chỉ đọc</h2>
+<p class="muted small">Chỉ mở phần xem hồ sơ sau khi xác minh MFA phiên hiện tại và quyền CEO ACTIVE. Thiếu kế hoạch/ngân sách hoặc bằng chứng QC sẽ được liệt kê rõ. Đây không phải thao tác phê duyệt.</p>
+<div class="actions"><button type="button" class="secondary" id="loadGateQueueBtn">Tải danh sách yêu cầu đang chờ</button></div>
+<label for="gateApprovalSelect">Chọn yêu cầu G1/G2</label>
+<select id="gateApprovalSelect"><option value="">Chưa tải danh sách</option></select>
+<p id="gateQueueStatus" class="muted small" role="status" aria-live="polite">Chỉ hiện yêu cầu thuộc tenant đã xác minh.</p>
+<label for="gateApprovalId">Approval ID (có thể chọn từ danh sách hoặc nhập trực tiếp)</label>
+<input id="gateApprovalId" type="text" inputmode="text" maxlength="36" placeholder="UUID của yêu cầu G1/G2">
+<button type="button" id="gateReviewBtn" class="secondary">Kiểm tra hồ sơ duyệt (chỉ đọc)</button>
+<p id="gateReviewStatus" role="status" aria-live="polite">Chưa kiểm tra. Không thay đổi quyết định.</p>
+</section>
+<section class="readiness-box" id="worklistPanel" hidden>
+<h2>5. Master Task Ledger — dữ liệu staging thật</h2>
+<p class="muted small">Danh sách đọc từ Supabase sau khi xác minh CEO và MFA AAL2. Chưa có chức năng ghi, phê duyệt hay đăng bài.</p>
+<div class="actions"><button type="button" id="refreshWorklistBtn" class="secondary">Tải danh sách nhiệm vụ từ staging</button></div>
+<div class="actions"><button type="button" id="backendProbeBtn" class="secondary">Kiểm tra kết nối backend staging (chỉ đọc)</button></div>
+<p id="backendProbeStatus" role="status" aria-live="polite">Chưa kiểm tra kết nối backend A00-021. Không cấp quyền Agent hoặc ghi dữ liệu.</p>
+
+<p id="worklistStatus" role="status" aria-live="polite">Chưa tải dữ liệu.</p>
+<div style="overflow-x:auto"><table id="worklistTable"><thead><tr><th>Nhiệm vụ</th><th>Agent</th><th>Trạng thái gốc</th><th>A00 runtime</th><th>G1</th><th>Phiên bản</th></tr></thead><tbody id="worklistRows"></tbody></table></div>
+</section>
+<div class="actions"><button id="logoutBtn" class="secondary" type="button">Đăng xuất &amp; xóa phiên</button></div>
+</section>
+<section class="panel"><h2>Trạng thái kiểm thử</h2><p id="message" role="status" aria-live="polite">Chưa đăng nhập.</p>
+<p class="muted small" id="callbackDiagnostics" aria-live="polite">Chẩn đoán callback: chưa có dữ liệu xác thực.</p>
+<p class="muted small">Token chỉ lưu trong bộ nhớ tab hiện tại. Tải lại trang cần đăng nhập và xác minh MFA lại. Màn hình này không có API ghi quyết định G1/G2.</p>
+<a href="./">Trở về Dashboard 3D</a></section>
+</main>
+</body></html>
